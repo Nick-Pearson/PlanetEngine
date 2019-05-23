@@ -14,6 +14,9 @@ public:
 	inline HWND GetWindowHandle() const { return mWindowHandle; }
 #endif
 
+	inline int GetSizeX() const { return width; }
+	inline int GetSizeY() const { return height; }
+
 private:
 
 	class PlanetEngine* enginePtr;
@@ -25,4 +28,7 @@ private:
 
 	HWND mWindowHandle;
 #endif
+
+	int width;
+	int height;
 };

@@ -94,7 +94,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PLATFORM_WIN</PreprocessorDefinitions>
-      <ExceptionHandling>false</ExceptionHandling>
+      <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -119,6 +119,7 @@
     <ClCompile Include="Src\Planet\Private\PlanetEngine.cpp" />
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
+    <ClCompile Include="Src\Planet\Private\Renderer\D3DShader.cpp" />
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +128,7 @@
     <ClInclude Include="Src\Planet\Private\Platform\Platform.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Window.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\D3DRenderer.h" />
+    <ClInclude Include="Src\Planet\Private\Renderer\D3DShader.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\Renderer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

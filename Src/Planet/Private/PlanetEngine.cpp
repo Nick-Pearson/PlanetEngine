@@ -36,6 +36,7 @@ void PlanetEngine::Run()
 		//ProcessInput();
 		//UpdateGameplay();
 		
+		renderer.Render();
 		renderer.SwapBuffers();
 	}
 }

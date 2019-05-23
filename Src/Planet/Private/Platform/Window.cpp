@@ -6,7 +6,8 @@ namespace
 {
 }
 
-Window::Window(int sizeX, int sizeY)
+Window::Window(int sizeX, int sizeY) : 
+	width(sizeX), height(sizeY)
 {
 	enginePtr = PlanetEngine::Get();
 
