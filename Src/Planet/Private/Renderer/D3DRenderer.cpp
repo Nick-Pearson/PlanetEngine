@@ -78,6 +78,7 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
 	{
 		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "Normal",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 	d3dAssert(mDevice->CreateInputLayout(
 		ied, (UINT)std::size(ied),
@@ -131,18 +132,22 @@ void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 
 	struct ConstantBuffer
 	{
-		DirectX::XMMATRIX transform;
+		DirectX::XMMATRIX model;
+		DirectX::XMMATRIX world;
+		DirectX::XMMATRIX view;
 	};
 	const ConstantBuffer cb =
 	{
-		{
-			DirectX::XMMatrixTranspose(
-				DirectX::XMMatrixRotationX(angle) *
-				DirectX::XMMatrixRotationY(-angle * 0.5f) *
-				DirectX::XMMatrixTranslation(0.0f,0.0f,5.0f) *
-				DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,10.0f)
-			)
-		}
+		DirectX::XMMatrixTranspose(
+			DirectX::XMMatrixRotationX(angle) *
+			DirectX::XMMatrixRotationY(-angle * 0.5f)
+		),
+		DirectX::XMMatrixTranspose(
+			DirectX::XMMatrixTranslation(0.0f,0.0f,5.0f)
+		),
+		DirectX::XMMatrixTranspose(
+			DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,10.0f)
+		)
 	};
 	angle += 0.02f;
 

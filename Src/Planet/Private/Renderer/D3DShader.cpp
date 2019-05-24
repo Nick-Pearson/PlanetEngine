@@ -25,6 +25,7 @@ D3DShader::D3DShader(const wchar_t* filename, ShaderType type, ID3D11Device* inD
 	if (ErrorBlob)
 	{
 		std::cout << "Error compiling shader file: " << filename << std::endl;
+		std::cout << (const char*)ErrorBlob->GetBufferPointer() << std::endl;
 		return;
 	}
 

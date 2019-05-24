@@ -126,6 +126,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\Container\LinkedList.h" />
+    <ClInclude Include="Src\Planet\Private\Math\Vector.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Mesh.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\MeshManager.h" />
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h" />
@@ -135,6 +136,15 @@
     <ClInclude Include="Src\Planet\Private\Renderer\D3DRenderer.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\D3DShader.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\Renderer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="Shader\PixelShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\VertexShader.hlsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

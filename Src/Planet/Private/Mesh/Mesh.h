@@ -3,13 +3,7 @@
 #include <vector>
 
 #include "MeshManager.h"
-
-struct Vector
-{
-	float x;
-	float y;
-	float z;
-};
+#include "../Math/Vector.h"
 
 struct Vertex
 {
@@ -18,6 +12,7 @@ struct Vertex
 	{}
 
 	Vector positon;
+	Vector normal;
 };
 
 class Mesh
@@ -29,6 +24,8 @@ public:
 
 	inline bool IsLoaded() const { return handle != nullptr; }
 	inline GPUMeshHandle* GetGPUHandle() const { return handle; }
+
+	void RecalculateNormals();
 
 private:
 	std::vector<Vertex> mVerticies;

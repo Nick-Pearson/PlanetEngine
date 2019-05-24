@@ -42,8 +42,8 @@ void PlanetEngine::Run()
 	};
 	unsigned short t[] = { 
 		// front
-		0,1,4,
-		1,5,4,
+		0,1,5,
+		0,5,4,
 
 		// back 2,3,6,7
 		3,2,6,
@@ -54,18 +54,18 @@ void PlanetEngine::Run()
 		6,5,7,
 
 		// bottom 0,1,2,3
-		0,2,1,
-		1,2,3,
+		0,3,1,
+		0,2,3,
 
 		//right
 		5,1,3,
 		5,3,7,
 
 		// left 6,4,2,0
-		0,4,2,
-		2,4,6
+		0,6,2,
+		0,4,6
 	};
-	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 45);
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
 
 	renderer.GetMeshManager()->LoadMesh(cube);
 
