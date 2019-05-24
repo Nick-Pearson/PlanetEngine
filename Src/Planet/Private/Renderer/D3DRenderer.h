@@ -24,6 +24,8 @@
 
 class D3DShader;
 class Window;
+class MeshManager;
+class Mesh;
 
 class D3DRenderer
 {
@@ -39,6 +41,9 @@ public:
 	void SwapBuffers();
 
 	void Render();
+	void RenderMesh(std::shared_ptr<Mesh> mesh);
+
+	inline MeshManager* GetMeshManager() const { return mMeshManager; }
 
 private:
 	ID3D11Device* mDevice = nullptr;
@@ -50,4 +55,5 @@ private:
 	D3DShader* vertexShader = nullptr;
 	D3DShader* pixelShader = nullptr;
 
+	MeshManager* mMeshManager = nullptr;
 };

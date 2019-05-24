@@ -5,6 +5,8 @@
 #include <wrl/client.h>
 #include <D3Dcompiler.h>
 #include <xutility>
+#include "../Mesh/MeshManager.h"
+#include "../Mesh/Mesh.h"
 
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -69,12 +71,30 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	vertexShader = new D3DShader{ L"VertexShader.hlsl", ShaderType::Vertex, mDevice };
 	pixelShader = new D3DShader{ L"PixelShader.hlsl", ShaderType::Pixel, mDevice };
 
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
+	const D3D11_INPUT_ELEMENT_DESC ied[] =
+	{
+		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
+	};
+	d3dAssert(mDevice->CreateInputLayout(
+		ied, (UINT)std::size(ied),
+		vertexShader->mShaderBlob->GetBufferPointer(),
+		vertexShader->mShaderBlob->GetBufferSize(),
+		&InputLayout
+	));
+
+	// bind vertex layout
+	mContext->IASetInputLayout(InputLayout.Get());
+	mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	const auto hModDxgiDebug = LoadLibraryEx("dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	// get address of DXGIGetDebugInterface in dll
 	typedef HRESULT (WINAPI* DXGIGetDebugInterface)(REFIID, IDXGIInfoQueue **);
 	const auto DxgiGetDebugInterface = reinterpret_cast<DXGIGetDebugInterface>(reinterpret_cast<void*>(GetProcAddress(hModDxgiDebug, "DXGIGetDebugInterface")));
 
 	DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), &mDxgiInfoQueue);
+
+	mMeshManager = new MeshManager{ mDevice };
 }
 
 D3DRenderer::~D3DRenderer()
@@ -90,6 +110,7 @@ D3DRenderer::~D3DRenderer()
 
 	delete vertexShader;
 	delete pixelShader;
+	delete mMeshManager;
 }
 
 void D3DRenderer::SwapBuffers()
@@ -102,22 +123,13 @@ void D3DRenderer::SwapBuffers()
 
 void D3DRenderer::Render()
 {
-	struct Vertex
-	{
-		Vertex(float inX, float inY) :
-			x(inX), y(inY)
-		{}
-
-		float x;
-		float y;
-	};
-
 	// create vertex buffer (1 2d triangle at center of screen)
 	const Vertex vertices[] =
 	{
-		{ 0.0f,0.5f },
-		{ 0.5f,-0.5f },
-		{ -0.5f,-0.5f },
+		{ -0.5f,0.5f,0.0f },
+		{ 0.5f,-0.5f,0.0f },
+		{ -0.5f,-0.5f,0.0f },
+		{ 0.5f,0.5f,0.0f }
 	};
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pVertexBuffer;
 	D3D11_BUFFER_DESC bd = {};
@@ -136,25 +148,49 @@ void D3DRenderer::Render()
 	const unsigned int stride = sizeof(Vertex);
 	const unsigned int offset = 0u;
 	mContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
+	// create index buffer
+	const unsigned short indices[] =
+	{
+		0,1,2,
+		1,0,3,
+	};
+	Microsoft::WRL::ComPtr<ID3D11Buffer> pIndexBuffer;
+	D3D11_BUFFER_DESC ibd = {};
+	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
+	ibd.Usage = D3D11_USAGE_DEFAULT;
+	ibd.CPUAccessFlags = 0u;
+	ibd.MiscFlags = 0u;
+	ibd.ByteWidth = sizeof(indices);
+	ibd.StructureByteStride = sizeof(unsigned short);
+
+	D3D11_SUBRESOURCE_DATA isd = {};
+	isd.pSysMem = indices;
+
+	d3dAssert(mDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
+
+	// bind index buffer
+	mContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
 	pixelShader->Use(mContext);
 	vertexShader->Use(mContext);
 
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
-	const D3D11_INPUT_ELEMENT_DESC ied[] =
-	{
-		{ "Position",0,DXGI_FORMAT_R32G32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
-	};
-	d3dAssert(mDevice->CreateInputLayout(
-		ied, (UINT)std::size(ied),
-		vertexShader->mShaderBlob->GetBufferPointer(),
-		vertexShader->mShaderBlob->GetBufferSize(),
-		&InputLayout
-	));
+	mContext->DrawIndexed((UINT)std::size(indices), 0u, 0u);
+	d3dFlushDebugMessages();
+}
 
-	// bind vertex layout
-	mContext->IASetInputLayout(InputLayout.Get());
-	mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	mContext->Draw((UINT)std::size(vertices), 0u);
+void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
+{
+	GPUMeshHandle* meshHandle = mesh->GetGPUHandle();
+	if (meshHandle == nullptr) return;
+
+	const unsigned int stride = sizeof(Vertex);
+	const unsigned int offset = 0u;
+	mContext->IASetVertexBuffers(0u, 1u, meshHandle->vertexBuffer.GetAddressOf(), &stride, &offset);
+	mContext->IASetIndexBuffer(meshHandle->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+
+	pixelShader->Use(mContext);
+	vertexShader->Use(mContext);
+
+	mContext->DrawIndexed(meshHandle->numTriangles, 0u, 0u);
 	d3dFlushDebugMessages();
 }

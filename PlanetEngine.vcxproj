@@ -116,6 +116,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Planet\Private\Mesh\Mesh.cpp" />
+    <ClCompile Include="Src\Planet\Private\Mesh\MeshManager.cpp" />
     <ClCompile Include="Src\Planet\Private\PlanetEngine.cpp" />
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
@@ -123,6 +125,9 @@
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Src\Planet\Private\Container\LinkedList.h" />
+    <ClInclude Include="Src\Planet\Private\Mesh\Mesh.h" />
+    <ClInclude Include="Src\Planet\Private\Mesh\MeshManager.h" />
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h" />
     <ClInclude Include="Src\Planet\Private\Platform\PlanetWindows.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Platform.h" />

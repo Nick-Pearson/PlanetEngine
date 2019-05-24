@@ -2,6 +2,9 @@
 
 #include "Platform/Window.h"
 #include "Renderer/Renderer.h"
+#include "Mesh/Mesh.h"
+
+#include <memory>
 
 PlanetEngine::PlanetEngine()
 {
@@ -27,6 +30,16 @@ void PlanetEngine::Run()
 
 	Renderer renderer{ window };
 
+	Vertex v[] = {
+		{ -0.5f,0.5f,0.0f },
+		{ 0.5f,-0.5f,0.0f },
+		{ -0.5f,-0.5f,0.0f },
+		{ 0.5f,0.5f,0.0f } };
+	unsigned short t[] = { 0,1,2,1,0,3 };
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 4, t, 6);
+
+	renderer.GetMeshManager()->LoadMesh(cube);
+
 	ExitCode = -1;
 	while (ExitCode == -1)
 	{
@@ -36,9 +49,12 @@ void PlanetEngine::Run()
 		//ProcessInput();
 		//UpdateGameplay();
 		
-		renderer.Render();
+		//renderer.Render();
+		renderer.RenderMesh(cube);
 		renderer.SwapBuffers();
 	}
+
+	renderer.GetMeshManager()->UnloadMesh(cube);
 }
 
 #if PLATFORM_WIN
