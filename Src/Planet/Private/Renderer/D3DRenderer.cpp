@@ -4,6 +4,7 @@
 #include "D3DShader.h"
 #include <wrl/client.h>
 #include <D3Dcompiler.h>
+#include <DirectXMath.h>
 #include <xutility>
 #include "../Mesh/MeshManager.h"
 #include "../Mesh/Mesh.h"
@@ -65,6 +66,8 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	vp.TopLeftY = 0;
 	mContext->RSSetViewports(1u, &vp);
 
+	aspectRatio = vp.Height / vp.Width;
+
 	// TODO: Bind to event on window changed size
 
 	// Compile Shaders
@@ -121,67 +124,41 @@ void D3DRenderer::SwapBuffers()
 	mContext->ClearRenderTargetView(mTarget, colour);
 }
 
-void D3DRenderer::Render()
-{
-	// create vertex buffer (1 2d triangle at center of screen)
-	const Vertex vertices[] =
-	{
-		{ -0.5f,0.5f,0.0f },
-		{ 0.5f,-0.5f,0.0f },
-		{ -0.5f,-0.5f,0.0f },
-		{ 0.5f,0.5f,0.0f }
-	};
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pVertexBuffer;
-	D3D11_BUFFER_DESC bd = {};
-	bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	bd.Usage = D3D11_USAGE_DEFAULT;
-	bd.CPUAccessFlags = 0u;
-	bd.MiscFlags = 0u;
-	bd.ByteWidth = sizeof(vertices);
-	bd.StructureByteStride = sizeof(Vertex);
-
-	D3D11_SUBRESOURCE_DATA sd = {};
-	sd.pSysMem = vertices;
-
-	d3dAssert(mDevice->CreateBuffer(&bd, &sd, &pVertexBuffer));
-	
-	const unsigned int stride = sizeof(Vertex);
-	const unsigned int offset = 0u;
-	mContext->IASetVertexBuffers(0u, 1u, pVertexBuffer.GetAddressOf(), &stride, &offset);
-	// create index buffer
-	const unsigned short indices[] =
-	{
-		0,1,2,
-		1,0,3,
-	};
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pIndexBuffer;
-	D3D11_BUFFER_DESC ibd = {};
-	ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibd.Usage = D3D11_USAGE_DEFAULT;
-	ibd.CPUAccessFlags = 0u;
-	ibd.MiscFlags = 0u;
-	ibd.ByteWidth = sizeof(indices);
-	ibd.StructureByteStride = sizeof(unsigned short);
-
-	D3D11_SUBRESOURCE_DATA isd = {};
-	isd.pSysMem = indices;
-
-	d3dAssert(mDevice->CreateBuffer(&ibd, &isd, &pIndexBuffer));
-
-	// bind index buffer
-	mContext->IASetIndexBuffer(pIndexBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-
-	pixelShader->Use(mContext);
-	vertexShader->Use(mContext);
-
-	mContext->DrawIndexed((UINT)std::size(indices), 0u, 0u);
-	d3dFlushDebugMessages();
-}
-
 void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 {
 	GPUMeshHandle* meshHandle = mesh->GetGPUHandle();
 	if (meshHandle == nullptr) return;
+
+	struct ConstantBuffer
+	{
+		DirectX::XMMATRIX transform;
+	};
+	const ConstantBuffer cb =
+	{
+		{
+			DirectX::XMMatrixTranspose(
+				DirectX::XMMatrixRotationX(angle) *
+				DirectX::XMMatrixRotationY(-angle * 0.5f) *
+				DirectX::XMMatrixTranslation(0.0f,0.0f,5.0f) *
+				DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,10.0f)
+			)
+		}
+	};
+	angle += 0.02f;
+
+	Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
+	D3D11_BUFFER_DESC cbd;
+	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbd.Usage = D3D11_USAGE_DYNAMIC;
+	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbd.MiscFlags = 0u;
+	cbd.ByteWidth = sizeof(cb);
+	cbd.StructureByteStride = 0u;
+	D3D11_SUBRESOURCE_DATA csd = {};
+	csd.pSysMem = &cb;
+	d3dAssert(mDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer));
+
+	mContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
 
 	const unsigned int stride = sizeof(Vertex);
 	const unsigned int offset = 0u;

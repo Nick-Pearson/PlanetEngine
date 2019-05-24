@@ -40,7 +40,6 @@ public:
 	// Renderer Interface
 	void SwapBuffers();
 
-	void Render();
 	void RenderMesh(std::shared_ptr<Mesh> mesh);
 
 	inline MeshManager* GetMeshManager() const { return mMeshManager; }
@@ -56,4 +55,7 @@ private:
 	D3DShader* pixelShader = nullptr;
 
 	MeshManager* mMeshManager = nullptr;
+
+	float aspectRatio;
+	float angle = 0.0f;
 };

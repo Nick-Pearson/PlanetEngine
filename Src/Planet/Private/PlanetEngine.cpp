@@ -31,12 +31,41 @@ void PlanetEngine::Run()
 	Renderer renderer{ window };
 
 	Vertex v[] = {
-		{ -0.5f,0.5f,0.0f },
-		{ 0.5f,-0.5f,0.0f },
-		{ -0.5f,-0.5f,0.0f },
-		{ 0.5f,0.5f,0.0f } };
-	unsigned short t[] = { 0,1,2,1,0,3 };
-	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 4, t, 6);
+		{ -1.0f, -1.0f, 1.0f },
+		{ 1.0f,  -1.0f, 1.0f },
+		{ -1.0f, -1.0f, -1.0f },
+		{ 1.0f,  -1.0f, -1.0f },
+		{ -1.0f, 1.0f, 1.0f },
+		{ 1.0f,  1.0f, 1.0f },
+		{ -1.0f, 1.0f, -1.0f },
+		{ 1.0f,  1.0f, -1.0f },
+	};
+	unsigned short t[] = { 
+		// front
+		0,1,4,
+		1,5,4,
+
+		// back 2,3,6,7
+		3,2,6,
+		3,6,7,
+
+		// top
+		6,4,5,
+		6,5,7,
+
+		// bottom 0,1,2,3
+		0,2,1,
+		1,2,3,
+
+		//right
+		5,1,3,
+		5,3,7,
+
+		// left 6,4,2,0
+		0,4,2,
+		2,4,6
+	};
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 45);
 
 	renderer.GetMeshManager()->LoadMesh(cube);
 
@@ -49,7 +78,6 @@ void PlanetEngine::Run()
 		//ProcessInput();
 		//UpdateGameplay();
 		
-		//renderer.Render();
 		renderer.RenderMesh(cube);
 		renderer.SwapBuffers();
 	}
