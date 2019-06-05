@@ -2,22 +2,20 @@
 
 #include <iostream>
 
-Mesh::Mesh(Vertex* verticies, size_t vertexCount, unsigned short* triangles, size_t trangleCount)
+Mesh::Mesh(const Vertex* verticies, size_t vertexCount, const unsigned short* triangles, size_t trangleCount)
 {
 	mVerticies.assign(verticies, verticies + vertexCount);
 	mTriangles.assign(triangles, triangles + trangleCount);
-
-	RecalculateNormals();
 }
 
-#pragma optimize("", off)
+Mesh::Mesh(const std::vector<Vertex>& verticies, const std::vector<unsigned short>& triangles)
+{
+	mVerticies = verticies;
+	mTriangles = triangles;
+}
+
 void Mesh::RecalculateNormals()
 {
-	Vector s1{ 0.0f, 1.0f, 0.0f };
-	Vector s2{ 1.0f, 0.0f, 0.0f };
-	Vector r = s1.Cross(s2);
-	
-
 	// reset all normals
 	for (Vertex& vert : mVerticies)
 	{
@@ -48,5 +46,3 @@ void Mesh::RecalculateNormals()
 		vert.normal /= vert.normal.Length();
 	}
 }
-
-#pragma optimize("", on)

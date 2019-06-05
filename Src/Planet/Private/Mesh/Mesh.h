@@ -7,8 +7,8 @@
 
 struct Vertex
 {
-	Vertex(float x, float y, float z) :
-		positon{x, y, z}
+	Vertex(const Vector& inPos, const Vector& inNorm = Vector{ 1.0f, 0.0f, 0.0f }) :
+		positon{inPos}, normal{inNorm}
 	{}
 
 	Vector positon;
@@ -20,7 +20,8 @@ class Mesh
 	friend class MeshManager;
 
 public:
-	Mesh(Vertex* verticies, size_t vertexCount, unsigned short* triangles, size_t trangleCount);
+	Mesh(const Vertex* verticies, size_t vertexCount, const unsigned short* triangles, size_t trangleCount);
+	Mesh(const std::vector<Vertex>& verticies, const std::vector<unsigned short>& triangles);
 
 	inline bool IsLoaded() const { return handle != nullptr; }
 	inline GPUMeshHandle* GetGPUHandle() const { return handle; }

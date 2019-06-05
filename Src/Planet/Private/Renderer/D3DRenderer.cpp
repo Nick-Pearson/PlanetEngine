@@ -5,7 +5,6 @@
 #include <wrl/client.h>
 #include <D3Dcompiler.h>
 #include <DirectXMath.h>
-#include <xutility>
 #include "../Mesh/MeshManager.h"
 #include "../Mesh/Mesh.h"
 
@@ -127,8 +126,10 @@ void D3DRenderer::SwapBuffers()
 
 void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 {
+	if (!mesh) return;
+
 	GPUMeshHandle* meshHandle = mesh->GetGPUHandle();
-	if (meshHandle == nullptr) return;
+	if (!meshHandle) return;
 
 	struct ConstantBuffer
 	{
@@ -143,10 +144,11 @@ void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 			DirectX::XMMatrixRotationY(-angle * 0.5f)
 		),
 		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixTranslation(0.0f,0.0f,5.0f)
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *
+			DirectX::XMMatrixTranslation(3.0f,0.0f,6.0f)
 		),
 		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,10.0f)
+			DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,5000.0f)
 		)
 	};
 	angle += 0.02f;

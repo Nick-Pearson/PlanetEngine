@@ -39,6 +39,9 @@
     <ClCompile Include="Src\Planet\Private\Mesh\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Mesh\OBJImporter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h">
@@ -72,6 +75,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Src\Planet\Private\Math\Vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Mesh\OBJImporter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

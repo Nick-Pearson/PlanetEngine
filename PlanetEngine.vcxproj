@@ -75,6 +75,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
+      <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -118,6 +119,7 @@
   <ItemGroup>
     <ClCompile Include="Src\Planet\Private\Mesh\Mesh.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\MeshManager.cpp" />
+    <ClCompile Include="Src\Planet\Private\Mesh\OBJImporter.cpp" />
     <ClCompile Include="Src\Planet\Private\PlanetEngine.cpp" />
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
@@ -129,6 +131,7 @@
     <ClInclude Include="Src\Planet\Private\Math\Vector.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Mesh.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\MeshManager.h" />
+    <ClInclude Include="Src\Planet\Private\Mesh\OBJImporter.h" />
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h" />
     <ClInclude Include="Src\Planet\Private\Platform\PlanetWindows.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Platform.h" />

@@ -9,6 +9,10 @@ public:
 	float y = 0.0f;
 	float z = 0.0f;
 
+	Vector(float inX = 0.0f, float inY = 0.0f, float inZ = 0.0f) : 
+		x(inX), y(inY), z(inZ)
+	{}
+
 	Vector operator/(const Vector& other)
 	{
 		Vector res = *this;

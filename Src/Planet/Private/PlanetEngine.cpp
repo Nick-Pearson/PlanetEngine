@@ -5,6 +5,7 @@
 #include "Mesh/Mesh.h"
 
 #include <memory>
+#include "Mesh/OBJImporter.h"
 
 PlanetEngine::PlanetEngine()
 {
@@ -31,14 +32,14 @@ void PlanetEngine::Run()
 	Renderer renderer{ window };
 
 	Vertex v[] = {
-		{ -1.0f, -1.0f, 1.0f },
-		{ 1.0f,  -1.0f, 1.0f },
-		{ -1.0f, -1.0f, -1.0f },
-		{ 1.0f,  -1.0f, -1.0f },
-		{ -1.0f, 1.0f, 1.0f },
-		{ 1.0f,  1.0f, 1.0f },
-		{ -1.0f, 1.0f, -1.0f },
-		{ 1.0f,  1.0f, -1.0f },
+		Vector{ -1.0f, -1.0f, 1.0f },
+		Vector{ 1.0f,  -1.0f, 1.0f },
+		Vector{ -1.0f, -1.0f, -1.0f },
+		Vector{ 1.0f,  -1.0f, -1.0f },
+		Vector{ -1.0f, 1.0f, 1.0f },
+		Vector{ 1.0f,  1.0f, 1.0f },
+		Vector{ -1.0f, 1.0f, -1.0f },
+		Vector{ 1.0f,  1.0f, -1.0f },
 	};
 	unsigned short t[] = { 
 		// front
@@ -66,8 +67,12 @@ void PlanetEngine::Run()
 		0,4,6
 	};
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
+	cube->RecalculateNormals();
 
-	renderer.GetMeshManager()->LoadMesh(cube);
+	std::shared_ptr<Mesh> model = OBJImporter::Import("Assets/Models/teapot.obj");
+
+	renderer.GetMeshManager()->LoadMesh(model);
+	//renderer.GetMeshManager()->LoadMesh(cube);
 
 	ExitCode = -1;
 	while (ExitCode == -1)
@@ -78,11 +83,13 @@ void PlanetEngine::Run()
 		//ProcessInput();
 		//UpdateGameplay();
 		
-		renderer.RenderMesh(cube);
+		//renderer.RenderMesh(cube);
+		renderer.RenderMesh(model);
 		renderer.SwapBuffers();
 	}
 
-	renderer.GetMeshManager()->UnloadMesh(cube);
+	//renderer.GetMeshManager()->UnloadMesh(cube);
+	renderer.GetMeshManager()->UnloadMesh(model);
 }
 
 #if PLATFORM_WIN
