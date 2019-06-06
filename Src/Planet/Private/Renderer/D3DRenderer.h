@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <dxgidebug.h>
 #include <iostream>
+#include <wrl/client.h>
 
 #define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { std::cout << "Error : " << r << std::endl; } }
 
@@ -42,19 +43,20 @@ public:
 
 	void RenderMesh(std::shared_ptr<Mesh> mesh);
 
-	inline MeshManager* GetMeshManager() const { return mMeshManager; }
+	inline MeshManager* GetMeshManager() const { return mMeshManager.get(); }
 
 private:
-	ID3D11Device* mDevice = nullptr;
-	IDXGISwapChain* mSwapChain = nullptr;
-	ID3D11DeviceContext* mContext = nullptr;
-	ID3D11RenderTargetView* mTarget = nullptr;
-	IDXGIInfoQueue* mDxgiInfoQueue = nullptr;
+	Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
+	Microsoft::WRL::ComPtr <IDXGISwapChain> mSwapChain;
+	Microsoft::WRL::ComPtr <ID3D11DeviceContext> mContext;
+	Microsoft::WRL::ComPtr <ID3D11RenderTargetView> mTarget;
+	Microsoft::WRL::ComPtr <ID3D11DepthStencilView> mDepthStencilView;
+	Microsoft::WRL::ComPtr <IDXGIInfoQueue> mDxgiInfoQueue;
 
-	D3DShader* vertexShader = nullptr;
-	D3DShader* pixelShader = nullptr;
+	std::shared_ptr<D3DShader> vertexShader;
+	std::shared_ptr <D3DShader> pixelShader;
 
-	MeshManager* mMeshManager = nullptr;
+	std::shared_ptr <MeshManager> mMeshManager;
 
 	float aspectRatio;
 	float angle = 0.0f;

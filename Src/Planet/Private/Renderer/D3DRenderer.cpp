@@ -42,19 +42,52 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 		0,
 		D3D11_SDK_VERSION,
 		&sd,
-		&mSwapChain,
-		&mDevice,
+		mSwapChain.GetAddressOf(),
+		mDevice.GetAddressOf(),
 		nullptr,
-		&mContext
+		mContext.GetAddressOf()
 	);
 
 	// setup viewport and buffers
-	ID3D11Resource* BackBuffer = nullptr;
-	d3dAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), (void**)&BackBuffer));
-	d3dAssert(mDevice->CreateRenderTargetView(BackBuffer, nullptr, &mTarget));
-	BackBuffer->Release();
+	Microsoft::WRL::ComPtr <ID3D11Resource> BackBuffer;
+	d3dAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), (void**)BackBuffer.GetAddressOf()));
+	d3dAssert(mDevice->CreateRenderTargetView(BackBuffer.Get(), nullptr, mTarget.GetAddressOf()));
 
-	mContext->OMSetRenderTargets(1u, &mTarget, nullptr);
+	// create depth stencil state
+	D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+	dsDesc.DepthEnable = TRUE;
+	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+	Microsoft::WRL::ComPtr <ID3D11DepthStencilState> DSState;
+	d3dAssert(mDevice->CreateDepthStencilState(&dsDesc, DSState.GetAddressOf()));
+
+	// bind depth state
+	mContext->OMSetDepthStencilState(DSState.Get(), 1u);
+
+	// create depth stencil texture
+	Microsoft::WRL::ComPtr <ID3D11Texture2D> DepthStencil = nullptr;
+	D3D11_TEXTURE2D_DESC descDepth = {};
+	descDepth.Width = (UINT)targetWindow.GetSizeX();
+	descDepth.Height = (UINT)targetWindow.GetSizeY();
+	descDepth.MipLevels = 1u;
+	descDepth.ArraySize = 1u;
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT;
+	descDepth.SampleDesc.Count = 1u;
+	descDepth.SampleDesc.Quality = 0u;
+	descDepth.Usage = D3D11_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	d3dAssert(mDevice->CreateTexture2D(&descDepth, nullptr, DepthStencil.GetAddressOf()));
+
+	// create view of depth stensil texture
+	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+	descDSV.Format = DXGI_FORMAT_D32_FLOAT;
+	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0u;
+	d3dAssert(mDevice->CreateDepthStencilView(
+		DepthStencil.Get(), &descDSV, mDepthStencilView.GetAddressOf()
+	));
+
+	mContext->OMSetRenderTargets(1u, mTarget.GetAddressOf(), mDepthStencilView.Get());
 
 	D3D11_VIEWPORT vp;
 	vp.Width = (float)targetWindow.GetSizeX();
@@ -70,8 +103,8 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	// TODO: Bind to event on window changed size
 
 	// Compile Shaders
-	vertexShader = new D3DShader{ L"VertexShader.hlsl", ShaderType::Vertex, mDevice };
-	pixelShader = new D3DShader{ L"PixelShader.hlsl", ShaderType::Pixel, mDevice };
+	vertexShader = std::make_shared<D3DShader>(L"VertexShader.hlsl", ShaderType::Vertex, mDevice );
+	pixelShader = std::make_shared<D3DShader>(L"PixelShader.hlsl", ShaderType::Pixel, mDevice );
 
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
@@ -95,25 +128,13 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	typedef HRESULT (WINAPI* DXGIGetDebugInterface)(REFIID, IDXGIInfoQueue **);
 	const auto DxgiGetDebugInterface = reinterpret_cast<DXGIGetDebugInterface>(reinterpret_cast<void*>(GetProcAddress(hModDxgiDebug, "DXGIGetDebugInterface")));
 
-	DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), &mDxgiInfoQueue);
+	DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
 
-	mMeshManager = new MeshManager{ mDevice };
+	mMeshManager = std::make_shared<MeshManager>(mDevice);
 }
 
 D3DRenderer::~D3DRenderer()
 {
-	if (mContext)
-		mContext->Release();
-	
-	if (mSwapChain)
-		mSwapChain->Release();
-	
-	if (mDevice)
-		mDevice->Release();
-
-	delete vertexShader;
-	delete pixelShader;
-	delete mMeshManager;
 }
 
 void D3DRenderer::SwapBuffers()
@@ -121,7 +142,8 @@ void D3DRenderer::SwapBuffers()
 	mSwapChain->Present(1u, 0u);
 
 	const float colour[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	mContext->ClearRenderTargetView(mTarget, colour);
+	mContext->ClearRenderTargetView(mTarget.Get(), colour);
+	mContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
 }
 
 void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
@@ -144,8 +166,8 @@ void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 			DirectX::XMMatrixRotationY(-angle * 0.5f)
 		),
 		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *
-			DirectX::XMMatrixTranslation(3.0f,0.0f,6.0f)
+			DirectX::XMMatrixScaling(20.0f, 20.0f, 20.0f) *
+			DirectX::XMMatrixTranslation(0.0f,0.0f,6.0f)
 		),
 		DirectX::XMMatrixTranspose(
 			DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,5000.0f)
@@ -172,8 +194,8 @@ void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 	mContext->IASetVertexBuffers(0u, 1u, meshHandle->vertexBuffer.GetAddressOf(), &stride, &offset);
 	mContext->IASetIndexBuffer(meshHandle->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
-	pixelShader->Use(mContext);
-	vertexShader->Use(mContext);
+	pixelShader->Use(mContext.Get());
+	vertexShader->Use(mContext.Get());
 
 	mContext->DrawIndexed(meshHandle->numTriangles, 0u, 0u);
 	d3dFlushDebugMessages();

@@ -3,16 +3,13 @@
 #include "Mesh.h"
 #include "../Renderer/D3DRenderer.h"
 
-MeshManager::MeshManager(ID3D11Device* device) :
+MeshManager::MeshManager(Microsoft::WRL::ComPtr <ID3D11Device> device) :
 	mDevice(device)
 {
-	mDevice->AddRef();
 }
 
 MeshManager::~MeshManager()
 {
-	if (mDevice)
-		mDevice->Release();
 }
 
 void MeshManager::LoadMesh(std::shared_ptr<Mesh> mesh)

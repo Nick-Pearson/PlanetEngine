@@ -8,11 +8,9 @@
 
 #include "D3DRenderer.h"
 
-D3DShader::D3DShader(const wchar_t* filename, ShaderType type, ID3D11Device* inDevice) :
+D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice) :
 	shaderType(type), mDevice(inDevice)
 {
-	mDevice->AddRef();
-
 	std::wstring fullpath = filename;
 	fullpath.insert(0, L"./Shader/");
 
@@ -31,25 +29,16 @@ D3DShader::D3DShader(const wchar_t* filename, ShaderType type, ID3D11Device* inD
 
 	if (shaderType == ShaderType::Pixel)
 	{
-		d3dAssert(mDevice->CreatePixelShader(mShaderBlob->GetBufferPointer(), mShaderBlob->GetBufferSize(), nullptr, &mPixelHandle));
+		d3dAssert(mDevice->CreatePixelShader(mShaderBlob->GetBufferPointer(), mShaderBlob->GetBufferSize(), nullptr, mPixelHandle.GetAddressOf()));
 	}
 	else
 	{
-		d3dAssert(mDevice->CreateVertexShader(mShaderBlob->GetBufferPointer(), mShaderBlob->GetBufferSize(), nullptr, &mVertexHandle));
+		d3dAssert(mDevice->CreateVertexShader(mShaderBlob->GetBufferPointer(), mShaderBlob->GetBufferSize(), nullptr, mVertexHandle.GetAddressOf()));
 	}
 }
 
 D3DShader::~D3DShader()
 {
-	if (mPixelHandle)
-		mPixelHandle->Release();
-
-	if (mVertexHandle)
-		mVertexHandle->Release();
-
-	if (mDevice)
-		mDevice->Release();
-
 	if (mShaderBlob)
 		mShaderBlob->Release();
 }
@@ -58,11 +47,11 @@ void D3DShader::Use(ID3D11DeviceContext* context)
 {
 	if (shaderType == ShaderType::Pixel)
 	{
-		context->PSSetShader(mPixelHandle, nullptr, 0u);
+		context->PSSetShader(mPixelHandle.Get(), nullptr, 0u);
 	}
 	else
 	{
-		context->VSSetShader(mVertexHandle, nullptr, 0u);
+		context->VSSetShader(mVertexHandle.Get(), nullptr, 0u);
 	}
 }
 

@@ -69,7 +69,7 @@ void PlanetEngine::Run()
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
 	cube->RecalculateNormals();
 
-	std::shared_ptr<Mesh> model = OBJImporter::Import("Assets/Models/teapot.obj");
+	std::shared_ptr<Mesh> model = OBJImporter::Import("Assets/Models/bunny.obj");
 
 	renderer.GetMeshManager()->LoadMesh(model);
 	//renderer.GetMeshManager()->LoadMesh(cube);

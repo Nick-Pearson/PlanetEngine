@@ -27,7 +27,7 @@ class MeshManager
 {
 public:
 
-	MeshManager(ID3D11Device* device);
+	MeshManager(Microsoft::WRL::ComPtr <ID3D11Device> device);
 	~MeshManager();
 
 	void LoadMesh(std::shared_ptr<Mesh> mesh);
@@ -39,5 +39,5 @@ private:
 
 	LinkedList <GPUMeshHandle> mLoadedMeshes;
 
-	ID3D11Device* mDevice;
+	Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
 };
