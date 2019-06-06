@@ -6,6 +6,7 @@
 
 #include <memory>
 #include "Mesh/OBJImporter.h"
+#include "Mesh/Primitives.h"
 
 PlanetEngine::PlanetEngine()
 {
@@ -69,7 +70,9 @@ void PlanetEngine::Run()
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
 	cube->RecalculateNormals();
 
-	std::shared_ptr<Mesh> model = OBJImporter::Import("Assets/Models/bunny.obj");
+	//std::shared_ptr<Mesh> model = OBJImporter::Import("Assets/Models/bunny.obj");
+	std::shared_ptr<Mesh> model = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(2.0f), 5);
+	model->FlipFaces();
 
 	renderer.GetMeshManager()->LoadMesh(model);
 	//renderer.GetMeshManager()->LoadMesh(cube);

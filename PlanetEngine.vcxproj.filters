@@ -42,6 +42,12 @@
     <ClCompile Include="Src\Planet\Private\Mesh\OBJImporter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Mesh\Primitives.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Math\Elipsoid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h">
@@ -78,6 +84,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Src\Planet\Private\Mesh\OBJImporter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Mesh\Primitives.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Math\Elipsoid.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

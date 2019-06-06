@@ -27,6 +27,7 @@ public:
 	inline GPUMeshHandle* GetGPUHandle() const { return handle; }
 
 	void RecalculateNormals();
+	void FlipFaces();
 
 private:
 	std::vector<Vertex> mVerticies;

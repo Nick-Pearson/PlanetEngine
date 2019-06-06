@@ -46,3 +46,18 @@ void Mesh::RecalculateNormals()
 		vert.normal /= vert.normal.Length();
 	}
 }
+
+void Mesh::FlipFaces()
+{
+	for (size_t i = 0; i < mTriangles.size(); i += 3)
+	{
+		unsigned short tmp = mTriangles[i];
+		mTriangles[i] = mTriangles[i + 1];
+		mTriangles[i + 1] = tmp;
+	}
+
+	for (Vertex& v : mVerticies)
+	{
+		v.normal *= -1.0f;
+	}
+}

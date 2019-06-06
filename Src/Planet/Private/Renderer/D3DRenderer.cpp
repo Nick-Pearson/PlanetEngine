@@ -162,12 +162,11 @@ void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
 	const ConstantBuffer cb =
 	{
 		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixRotationX(angle) *
-			DirectX::XMMatrixRotationY(-angle * 0.5f)
+			DirectX::XMMatrixRotationY(angle)
 		),
 		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixScaling(20.0f, 20.0f, 20.0f) *
-			DirectX::XMMatrixTranslation(0.0f,0.0f,6.0f)
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *
+			DirectX::XMMatrixTranslation(0.0f,-.5f,4.0f)
 		),
 		DirectX::XMMatrixTranspose(
 			DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,5000.0f)

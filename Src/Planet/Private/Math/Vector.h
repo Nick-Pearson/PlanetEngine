@@ -43,6 +43,36 @@ public:
 		return *this;
 	}
 
+	Vector operator*(const Vector& other)
+	{
+		Vector res = *this;
+		res *= other;
+		return res;
+	}
+
+	Vector& operator*=(const Vector& other)
+	{
+		x *= other.x;
+		y *= other.y;
+		z *= other.z;
+		return *this;
+	}
+
+	Vector operator*(float other)
+	{
+		Vector res = *this;
+		res *= other;
+		return res;
+	}
+
+	Vector& operator*=(float value)
+	{
+		x *= value;
+		y *= value;
+		z *= value;
+		return *this;
+	}
+
 	Vector operator+(const Vector& other)
 	{
 		Vector res = *this;
@@ -55,6 +85,26 @@ public:
 		x += other.x;
 		y += other.y;
 		z += other.z;
+		return *this;
+	}
+	
+	Vector operator-()
+	{
+		return *this * -1.0f;
+	}
+
+	Vector operator-(float other)
+	{
+		Vector res = *this;
+		res *= other;
+		return res;
+	}
+
+	Vector& operator-=(float value)
+	{
+		x -= value;
+		y -= value;
+		z -= value;
 		return *this;
 	}
 
