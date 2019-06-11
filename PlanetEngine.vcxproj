@@ -117,9 +117,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Planet\Private\Entity\Component.cpp" />
+    <ClCompile Include="Src\Planet\Private\Entity\Entity.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Elipsoid.cpp" />
+    <ClCompile Include="Src\Planet\Private\Math\Transform.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\Mesh.cpp" />
-    <ClCompile Include="Src\Planet\Private\Mesh\MeshManager.cpp" />
+    <ClCompile Include="Src\Planet\Private\Mesh\MeshComponent.cpp" />
+    <ClCompile Include="Src\Planet\Private\Mesh\GPUResourceManager.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\OBJImporter.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\Primitives.cpp" />
     <ClCompile Include="Src\Planet\Private\PlanetEngine.cpp" />
@@ -127,13 +131,19 @@
     <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DShader.cpp" />
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
+    <ClCompile Include="Src\Planet\Private\World\Scene.cpp" />
+    <ClCompile Include="Src\Planet\Private\World\SkyDome.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\Container\LinkedList.h" />
+    <ClInclude Include="Src\Planet\Private\Entity\Component.h" />
+    <ClInclude Include="Src\Planet\Private\Entity\Entity.h" />
     <ClInclude Include="Src\Planet\Private\Math\Elipsoid.h" />
+    <ClInclude Include="Src\Planet\Private\Math\Transform.h" />
     <ClInclude Include="Src\Planet\Private\Math\Vector.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Mesh.h" />
-    <ClInclude Include="Src\Planet\Private\Mesh\MeshManager.h" />
+    <ClInclude Include="Src\Planet\Private\Mesh\MeshComponent.h" />
+    <ClInclude Include="Src\Planet\Private\Mesh\GPUResourceManager.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\OBJImporter.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Primitives.h" />
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h" />
@@ -143,6 +153,10 @@
     <ClInclude Include="Src\Planet\Private\Renderer\D3DRenderer.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\D3DShader.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\Renderer.h" />
+    <ClInclude Include="Src\Planet\Private\Renderer\RenderState.h" />
+    <ClInclude Include="Src\Planet\Private\World\CameraComponent.h" />
+    <ClInclude Include="Src\Planet\Private\World\Scene.h" />
+    <ClInclude Include="Src\Planet\Private\World\SkyDome.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\PixelShader.hlsl">
@@ -150,6 +164,9 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">5.0</ShaderModel>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\SkySphere.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
     </FxCompile>
     <FxCompile Include="Shader\VertexShader.hlsl" />
   </ItemGroup>

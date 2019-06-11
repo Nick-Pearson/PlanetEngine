@@ -32,7 +32,7 @@ namespace
 	}
 }
 
-std::shared_ptr<Mesh> OBJImporter::Import(const char* filepath)
+std::shared_ptr<Mesh> OBJImporter::Import(const char* filepath, float scaleFactor /*= 1.0f*/)
 {
 	std::ifstream file;
 	file.open(filepath, std::ios::in);
@@ -97,7 +97,7 @@ std::shared_ptr<Mesh> OBJImporter::Import(const char* filepath)
 			float y = (float)std::atof(parts[2].c_str());
 			float z = (float)std::atof(parts[3].c_str());
 
-			vertPositions.push_back(Vector{ x,y,z });
+			vertPositions.push_back(Vector{ x,y,z } * scaleFactor);
 		}
 		else if (parts[0] == "vn" && parts.size() == 4)
 		{

@@ -4,9 +4,10 @@
 #include "D3DShader.h"
 #include <wrl/client.h>
 #include <D3Dcompiler.h>
-#include <DirectXMath.h>
-#include "../Mesh/MeshManager.h"
+#include "../Mesh/GPUResourceManager.h"
 #include "../Mesh/Mesh.h"
+#include "../World/CameraComponent.h"
+#include "../Math/Transform.h"
 
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -78,7 +79,7 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	d3dAssert(mDevice->CreateTexture2D(&descDepth, nullptr, DepthStencil.GetAddressOf()));
 
-	// create view of depth stensil texture
+	// create view of depth stencil texture
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
 	descDSV.Format = DXGI_FORMAT_D32_FLOAT;
 	descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
@@ -104,7 +105,6 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 
 	// Compile Shaders
 	vertexShader = std::make_shared<D3DShader>(L"VertexShader.hlsl", ShaderType::Vertex, mDevice );
-	pixelShader = std::make_shared<D3DShader>(L"PixelShader.hlsl", ShaderType::Pixel, mDevice );
 
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
 	const D3D11_INPUT_ELEMENT_DESC ied[] =
@@ -122,6 +122,13 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	// bind vertex layout
 	mContext->IASetInputLayout(InputLayout.Get());
 	mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	vertexShader->Use(mContext.Get());
+
+	CreateConstantBuffer(&mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
+	CreateConstantBuffer(&mFastConstantBuffer, &mFastConstantBufferData, sizeof(mFastConstantBufferData));
+
+	ID3D11Buffer* Buffers[2] = { mSlowConstantBuffer.Get(), mFastConstantBuffer.Get() };
+	mContext->VSSetConstantBuffers(0u, 2u, Buffers);
 
 	const auto hModDxgiDebug = LoadLibraryEx("dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	// get address of DXGIGetDebugInterface in dll
@@ -130,7 +137,7 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 
 	DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
 
-	mMeshManager = std::make_shared<MeshManager>(mDevice);
+	mMeshManager = std::make_shared<GPUResourceManager>(mDevice);
 }
 
 D3DRenderer::~D3DRenderer()
@@ -141,61 +148,113 @@ void D3DRenderer::SwapBuffers()
 {
 	mSwapChain->Present(1u, 0u);
 
-	const float colour[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	const float colour[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
 	mContext->ClearRenderTargetView(mTarget.Get(), colour);
 	mContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
 }
 
-void D3DRenderer::RenderMesh(std::shared_ptr<Mesh> mesh)
+void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
 {
-	if (!mesh) return;
+	if (!camera) return;
 
-	GPUMeshHandle* meshHandle = mesh->GetGPUHandle();
-	if (!meshHandle) return;
+	// setup projection matrix
+	// TODO: Maybe not do this every frame?
+	// TODO: Collect stats on how often these buffers are updated
+	mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspectRatio, camera->NearClip, camera->FarClip));
+	mSlowConstantBufferData.world = Transform().GetMatrix();
 
-	struct ConstantBuffer
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	mContext->Map(mSlowConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	std::memcpy(mappedResource.pData, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
+	mContext->Unmap(mSlowConstantBuffer.Get(), 0);
+
+	currentRenderState.UseWorldMatrix = false;
+
+	// sort render states
+	// use array sort for better cache performance in the sort and the subsequent loop
+	std::vector<RenderState> sortedStates;
+	renderStates.SortToArray([&](const RenderState& a, const RenderState& b) {
+		if (!a.UseDepthBuffer && b.UseDepthBuffer) return true;
+		return false;
+	}, sortedStates);
+
+	// draw each state
+	for (const RenderState& state : sortedStates)
 	{
-		DirectX::XMMATRIX model;
-		DirectX::XMMATRIX world;
-		DirectX::XMMATRIX view;
-	};
-	const ConstantBuffer cb =
-	{
-		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixRotationY(angle)
-		),
-		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *
-			DirectX::XMMatrixTranslation(0.0f,-.5f,4.0f)
-		),
-		DirectX::XMMatrixTranspose(
-			DirectX::XMMatrixPerspectiveLH(1.0f,aspectRatio,0.5f,5000.0f)
-		)
-	};
-	angle += 0.02f;
+		Draw(camera.get(), state);
+	}
+}
 
-	Microsoft::WRL::ComPtr<ID3D11Buffer> pConstantBuffer;
+RenderState* D3DRenderer::AddRenderState(const RenderState& state)
+{
+	return renderStates.Add(state);
+}
+
+void D3DRenderer::RemoveRenderState(const RenderState* state)
+{
+	renderStates.Remove(state);
+}
+
+void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
+{
+	if (!state.IsValid()) return;
+
+	// apply the render state
+	if (currentRenderState.UseDepthBuffer != state.UseDepthBuffer)
+	{
+		// apply depth buffer
+		D3D11_DEPTH_STENCIL_DESC dsDesc = {};
+		dsDesc.DepthEnable = TRUE;
+		dsDesc.DepthWriteMask = state.UseDepthBuffer ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
+		dsDesc.DepthFunc = state.UseDepthBuffer ? D3D11_COMPARISON_LESS : D3D11_COMPARISON_ALWAYS;
+		Microsoft::WRL::ComPtr <ID3D11DepthStencilState> DSState;
+		d3dAssert(mDevice->CreateDepthStencilState(&dsDesc, DSState.GetAddressOf()));
+
+		// bind depth state
+		mContext->OMSetDepthStencilState(DSState.Get(), 1u);
+	}
+
+	if (currentRenderState.UseWorldMatrix != state.UseWorldMatrix)
+	{
+		Transform cameraTransform = state.UseWorldMatrix ? component->GetWorldTransform() : Transform();
+		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
+		mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
+
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		mContext->Map(mSlowConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		std::memcpy(mappedResource.pData, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
+		mContext->Unmap(mSlowConstantBuffer.Get(), 0);
+	}
+
+	if (currentRenderState.mesh != state.mesh)
+	{
+		const unsigned int stride = sizeof(Vertex);
+		const unsigned int offset = 0u;
+		mContext->IASetVertexBuffers(0u, 1u, state.mesh->vertexBuffer.GetAddressOf(), &stride, &offset);
+		mContext->IASetIndexBuffer(state.mesh->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
+	}
+
+	if (currentRenderState.pixelShader != state.pixelShader)
+	{
+		state.pixelShader->Use(mContext.Get());
+	}
+
+	currentRenderState = state;
+
+	mContext->DrawIndexed(state.mesh->numTriangles, 0u, 0u);
+	d3dFlushDebugMessages();
+}
+
+void D3DRenderer::CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize)
+{
 	D3D11_BUFFER_DESC cbd;
 	cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbd.Usage = D3D11_USAGE_DYNAMIC;
 	cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	cbd.MiscFlags = 0u;
-	cbd.ByteWidth = sizeof(cb);
+	cbd.ByteWidth = bufferSize;
 	cbd.StructureByteStride = 0u;
 	D3D11_SUBRESOURCE_DATA csd = {};
-	csd.pSysMem = &cb;
-	d3dAssert(mDevice->CreateBuffer(&cbd, &csd, &pConstantBuffer));
-
-	mContext->VSSetConstantBuffers(0u, 1u, pConstantBuffer.GetAddressOf());
-
-	const unsigned int stride = sizeof(Vertex);
-	const unsigned int offset = 0u;
-	mContext->IASetVertexBuffers(0u, 1u, meshHandle->vertexBuffer.GetAddressOf(), &stride, &offset);
-	mContext->IASetIndexBuffer(meshHandle->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-
-	pixelShader->Use(mContext.Get());
-	vertexShader->Use(mContext.Get());
-
-	mContext->DrawIndexed(meshHandle->numTriangles, 0u, 0u);
-	d3dFlushDebugMessages();
+	csd.pSysMem = bufferPtr;
+	d3dAssert(mDevice->CreateBuffer(&cbd, &csd, outBuffer));
 }

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <algorithm>
+
 template<typename T>
 class LinkedList
 {
@@ -19,6 +22,22 @@ public:
 	T* Add(const T& item);
 
 	bool Remove(const T& item);
+	bool Remove(const T* item);
+
+	template<typename ComparisonFunc>
+	void SortToArray(ComparisonFunc function, std::vector<T>& outArray)
+	{
+		outArray.reserve(Length());
+
+		Node* node = list;
+		while (node != nullptr)
+		{
+			outArray.push_back(node->data);
+			node = node->next;
+		}
+
+		std::sort(outArray.begin(), outArray.end(), function);
+	}
 
 private:
 
@@ -41,12 +60,19 @@ T* LinkedList<T>::Add(const T& item)
 	}
 
 	back = newNode;
+	++size;
 
 	return &newNode->data;
 }
 
 template<typename T>
 bool LinkedList<T>::Remove(const T& item)
+{
+	return false;
+}
+
+template<typename T>
+bool LinkedList<T>::Remove(const T* item)
 {
 	return false;
 }

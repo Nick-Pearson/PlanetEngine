@@ -22,7 +22,6 @@ public:
 
 private:
 
-	void* gpuHandle = nullptr;
 	ShaderType shaderType;
 	Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
 

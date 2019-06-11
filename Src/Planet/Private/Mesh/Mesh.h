@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "MeshManager.h"
+#include "GPUResourceManager.h"
 #include "../Math/Vector.h"
 
 struct Vertex
@@ -17,7 +17,7 @@ struct Vertex
 
 class Mesh
 {
-	friend class MeshManager;
+	friend class GPUResourceManager;
 
 public:
 	Mesh(const Vertex* verticies, size_t vertexCount, const unsigned short* triangles, size_t trangleCount);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Platform/PlanetWindows.h"
+#include "Renderer/Renderer.h"
 
 class PlanetEngine
 {
@@ -15,6 +16,8 @@ public:
 	void Run();
 
 	inline int GetExitCode() const { return ExitCode; }
+
+	inline Renderer* GetRenderer() const { return renderer; }
 	
 #if PLATFORM_WIN
 	void PumpWindowsMessages();
@@ -25,5 +28,7 @@ public:
 private:
 
 	int ExitCode;
+
+	Renderer* renderer;
 
 };

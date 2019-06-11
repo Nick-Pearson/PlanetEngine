@@ -1,12 +1,16 @@
 #include "PlanetEngine.h"
 
 #include "Platform/Window.h"
-#include "Renderer/Renderer.h"
 #include "Mesh/Mesh.h"
 
 #include <memory>
 #include "Mesh/OBJImporter.h"
 #include "Mesh/Primitives.h"
+#include "Entity/Entity.h"
+#include "World/Scene.h"
+#include "Mesh/MeshComponent.h"
+#include "World/CameraComponent.h"
+#include "World/SkyDome.h"
 
 PlanetEngine::PlanetEngine()
 {
@@ -25,57 +29,25 @@ PlanetEngine* PlanetEngine::Get()
 	return sEngine;
 }
 
+class CameraComponent;
+
 void PlanetEngine::Run()
 {
 	Window window{1280, 720};
 	window.SetWindowName("PlanetEngine");
 
-	Renderer renderer{ window };
+	renderer = new Renderer{ window };
 
-	Vertex v[] = {
-		Vector{ -1.0f, -1.0f, 1.0f },
-		Vector{ 1.0f,  -1.0f, 1.0f },
-		Vector{ -1.0f, -1.0f, -1.0f },
-		Vector{ 1.0f,  -1.0f, -1.0f },
-		Vector{ -1.0f, 1.0f, 1.0f },
-		Vector{ 1.0f,  1.0f, 1.0f },
-		Vector{ -1.0f, 1.0f, -1.0f },
-		Vector{ 1.0f,  1.0f, -1.0f },
-	};
-	unsigned short t[] = { 
-		// front
-		0,1,5,
-		0,5,4,
+	std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
 
-		// back 2,3,6,7
-		3,2,6,
-		3,6,7,
+	std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-		// top
-		6,4,5,
-		6,5,7,
+	std::shared_ptr<Entity> cameraEntity = scene->SpawnEntity();
+	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->AddComponent<CameraComponent>();
+	cameraEntity->Translate(Vector{ 0.0f, 0.0f, -4.0f });
 
-		// bottom 0,1,2,3
-		0,3,1,
-		0,2,3,
-
-		//right
-		5,1,3,
-		5,3,7,
-
-		// left 6,4,2,0
-		0,6,2,
-		0,4,6
-	};
-	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
-	cube->RecalculateNormals();
-
-	//std::shared_ptr<Mesh> model = OBJImporter::Import("Assets/Models/bunny.obj");
-	std::shared_ptr<Mesh> model = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(2.0f), 5);
-	model->FlipFaces();
-
-	renderer.GetMeshManager()->LoadMesh(model);
-	//renderer.GetMeshManager()->LoadMesh(cube);
+	scene->SpawnEntity()->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
+	scene->SpawnEntity<SkyDome>();
 
 	ExitCode = -1;
 	while (ExitCode == -1)
@@ -84,15 +56,15 @@ void PlanetEngine::Run()
 		PumpWindowsMessages();
 #endif
 		//ProcessInput();
-		//UpdateGameplay();
+
+		//scene->Update(deltaSeconds);
 		
 		//renderer.RenderMesh(cube);
-		renderer.RenderMesh(model);
-		renderer.SwapBuffers();
+		renderer->Render(cameraComp);
+		renderer->SwapBuffers();
 	}
 
-	//renderer.GetMeshManager()->UnloadMesh(cube);
-	renderer.GetMeshManager()->UnloadMesh(model);
+	delete renderer;
 }
 
 #if PLATFORM_WIN

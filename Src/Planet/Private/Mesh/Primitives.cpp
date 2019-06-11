@@ -30,6 +30,47 @@ std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& el
 	return mesh;
 }
 
+std::shared_ptr<Mesh> Primitives::Cube(float scale)
+{
+	Vertex v[] = {
+		Vector{ -1.0f, -1.0f, 1.0f },
+		Vector{ 1.0f,  -1.0f, 1.0f },
+		Vector{ -1.0f, -1.0f, -1.0f },
+		Vector{ 1.0f,  -1.0f, -1.0f },
+		Vector{ -1.0f, 1.0f, 1.0f },
+		Vector{ 1.0f,  1.0f, 1.0f },
+		Vector{ -1.0f, 1.0f, -1.0f },
+		Vector{ 1.0f,  1.0f, -1.0f },
+	};
+	unsigned short t[] = {
+		// front
+		0,1,5,
+		0,5,4,
+
+		// back 2,3,6,7
+		3,2,6,
+		3,6,7,
+
+		// top
+		6,4,5,
+		6,5,7,
+
+		// bottom 0,1,2,3
+		0,3,1,
+		0,2,3,
+
+		//right
+		5,1,3,
+		5,3,7,
+
+		// left 6,4,2,0
+		0,6,2,
+		0,4,6
+	};
+	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
+	cube->RecalculateNormals();
+}
+
 void Primitives::SubdivisionStep(std::vector<Vertex>& verts, std::vector<unsigned short>& outIndicies, unsigned short v0, unsigned short v1, unsigned short v2, int level)
 {
 	if (level > 0)

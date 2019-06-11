@@ -7,8 +7,10 @@
 #include "../Container/LinkedList.h"
 
 #include <memory>
+#include <unordered_map>
 
 class Mesh;
+class D3DShader;
 
 struct GPUMeshHandle
 {
@@ -23,21 +25,25 @@ struct GPUMeshHandle
 	}
 };
 
-class MeshManager
+class GPUResourceManager
 {
 public:
 
-	MeshManager(Microsoft::WRL::ComPtr <ID3D11Device> device);
-	~MeshManager();
+	GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device);
+	~GPUResourceManager();
 
 	void LoadMesh(std::shared_ptr<Mesh> mesh);
 	void UnloadMesh(std::shared_ptr<Mesh> mesh);
+
+	std::shared_ptr<D3DShader> LoadShader(const char* ShaderFile);
 
 private:
 
 	void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, Microsoft::WRL::ComPtr<ID3D11Buffer>& outBuffer);
 
 	LinkedList <GPUMeshHandle> mLoadedMeshes;
+
+	std::unordered_map<std::string, std::shared_ptr<D3DShader>> loadedShaders;
 
 	Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
 };
