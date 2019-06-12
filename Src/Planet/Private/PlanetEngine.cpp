@@ -11,6 +11,7 @@
 #include "Mesh/MeshComponent.h"
 #include "World/CameraComponent.h"
 #include "World/SkyDome.h"
+#include "Input/InputManager.h"
 
 PlanetEngine::PlanetEngine()
 {
@@ -38,13 +39,18 @@ void PlanetEngine::Run()
 
 	renderer = new Renderer{ window };
 
+	inputManager = new InputManager{};
+	RegisterMessageHandler(inputManager);
+
 	std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
 
 	std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
+	//std::shared_ptr<Entity> cameraEntity = scene->SpawnEntity<FlyCam>();
+	//std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
 	std::shared_ptr<Entity> cameraEntity = scene->SpawnEntity();
 	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->AddComponent<CameraComponent>();
-	cameraEntity->Translate(Vector{ 0.0f, 0.0f, -4.0f });
+	cameraEntity->Translate(Vector{ 0.0f, 2.0f, -4.0f });
 
 	scene->SpawnEntity()->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
 	scene->SpawnEntity<SkyDome>();
@@ -65,6 +71,8 @@ void PlanetEngine::Run()
 	}
 
 	delete renderer;
+	UnregisterMessageHandler(inputManager);
+	delete inputManager;
 }
 
 #if PLATFORM_WIN
@@ -92,6 +100,30 @@ LRESULT CALLBACK PlanetEngine::ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM 
 		break;
 	}
 
+	for (IWindowsMessageHandler* handler : messageHandlers)
+	{
+		if (handler->HandleMessage(hWnd, msg, wParam, lParam))
+			return true;
+	}
+
 	return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
+void PlanetEngine::RegisterMessageHandler(IWindowsMessageHandler* Handler)
+{
+	messageHandlers.push_back(Handler);
+}
+
+void PlanetEngine::UnregisterMessageHandler(IWindowsMessageHandler* Handler)
+{
+	auto it = messageHandlers.begin();
+	for (; it != messageHandlers.end(); it++)
+	{
+		if ((*it) == Handler) break;
+	}
+
+	if(it != messageHandlers.end())
+		messageHandlers.erase(it);
+}
+
 #endif

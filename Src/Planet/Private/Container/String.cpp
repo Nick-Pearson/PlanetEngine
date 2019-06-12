@@ -20,10 +20,9 @@ String::String(unsigned char c)
 
 String::~String()
 {
-	//free(mData);
+	free(mData);
 }
 
-#pragma optimize("", off)
 String String::PrintfInternal(TCHAR* Format, ...)
 {
 	va_list args;
@@ -107,4 +106,3 @@ void String::ResizeTo(int NewLength)
 	mData[NewLength] = '\0';
 	mLength = NewLength;
 }
-#pragma optimize("", on)

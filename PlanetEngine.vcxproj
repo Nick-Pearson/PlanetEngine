@@ -117,8 +117,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Src\Planet\Private\Container\String.cpp" />
     <ClCompile Include="Src\Planet\Private\Entity\Component.cpp" />
     <ClCompile Include="Src\Planet\Private\Entity\Entity.cpp" />
+    <ClCompile Include="Src\Planet\Private\Input\InputManager.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Elipsoid.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Transform.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\Mesh.cpp" />
@@ -127,6 +129,7 @@
     <ClCompile Include="Src\Planet\Private\Mesh\OBJImporter.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\Primitives.cpp" />
     <ClCompile Include="Src\Planet\Private\PlanetEngine.cpp" />
+    <ClCompile Include="Src\Planet\Private\Platform\PlanetWindows.cpp" />
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DShader.cpp" />
@@ -136,8 +139,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\Container\LinkedList.h" />
+    <ClInclude Include="Src\Planet\Private\Container\String.h" />
     <ClInclude Include="Src\Planet\Private\Entity\Component.h" />
     <ClInclude Include="Src\Planet\Private\Entity\Entity.h" />
+    <ClInclude Include="Src\Planet\Private\Input\InputManager.h" />
+    <ClInclude Include="Src\Planet\Private\Input\KeyCode.h" />
     <ClInclude Include="Src\Planet\Private\Math\Elipsoid.h" />
     <ClInclude Include="Src\Planet\Private\Math\Transform.h" />
     <ClInclude Include="Src\Planet\Private\Math\Vector.h" />
@@ -147,6 +153,7 @@
     <ClInclude Include="Src\Planet\Private\Mesh\OBJImporter.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Primitives.h" />
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h" />
+    <ClInclude Include="Src\Planet\Private\PlanetLogging.h" />
     <ClInclude Include="Src\Planet\Private\Platform\PlanetWindows.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Platform.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Window.h" />
