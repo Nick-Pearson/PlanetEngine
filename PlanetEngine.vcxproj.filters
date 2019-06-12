@@ -75,6 +75,9 @@
     <ClCompile Include="Src\Planet\Private\Platform\PlanetWindows.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Editor\FlyCam.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h">
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Src\Planet\Private\PlanetLogging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Editor\FlyCam.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

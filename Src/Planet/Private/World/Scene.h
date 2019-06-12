@@ -13,6 +13,8 @@ public:
 	template<class T = Entity, typename... Args>
 	std::shared_ptr<T> SpawnEntity(Args... args);
 
+	void Update(float deltaSeconds);
+
 private:
 
 	std::vector<std::shared_ptr<Entity>> entities;

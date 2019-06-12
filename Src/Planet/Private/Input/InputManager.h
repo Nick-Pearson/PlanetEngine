@@ -15,6 +15,12 @@ public:
 	bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) override;
 #endif
 
+	inline bool GetIsKeyDown(KeyCode key) const
+	{
+		if (key == KeyCode::INVALID) return false;
+		return keys[(int)key];
+	}
+
 private:
 
 	bool keys[(int)KeyCode::INVALID];

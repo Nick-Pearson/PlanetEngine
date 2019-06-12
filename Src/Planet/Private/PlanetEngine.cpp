@@ -3,7 +3,6 @@
 #include "Platform/Window.h"
 #include "Mesh/Mesh.h"
 
-#include <memory>
 #include "Mesh/OBJImporter.h"
 #include "Mesh/Primitives.h"
 #include "Entity/Entity.h"
@@ -12,6 +11,11 @@
 #include "World/CameraComponent.h"
 #include "World/SkyDome.h"
 #include "Input/InputManager.h"
+#include "Editor/FlyCam.h"
+
+#include <memory>
+#include <chrono>
+#include <thread>
 
 PlanetEngine::PlanetEngine()
 {
@@ -46,14 +50,15 @@ void PlanetEngine::Run()
 
 	std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-	//std::shared_ptr<Entity> cameraEntity = scene->SpawnEntity<FlyCam>();
-	//std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
-	std::shared_ptr<Entity> cameraEntity = scene->SpawnEntity();
-	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->AddComponent<CameraComponent>();
+	std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>();
+	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
 	cameraEntity->Translate(Vector{ 0.0f, 2.0f, -4.0f });
 
 	scene->SpawnEntity()->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
 	scene->SpawnEntity<SkyDome>();
+
+	float deltaTime = 0.01f;
+	auto begin = std::chrono::high_resolution_clock::now();
 
 	ExitCode = -1;
 	while (ExitCode == -1)
@@ -63,11 +68,15 @@ void PlanetEngine::Run()
 #endif
 		//ProcessInput();
 
-		//scene->Update(deltaSeconds);
+		scene->Update(deltaTime);
 		
 		//renderer.RenderMesh(cube);
 		renderer->Render(cameraComp);
 		renderer->SwapBuffers();
+
+		auto end = std::chrono::high_resolution_clock::now();
+		deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(end - begin).count();
+		begin = end;
 	}
 
 	delete renderer;
