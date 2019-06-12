@@ -7,6 +7,7 @@
 #include <wrl/client.h>
 
 #include "D3DRenderer.h"
+#include "../PlanetLogging.h"
 
 D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice) :
 	shaderType(type), mDevice(inDevice)
@@ -22,8 +23,8 @@ D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::C
 
 	if (ErrorBlob)
 	{
-		std::cout << "Error compiling shader file: " << filename << std::endl;
-		std::cout << (const char*)ErrorBlob->GetBufferPointer() << std::endl;
+		P_ERROR(Shader, TEXT("Error compiling shader file: ..."), filename);
+		//std::cout << (const char*)ErrorBlob->GetBufferPointer() << std::endl;
 		return;
 	}
 

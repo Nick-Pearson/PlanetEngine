@@ -8,8 +8,9 @@
 #include <wrl/client.h>
 #include "../Container/LinkedList.h"
 #include "RenderState.h"
+#include "../PlanetLogging.h"
 
-#define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { std::cout << "Error : " << r << std::endl; } }
+#define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { P_ERROR(Renderer, TEXT("Err")) } }
 
 #define d3dFlushDebugMessages() \
 	{ \
@@ -21,7 +22,7 @@
 			char* rawmsg = new char[msg_len]; \
 			auto msg = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(rawmsg); \
 			mDxgiInfoQueue->GetMessage(DXGI_DEBUG_D3D11, i, msg, &msg_len); \
-			std::cout << msg->pDescription << std::endl; \
+			/*P_ERROR(Renderer, TEXT("D3D11 Error: %p "), msg->pDescription);*/ \
 			delete rawmsg; \
 		} \
 	}
@@ -44,6 +45,7 @@ public:
 	D3DRenderer& operator=(const D3DRenderer&) = delete;
 	~D3DRenderer();
 
+	// alignment for Direct X structures
 	void* operator new(size_t i)
 	{
 		return _mm_malloc(i, 16);

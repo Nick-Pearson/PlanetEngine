@@ -7,6 +7,6 @@ class CameraComponent : public Component
 public:
 	//CameraComponent();
 
-	float NearClip = 0.1f;
+	float NearClip = 0.5f;
 	float FarClip = 5000.0f;
 };
