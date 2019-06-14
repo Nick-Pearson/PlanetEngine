@@ -9,9 +9,20 @@ class String
 public:
 
 	// Constructor and Destructor
-	String();
-	String(const String& other);
-	String(String&& other) = default;
+	String()
+	{
+		Empty();
+	}
+
+	String(const String& other)
+	{
+		*this = other;
+	}
+
+	String(String&& other)
+	{
+		*this = other;
+	}
 
 	template<typename CharType>
 	String(const CharType* charArray)
@@ -39,7 +50,11 @@ public:
 		}
 	}
 
-	String(unsigned char c);
+	String(unsigned char c)
+	{
+		ResizeTo(1);
+		mData[0] = c;
+	}
 
 	~String();
 
@@ -64,7 +79,30 @@ public:
 	void operator+=(TCHAR c)
 	{
 		ResizeTo(mLength + 1);
-		mData[mLength] = c;
+		mData[mLength-1] = c;
+	}
+
+	void operator+=(const String& other)
+	{
+		ResizeTo(mLength + other.Length());
+		memcpy(mData + (mLength - other.Length()), other.mData, other.Length());
+	}
+
+	String& operator=(String&& other)
+	{
+		mData = other.mData;
+		mLength = other.mLength;
+
+		other.mData = nullptr;
+		other.ResizeTo(0);
+		return *this;
+	}
+	
+	String& operator=(const String& other)
+	{
+		ResizeTo(other.Length());
+		memcpy(mData, other.mData, other.Length() + 1 * sizeof(TCHAR));
+		return *this;
 	}
 
 public:
@@ -83,6 +121,9 @@ public:
 
 	static String PrintfInternal(TCHAR* Format, ...);
 
+	static String FromFloat(float value);
+	static String FromInt(int value);
+
 public:
 	// Member functions
 
@@ -91,6 +132,8 @@ public:
 	inline void Empty() { ResizeTo(0); }
 
 	void Replace(int startIdx, int endIdx, const String& string);
+
+	void Reverse();
 
 private:
 

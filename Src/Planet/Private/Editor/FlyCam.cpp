@@ -14,7 +14,7 @@ void FlyCam::OnUpdate(float deltaSeconds)
 
 	if (!mgr) return;
 
-	Vector movement;
+	Vector movement, rotation;
 
 	if (mgr->GetIsKeyDown(KeyCode::W))
 	{
@@ -34,5 +34,24 @@ void FlyCam::OnUpdate(float deltaSeconds)
 		movement += Vector(-1.0f, 0.0f, 0.0f);
 	}
 
-	Translate(movement * deltaSeconds * speed);
+	if (mgr->GetIsKeyDown(KeyCode::UP_ARROW))
+	{
+		rotation += Vector(-1.0f, 0.0f, 0.0f);
+	}
+	else if (mgr->GetIsKeyDown(KeyCode::DOWN_ARROW))
+	{
+		rotation += Vector(1.0f, 0.0f, 0.0f);
+	}
+
+	if (mgr->GetIsKeyDown(KeyCode::LEFT_ARROW))
+	{
+		rotation += Vector(0.0f, -1.0f, 0.0f);
+	}
+	else if (mgr->GetIsKeyDown(KeyCode::RIGHT_ARROW))
+	{
+		rotation += Vector(0.0f, 1.0f, 0.0f);
+	}
+
+	Rotate(rotation * deltaSeconds * mTurnSpeed);
+	Translate((transform.rotation * movement) * deltaSeconds * mMoveSpeed);
 }

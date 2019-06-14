@@ -24,3 +24,10 @@ void Entity::Translate(Vector translation)
 {
 	transform.location += translation;
 }
+
+void Entity::Rotate(Vector rotation)
+{
+	if (rotation.IsZero()) return;
+
+	transform.rotation += rotation;
+}

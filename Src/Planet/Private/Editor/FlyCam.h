@@ -18,5 +18,6 @@ public:
 private:
 	std::shared_ptr<CameraComponent> camera;
 
-	float speed = 10.0f;
+	float mMoveSpeed = 10.0f;
+	float mTurnSpeed = 20.0f;
 };

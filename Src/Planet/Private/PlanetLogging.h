@@ -6,7 +6,8 @@
 
 #define P_LOG(Category, Format, ...) \
 	{ \
-	String LogMsg = String::Printf(TEXT("[%s] %s\n"), String { #Category } , String::Printf(Format, ##__VA_ARGS__)); \
+	String msg =  String::Printf(Format, ##__VA_ARGS__); \
+	String LogMsg = String::Printf(TEXT("[%s] %s\n"), #Category , *msg); \
 	std::cout << *LogMsg << std::endl; \
 	OutputDebugString(*LogMsg); \
 	}

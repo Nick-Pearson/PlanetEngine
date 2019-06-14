@@ -9,12 +9,24 @@
 class Scene;
 
 // an object that exists within the scene
+__declspec(align(16))
 class Entity
 {
 	friend class Scene;
 public:
 
 	Entity();
+
+	// alignment for Direct X structures
+	void* operator new(size_t i)
+	{
+		return _mm_malloc(i, 16);
+	}
+
+	void operator delete(void* p)
+	{
+		_mm_free(p);
+	}
 
 	template<class T, typename... Args>
 	std::shared_ptr<T> AddComponent(Args... args);
@@ -28,6 +40,7 @@ public:
 	inline Transform GetTransform() const { return transform; }
 
 	void Translate(Vector translation);
+	void Rotate(Vector rotation);
 
 public:
 	Transform transform;

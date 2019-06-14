@@ -1,6 +1,7 @@
 #pragma once
 
 #include <valarray>
+#include <DirectXMath.h>
 
 struct Vector
 {
@@ -12,6 +13,13 @@ public:
 	Vector(float inX = 0.0f, float inY = 0.0f, float inZ = 0.0f) : 
 		x(inX), y(inY), z(inZ)
 	{}
+	
+	Vector(const DirectX::XMVECTOR& vecReg)
+	{
+		x = DirectX::XMVectorGetX(vecReg);
+		y = DirectX::XMVectorGetY(vecReg);
+		z = DirectX::XMVectorGetZ(vecReg);
+	}
 
 	Vector operator/(const Vector& other)
 	{
@@ -125,6 +133,11 @@ public:
 
 public:
 
+	DirectX::XMVECTOR ToVectorReg() const
+	{
+		return DirectX::XMVectorSet(x, y, z, 1.0f);
+	}
+
 	inline float Length() const
 	{
 		return std::sqrt(LengthSqrd());
@@ -141,6 +154,11 @@ public:
 		if (len < 0.001f) return;
 
 		*this = *this / len;
+	}
+
+	bool IsZero() const
+	{
+		return x == 0.0f && y == 0.0f && z == 0.0f;
 	}
 
 	Vector Cross(const Vector& other) const

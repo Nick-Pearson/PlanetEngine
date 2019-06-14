@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ExceptionHandling>Sync</ExceptionHandling>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_ENABLE_EXTENDED_ALIGNED_STORAGE=1</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -94,7 +95,7 @@
       <SDLCheck>true</SDLCheck>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PLATFORM_WIN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);PLATFORM_WIN;_ENABLE_EXTENDED_ALIGNED_STORAGE=1</PreprocessorDefinitions>
       <ExceptionHandling>Sync</ExceptionHandling>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
     </ClCompile>
@@ -123,6 +124,7 @@
     <ClCompile Include="Src\Planet\Private\Entity\Entity.cpp" />
     <ClCompile Include="Src\Planet\Private\Input\InputManager.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Elipsoid.cpp" />
+    <ClCompile Include="Src\Planet\Private\Math\Quaternion.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Transform.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\Mesh.cpp" />
     <ClCompile Include="Src\Planet\Private\Mesh\MeshComponent.cpp" />
@@ -147,6 +149,8 @@
     <ClInclude Include="Src\Planet\Private\Input\InputManager.h" />
     <ClInclude Include="Src\Planet\Private\Input\KeyCode.h" />
     <ClInclude Include="Src\Planet\Private\Math\Elipsoid.h" />
+    <ClInclude Include="Src\Planet\Private\Math\Math.h" />
+    <ClInclude Include="Src\Planet\Private\Math\Quaternion.h" />
     <ClInclude Include="Src\Planet\Private\Math\Transform.h" />
     <ClInclude Include="Src\Planet\Private\Math\Vector.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Mesh.h" />

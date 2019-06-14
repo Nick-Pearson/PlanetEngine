@@ -103,9 +103,9 @@ std::shared_ptr<Mesh> OBJImporter::Import(const char* filepath, float scaleFacto
 		{
 			// normal
 			Vector normal;
-			normal.x = -(float)std::atof(parts[1].c_str());
-			normal.y = -(float)std::atof(parts[2].c_str());
-			normal.z = -(float)std::atof(parts[3].c_str());
+			normal.x = (float)std::atof(parts[1].c_str());
+			normal.y = (float)std::atof(parts[2].c_str());
+			normal.z = (float)std::atof(parts[3].c_str());
 
 			normal.Normalise();
 			vertNormals.push_back(normal);

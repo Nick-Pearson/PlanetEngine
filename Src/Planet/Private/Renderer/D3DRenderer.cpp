@@ -161,7 +161,8 @@ void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
 	// TODO: Maybe not do this every frame?
 	// TODO: Collect stats on how often these buffers are updated
 	mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspectRatio, camera->NearClip, camera->FarClip));
-	mSlowConstantBufferData.world = Transform().GetMatrix();
+
+	mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixIdentity());
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	mContext->Map(mSlowConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

@@ -2,6 +2,7 @@
 
 #include "Vector.h"
 #include <DirectXMath.h>
+#include "Quaternion.h"
 
 struct Transform
 {
@@ -11,7 +12,7 @@ public:
 
 	DirectX::XMMATRIX GetMatrix() const;
 
+	Quaternion rotation;
 	Vector location;
-	//Quaternion rotation;
 	Vector scale;
 };

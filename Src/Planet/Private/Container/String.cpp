@@ -1,71 +1,74 @@
 #include "String.h"
 #include <cstdlib>
-
-String::String()
-{
-	Empty();
-}
-
-String::String(const String& other)
-{
-	ResizeTo(other.Length());
-	memcpy(mData, other.mData, (other.Length() + 1) * sizeof(TCHAR));
-}
-
-String::String(unsigned char c)
-{
-	ResizeTo(1);
-	mData[0] = c;
-}
+#include <stdio.h>
 
 String::~String()
 {
 	free(mData);
 }
 
+#pragma optimize("", off)
 String String::PrintfInternal(TCHAR* Format, ...)
 {
 	va_list args;
 	va_start(args, Format);
 
-	String outputString{ Format };
+	const int BufferSize = 256;
+	TCHAR* Buff = new TCHAR[BufferSize];
 
-	String formatString;
-	int insertIdx = 0;
-	for (int i = 0; i < outputString.Length(); ++i)
-	{
-		const TCHAR& c = outputString[i];
-
-		if (formatString.Length() > 0)
-		{
-			formatString += c;
-
-			if (c == 's')
-			{
-				outputString.Replace(insertIdx, i, va_arg(args, String));
-			}
-			else if (c == 'c')
-			{
-				outputString.Replace(insertIdx, i, String{ va_arg(args, unsigned char) });
-			}
-			else if (c == 'p')
-			{
-				const char* strptr = va_arg(args, const char*);
-				outputString.Replace(insertIdx, i, String{ strptr });
-			}
-			
-			formatString.Empty();
-		}
-		else if (c == '%')
-		{
-			formatString += c;
-			insertIdx = i;
-		}
-	}
+	int result = vsnprintf(Buff, BufferSize - 1, Format, args);
 
 	va_end(args);
 
-	return outputString;
+	String str = String{ Buff };
+	delete Buff;
+	return str;
+}
+
+String String::FromFloat(float value)
+{
+	int wholePart = (int)value;
+	float decimalPart = value - (float)wholePart;
+
+	String str = String::FromInt(wholePart);
+
+	int intDecimalPart = 0;
+
+	const int maxPlaces = 8;
+	for (int i = 0; i < maxPlaces; ++i)
+	{
+		decimalPart *= 10.0f;
+		intDecimalPart *= 10;
+
+		intDecimalPart += (int)decimalPart;
+	}
+
+	str += '.';
+	str += String::FromInt(intDecimalPart);
+
+	return str;
+}
+
+String String::FromInt(int value)
+{
+	String outStr;
+
+	if (value < 0)
+		outStr += '-';
+
+	int valCpy = value;
+	do
+	{
+		outStr += (valCpy % 10) + '0';
+		valCpy /= 10;
+	} while (valCpy != 0);
+
+	if (value < 0)
+		outStr += '-';
+
+	outStr.Reverse();
+
+	return outStr;
 }
 
 void String::Replace(int startIdx, int endIdx, const String& string)
@@ -80,7 +83,7 @@ void String::Replace(int startIdx, int endIdx, const String& string)
 
 		for(int i = 1; i <= copyLen; ++i)
 		{
-			mData[(mLength - copyLen - 1) + i] = mData[i + endIdx];
+			mData[mLength - i] = mData[endIdx + copyLen + 1 - i];
 		}
 	}
 
@@ -97,6 +100,18 @@ void String::Replace(int startIdx, int endIdx, const String& string)
 		ResizeTo(newLen);
 	}
 }
+
+void String::Reverse()
+{
+	int halfLen = (int)(mLength / 2.0f);
+	for (int i = 0; i < halfLen; ++i)
+	{
+		TCHAR tmp = mData[i];
+		mData[i] = mData[mLength - i - 1];
+		mData[mLength - i - 1] = tmp;
+	}
+}
+#pragma optimize("", on)
 
 void String::ResizeTo(int NewLength)
 {

@@ -23,7 +23,8 @@ private:
 template<class T /*= Entity*/, typename... Args>
 std::shared_ptr<T> Scene::SpawnEntity(Args... args)
 {
-	std::shared_ptr<T> newEntity = std::make_shared<T>();
+	T* ptr = new T(args...);
+	std::shared_ptr<T> newEntity = std::shared_ptr<T>(ptr);
 	entities.push_back(newEntity);
 
 	newEntity->scene = this;
