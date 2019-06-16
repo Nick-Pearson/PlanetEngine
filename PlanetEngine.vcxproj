@@ -180,6 +180,7 @@
     </FxCompile>
     <FxCompile Include="Shader\SkySphere.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
     </FxCompile>
     <FxCompile Include="Shader\VertexShader.hlsl" />
   </ItemGroup>

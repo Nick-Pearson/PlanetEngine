@@ -22,7 +22,7 @@ std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& el
 
 	for (Vertex& vert : verts)
 	{
-		vert.normal = -vert.positon;
+		vert.normal = vert.positon;
 		vert.positon *= Vector(elipsoid.sizeX, elipsoid.sizeY, elipsoid.sizeZ);
 	}
 
