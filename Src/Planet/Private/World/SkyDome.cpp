@@ -1,12 +1,24 @@
 #include "SkyDome.h"
 #include "../Mesh/MeshComponent.h"
 #include "../Mesh/Primitives.h"
+#include "../Renderer/D3DRenderer.h"
+#include "../PlanetEngine.h"
 
 SkyDome::SkyDome()
 {
 	std::shared_ptr<Mesh> mesh = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(1.0f), 5);
 	mesh->FlipFaces();
-	domeMesh = AddComponent<MeshComponent>(mesh, "SkySphere.hlsl");
-	domeMesh->SetUseDepthBuffer(false);
-	domeMesh->SetUseWorldMatrix(false);
+	mDomeMesh = AddComponent<MeshComponent>(mesh, "SkySphere.hlsl");
+	mDomeMesh->SetUseDepthBuffer(false);
+	mDomeMesh->SetUseWorldMatrix(false);
+}
+
+void SkyDome::OnUpdate(float deltaSeconds)
+{
+	Entity::OnUpdate(deltaSeconds);
+
+	mSunRotation += Vector(mSunSpeed * deltaSeconds, 0.0f, 0.0f);
+
+	// maybe dont do this all the time?
+	PlanetEngine::Get()->GetRenderer()->UpdateWorldBuffer(WorldBufferData(mSunRotation * Vector{0.0f, 1.0f, 0.0f}, mSunSkyStrength, mSunColour));
 }

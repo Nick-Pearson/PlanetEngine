@@ -127,8 +127,13 @@ D3DRenderer::D3DRenderer(const Window& targetWindow)
 	CreateConstantBuffer(&mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
 	CreateConstantBuffer(&mFastConstantBuffer, &mFastConstantBufferData, sizeof(mFastConstantBufferData));
 
-	ID3D11Buffer* Buffers[2] = { mSlowConstantBuffer.Get(), mFastConstantBuffer.Get() };
-	mContext->VSSetConstantBuffers(0u, 2u, Buffers);
+	ID3D11Buffer* VertBuffers[2] = { mSlowConstantBuffer.Get(), mFastConstantBuffer.Get() };
+	mContext->VSSetConstantBuffers(0u, 2u, VertBuffers);
+
+	CreateConstantBuffer(&mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
+
+	ID3D11Buffer* PixBuffers[1] = { mWorldPixelBuffer.Get() };
+	mContext->PSSetConstantBuffers(0u, 1u, PixBuffers);
 
 	const auto hModDxgiDebug = LoadLibraryEx("dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	// get address of DXGIGetDebugInterface in dll
@@ -167,10 +172,7 @@ void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
 	DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
 	mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
 
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	mContext->Map(mSlowConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	std::memcpy(mappedResource.pData, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-	mContext->Unmap(mSlowConstantBuffer.Get(), 0);
+	UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
 
 	currentRenderState.UseWorldMatrix = false;
 
@@ -199,6 +201,12 @@ void D3DRenderer::RemoveRenderState(const RenderState* state)
 	renderStates.Remove(state);
 }
 
+void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
+{
+	mWorldPixelBufferData = data;
+	UpdateBuffer(mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
+}
+
 void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 {
 	if (!state.IsValid()) return;
@@ -224,10 +232,7 @@ void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 		DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
 		mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
 
-		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		mContext->Map(mSlowConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		std::memcpy(mappedResource.pData, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-		mContext->Unmap(mSlowConstantBuffer.Get(), 0);
+		UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
 	}
 
 	if (currentRenderState.mesh != state.mesh)
@@ -247,6 +252,14 @@ void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 
 	mContext->DrawIndexed(state.mesh->numTriangles, 0u, 0u);
 	d3dFlushDebugMessages();
+}
+
+void D3DRenderer::UpdateBuffer(Microsoft::WRL::ComPtr <ID3D11Buffer> buffer, void* bufferData, size_t bufferSize)
+{
+	D3D11_MAPPED_SUBRESOURCE mappedResource;
+	mContext->Map(buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+	std::memcpy(mappedResource.pData, bufferData, bufferSize);
+	mContext->Unmap(buffer.Get(), 0);
 }
 
 void D3DRenderer::CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize)

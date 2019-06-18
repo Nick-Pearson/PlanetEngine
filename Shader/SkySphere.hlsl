@@ -1,4 +1,3 @@
-
 // atmosphere radius (in km)
 #define RA 6420e3f
 // earth radius (in km)
@@ -11,11 +10,18 @@
 #define NUM_SAMPLES 16
 #define NUM_SAMPLES_LIGHT 8
 
-#define PI 3.14159265f
+#define PI 3.14159265359f
 
 #define BETA_R float3(5.5e-6f, 13.0e-6f, 22.4e-6f)
 #define BETA_M float3(21e-6f, 21e-6f, 21e-6f)
 
+cbuffer CBuff_World
+{
+	float3 sunDir;
+	float sunSkyStrength;
+
+	float3 sunCol;
+};
 
 float intersect_atmosphere(float3 orig, float3 dir)
 {
@@ -42,12 +48,11 @@ float mie_phase(float mu)
 	const float g = 0.76f;
 	const float g2 = g * g;
 	return (1.0f - g2) / ((4.0f+PI) * pow(abs(1.0f + g2 - (2.0f*g*mu)), 1.5f));
-
 }
 
 float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 {
-	float3 sunDir = normalize(float3(0.0f, 1.0f, 1.0f));
+	//float3 sunDir = normalize(float3(0.0f, -.03f, 1.0f));
 
 	float3 dir = -normal;
 	float3 orig = float3(0.0f, RE + 1.0f, 0.0f);
@@ -117,6 +122,6 @@ float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 		tCurrent += segmentLen;
 	}
 
-	float3 col = (sumR * phaseR * BETA_R + sumM * phaseM * BETA_M) * 12.0f;
+	float3 col = (sumR * phaseR * BETA_R + sumM * phaseM * BETA_M) * sunSkyStrength;
 	return float4(col, 1.0f);
 }

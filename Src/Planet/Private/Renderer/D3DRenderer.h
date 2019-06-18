@@ -9,6 +9,7 @@
 #include "../Container/LinkedList.h"
 #include "RenderState.h"
 #include "../PlanetLogging.h"
+#include "../Math/Vector.h"
 
 #define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { P_ERROR(Renderer, TEXT("Err")) } }
 
@@ -33,6 +34,20 @@ class GPUResourceManager;
 class ShaderManager;
 class Mesh;
 class CameraComponent;
+
+struct WorldBufferData
+{
+	WorldBufferData() {}
+	WorldBufferData(const Vector& inDir, float inStrength, const Vector& inCol) :
+		sunDir(inDir), sunSkyStrength(inStrength), sunCol(inCol)
+	{}
+
+	Vector sunDir = Vector{ 0.0f, 1.0f, 0.0f };
+	float sunSkyStrength = 20.0f;
+
+	Vector sunCol = Vector{ 1.0f, 1.0f, 1.0f };
+	char padding[4];
+};
 
 __declspec(align(16))
 class D3DRenderer
@@ -67,9 +82,13 @@ public:
 	RenderState* AddRenderState(const RenderState& state);
 	void RemoveRenderState(const RenderState* state);
 
+	void UpdateWorldBuffer(const WorldBufferData& data);
+
 protected:
 
 	void Draw(CameraComponent* component, const RenderState& state);
+
+	void UpdateBuffer(Microsoft::WRL::ComPtr <ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
 private:
 	// D3D11 Ptrs
@@ -111,6 +130,9 @@ private:
 		DirectX::XMMATRIX model;
 	};
 	FastConstantBuffer mFastConstantBufferData;
+
+	Microsoft::WRL::ComPtr <ID3D11Buffer> mWorldPixelBuffer;
+	WorldBufferData mWorldPixelBufferData;
 
 	void CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize);
 
