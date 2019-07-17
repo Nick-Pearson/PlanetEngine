@@ -136,6 +136,7 @@
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3DShader.cpp" />
+    <ClCompile Include="Src\Planet\Private\Texture\Texture2D.cpp" />
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
     <ClCompile Include="Src\Planet\Private\World\Scene.cpp" />
     <ClCompile Include="Src\Planet\Private\World\SkyDome.cpp" />
@@ -167,6 +168,8 @@
     <ClInclude Include="Src\Planet\Private\Renderer\D3DShader.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\Renderer.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\RenderState.h" />
+    <ClInclude Include="Src\Planet\Private\Texture\ITexture.h" />
+    <ClInclude Include="Src\Planet\Private\Texture\Texture2D.h" />
     <ClInclude Include="Src\Planet\Private\World\CameraComponent.h" />
     <ClInclude Include="Src\Planet\Private\World\Scene.h" />
     <ClInclude Include="Src\Planet\Private\World\SkyDome.h" />

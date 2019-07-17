@@ -71,6 +71,21 @@ std::shared_ptr<Mesh> Primitives::Cube(float scale)
 	cube->RecalculateNormals();
 }
 
+std::shared_ptr<Mesh> Primitives::Plane(float scale)
+{
+	Vertex v[] = {
+		Vertex{ Vector{ scale *  1.0f, scale * -1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
+		Vertex{ Vector{ scale * -1.0f, scale *  1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
+		Vertex{ Vector{ scale *  1.0f, scale *  1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
+		Vertex{ Vector{ scale * -1.0f, scale * -1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
+	};
+	unsigned short t[] = {
+		0,1,2,
+		0,3,1,
+	};
+	return std::make_shared<Mesh>(v, 4, t, 6);
+}
+
 void Primitives::SubdivisionStep(std::vector<Vertex>& verts, std::vector<unsigned short>& outIndicies, unsigned short v0, unsigned short v1, unsigned short v2, int level)
 {
 	if (level > 0)

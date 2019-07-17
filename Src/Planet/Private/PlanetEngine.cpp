@@ -55,6 +55,7 @@ void PlanetEngine::Run()
 	cameraEntity->Translate(Vector{ 0.0f, 2.0f, -4.0f });
 
 	scene->SpawnEntity()->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
+	scene->SpawnEntity()->AddComponent<MeshComponent>(Primitives::Plane(5.0f), "PixelShader.hlsl");
 	scene->SpawnEntity<SkyDome>();
 
 	float deltaTime = 0.01f;

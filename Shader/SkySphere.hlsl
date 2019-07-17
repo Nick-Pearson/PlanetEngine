@@ -45,15 +45,13 @@ float rayleigh_phase(float mu)
 
 float mie_phase(float mu)
 {
-	const float g = 0.76f;
+	const float g = 0.95f;
 	const float g2 = g * g;
 	return (1.0f - g2) / ((4.0f+PI) * pow(abs(1.0f + g2 - (2.0f*g*mu)), 1.5f));
 }
 
 float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 {
-	//float3 sunDir = normalize(float3(0.0f, -.03f, 1.0f));
-
 	float3 dir = -normal;
 	float3 orig = float3(0.0f, RE + 1.0f, 0.0f);
 

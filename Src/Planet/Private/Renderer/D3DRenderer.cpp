@@ -153,9 +153,9 @@ void D3DRenderer::SwapBuffers()
 {
 	mSwapChain->Present(1u, 0u);
 
-	const float colour[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	const float colour[4] = { 0.f, 0.f, 0.f, 1.0f };
 	mContext->ClearRenderTargetView(mTarget.Get(), colour);
-	mContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0u);
+	mContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
 }
 
 void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
