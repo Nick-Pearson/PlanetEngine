@@ -1,13 +1,13 @@
 #include "D3DRenderer.h"
 
-#include "../Platform/Window.h"
+#include "../../Platform/Window.h"
 #include "D3DShader.h"
 #include <wrl/client.h>
 #include <D3Dcompiler.h>
-#include "../Mesh/GPUResourceManager.h"
-#include "../Mesh/Mesh.h"
-#include "../World/CameraComponent.h"
-#include "../Math/Transform.h"
+#include "../../Mesh/GPUResourceManager.h"
+#include "../../Mesh/Mesh.h"
+#include "../../World/CameraComponent.h"
+#include "../../Math/Transform.h"
 
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "dxguid.lib")

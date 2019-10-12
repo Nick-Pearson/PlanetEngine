@@ -1,9 +1,11 @@
 #pragma once
 
 #include "Platform/Platform.h"
-#include "Renderer/Renderer.h"
+
+#include <vector>
 
 class InputManager;
+class RenderManager;
 
 class PlanetEngine
 {
@@ -19,7 +21,7 @@ public:
 
 	inline int GetExitCode() const { return ExitCode; }
 
-	inline Renderer* GetRenderer() const { return renderer; }
+	inline RenderManager* GetRenderManager() const { return mRenderManager; }
 	inline InputManager* GetInputManager() const { return inputManager; }
 
 #if PLATFORM_WIN
@@ -38,7 +40,7 @@ private:
 
 	int ExitCode;
 
-	Renderer* renderer;
+	RenderManager* mRenderManager;
 	InputManager* inputManager;
 
 };

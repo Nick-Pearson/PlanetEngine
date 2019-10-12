@@ -1,8 +1,9 @@
 #include "SkyDome.h"
 #include "../Mesh/MeshComponent.h"
 #include "../Mesh/Primitives.h"
-#include "../Renderer/D3DRenderer.h"
+#include "../Renderer/D3D11/D3DRenderer.h"
 #include "../PlanetEngine.h"
+#include "../Renderer/RenderManager.h"
 
 SkyDome::SkyDome()
 {
@@ -20,5 +21,5 @@ void SkyDome::OnUpdate(float deltaSeconds)
 	mSunRotation += Vector(mSunSpeed * deltaSeconds, 0.0f, 0.0f);
 
 	// maybe dont do this all the time?
-	PlanetEngine::Get()->GetRenderer()->UpdateWorldBuffer(WorldBufferData(mSunRotation * Vector{0.0f, 1.0f, 0.0f}, mSunSkyStrength, mSunColour));
+	PlanetEngine::Get()->GetRenderManager()->GetRenderer()->UpdateWorldBuffer(WorldBufferData(mSunRotation * Vector{0.0f, 1.0f, 0.0f}, mSunSkyStrength, mSunColour));
 }

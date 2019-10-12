@@ -118,6 +118,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Lib\imgui-1.73\imgui.cpp" />
+    <ClCompile Include="Lib\imgui-1.73\imgui_demo.cpp" />
+    <ClCompile Include="Lib\imgui-1.73\imgui_draw.cpp" />
+    <ClCompile Include="Lib\imgui-1.73\imgui_impl_dx11.cpp" />
+    <ClCompile Include="Lib\imgui-1.73\imgui_impl_win32.cpp" />
+    <ClCompile Include="Lib\imgui-1.73\imgui_widgets.cpp" />
     <ClCompile Include="Src\Planet\Private\Container\String.cpp" />
     <ClCompile Include="Src\Planet\Private\Editor\FlyCam.cpp" />
     <ClCompile Include="Src\Planet\Private\Entity\Component.cpp" />
@@ -134,14 +140,22 @@
     <ClCompile Include="Src\Planet\Private\PlanetEngine.cpp" />
     <ClCompile Include="Src\Planet\Private\Platform\PlanetWindows.cpp" />
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
-    <ClCompile Include="Src\Planet\Private\Renderer\D3DRenderer.cpp" />
-    <ClCompile Include="Src\Planet\Private\Renderer\D3DShader.cpp" />
-    <ClCompile Include="Src\Planet\Private\Texture\Texture2D.cpp" />
+    <ClCompile Include="Src\Planet\Private\Renderer\D3D11\D3DRenderer.cpp" />
+    <ClCompile Include="Src\Planet\Private\Renderer\D3D11\D3DShader.cpp" />
+    <ClCompile Include="Src\Planet\Private\Renderer\RenderManager.cpp" />
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
     <ClCompile Include="Src\Planet\Private\World\Scene.cpp" />
     <ClCompile Include="Src\Planet\Private\World\SkyDome.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Lib\imgui-1.73\imconfig.h" />
+    <ClInclude Include="Lib\imgui-1.73\imgui.h" />
+    <ClInclude Include="Lib\imgui-1.73\imgui_impl_dx11.h" />
+    <ClInclude Include="Lib\imgui-1.73\imgui_impl_win32.h" />
+    <ClInclude Include="Lib\imgui-1.73\imgui_internal.h" />
+    <ClInclude Include="Lib\imgui-1.73\imstb_rectpack.h" />
+    <ClInclude Include="Lib\imgui-1.73\imstb_textedit.h" />
+    <ClInclude Include="Lib\imgui-1.73\imstb_truetype.h" />
     <ClInclude Include="Src\Planet\Private\Container\LinkedList.h" />
     <ClInclude Include="Src\Planet\Private\Container\String.h" />
     <ClInclude Include="Src\Planet\Private\Editor\FlyCam.h" />
@@ -164,12 +178,11 @@
     <ClInclude Include="Src\Planet\Private\Platform\PlanetWindows.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Platform.h" />
     <ClInclude Include="Src\Planet\Private\Platform\Window.h" />
-    <ClInclude Include="Src\Planet\Private\Renderer\D3DRenderer.h" />
-    <ClInclude Include="Src\Planet\Private\Renderer\D3DShader.h" />
+    <ClInclude Include="Src\Planet\Private\Renderer\D3D11\D3DRenderer.h" />
+    <ClInclude Include="Src\Planet\Private\Renderer\D3D11\D3DShader.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\Renderer.h" />
+    <ClInclude Include="Src\Planet\Private\Renderer\RenderManager.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\RenderState.h" />
-    <ClInclude Include="Src\Planet\Private\Texture\ITexture.h" />
-    <ClInclude Include="Src\Planet\Private\Texture\Texture2D.h" />
     <ClInclude Include="Src\Planet\Private\World\CameraComponent.h" />
     <ClInclude Include="Src\Planet\Private\World\Scene.h" />
     <ClInclude Include="Src\Planet\Private\World\SkyDome.h" />

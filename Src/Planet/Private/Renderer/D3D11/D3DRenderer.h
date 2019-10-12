@@ -1,15 +1,15 @@
 #pragma once
 
-#include "../Platform/PlanetWindows.h"
+#include "../../Platform/PlanetWindows.h"
 #include <d3d11.h>
 #include <dxgidebug.h>
 #include <DirectXMath.h>
 #include <iostream>
 #include <wrl/client.h>
-#include "../Container/LinkedList.h"
-#include "RenderState.h"
-#include "../PlanetLogging.h"
-#include "../Math/Vector.h"
+#include "../../Container/LinkedList.h"
+#include "../RenderState.h"
+#include "../../PlanetLogging.h"
+#include "../../Math/Vector.h"
 
 #define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { P_ERROR(Renderer, TEXT("Err")) } }
 

@@ -12,6 +12,7 @@
 #include "World/SkyDome.h"
 #include "Input/InputManager.h"
 #include "Editor/FlyCam.h"
+#include "Renderer/RenderManager.h"
 
 #include <memory>
 #include <chrono>
@@ -41,7 +42,7 @@ void PlanetEngine::Run()
 	Window window{1280, 720};
 	window.SetWindowName("PlanetEngine");
 
-	renderer = new Renderer{ window };
+	mRenderManager = new RenderManager{ &window };
 
 	inputManager = new InputManager{};
 	RegisterMessageHandler(inputManager);
@@ -54,6 +55,7 @@ void PlanetEngine::Run()
 	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
 	cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
 	cameraEntity->Rotate(Vector{ 15.0f, 180.0f, 0.0f });
+	mRenderManager->SetCamera(cameraComp);
 
 	std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
 	bunnyEntity->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
@@ -79,16 +81,14 @@ void PlanetEngine::Run()
 
 		scene->Update(deltaTime);
 		
-		//renderer.RenderMesh(cube);
-		renderer->Render(cameraComp);
-		renderer->SwapBuffers();
+		mRenderManager->RenderFrame();
 
 		auto end = std::chrono::high_resolution_clock::now();
 		deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(end - begin).count();
 		begin = end;
 	}
 
-	delete renderer;
+	delete mRenderManager;
 	UnregisterMessageHandler(inputManager);
 	delete inputManager;
 }

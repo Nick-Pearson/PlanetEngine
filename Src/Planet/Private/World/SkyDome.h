@@ -3,9 +3,6 @@
 #include "../Entity/Entity.h"
 
 class MeshComponent;
-class Texture1D;
-class Texture2D;
-class Texture3D;
 
 class SkyDome: public Entity
 {
@@ -23,8 +20,8 @@ private:
 
 	float mSunSpeed = 1.0f;
 
-	static std::unique_ptr<Texture3D> sScatteringTexture;
-	static std::unique_ptr<Texture2D> sTransmitanceTexture;
-	static std::unique_ptr<Texture2D> sPhaseTexture;
-	static std::unique_ptr<Texture1D> sAmbientTexture;
+	//static std::unique_ptr<Texture3D> sScatteringTexture;
+	//static std::unique_ptr<Texture2D> sTransmitanceTexture;
+	//static std::unique_ptr<Texture2D> sPhaseTexture;
+	//static std::unique_ptr<Texture1D> sAmbientTexture;
 };

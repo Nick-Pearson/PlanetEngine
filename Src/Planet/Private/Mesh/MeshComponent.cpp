@@ -3,9 +3,10 @@
 #include "../Renderer/Renderer.h"
 #include "../PlanetEngine.h"
 #include "GPUResourceManager.h"
-#include "../Renderer/D3DShader.h"
+#include "../Renderer/D3D11/D3DShader.h"
 #include "Mesh.h"
 #include "../Entity/Entity.h"
+#include "../Renderer/RenderManager.h"
 
 MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, const char* shaderName) :
 	mMesh(mesh), mShaderName(shaderName)
@@ -16,7 +17,7 @@ void MeshComponent::SetVisibility(bool newVisibility)
 {
 	if (mVisible == newVisibility) return;
 
-	Renderer* renderer = PlanetEngine::Get()->GetRenderer();
+	Renderer* renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
 
 	mVisible = newVisibility;
 	if (mVisible)
@@ -51,7 +52,7 @@ void MeshComponent::OnSpawned()
 {
 	Component::OnSpawned();
 
-	Renderer* renderer = PlanetEngine::Get()->GetRenderer();
+	Renderer* renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
 	renderer->GetResourceManager()->LoadMesh(mMesh);
 
 	renderState.mesh = mMesh->GetGPUHandle();

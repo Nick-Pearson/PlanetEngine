@@ -1,8 +1,8 @@
 #include "GPUResourceManager.h"
 
 #include "Mesh.h"
-#include "../Renderer/D3DRenderer.h"
-#include "../Renderer/D3DShader.h"
+#include "../Renderer/D3D11/D3DRenderer.h"
+#include "../Renderer/D3D11/D3DShader.h"
 
 GPUResourceManager::GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device) :
 	mDevice(device)
