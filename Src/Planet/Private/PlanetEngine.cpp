@@ -50,13 +50,21 @@ void PlanetEngine::Run()
 
 	std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
-	std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>();
+	std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
 	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
-	cameraEntity->Translate(Vector{ 0.0f, 2.0f, -4.0f });
+	cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
+	cameraEntity->Rotate(Vector{ 15.0f, 180.0f, 0.0f });
 
-	scene->SpawnEntity()->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
-	scene->SpawnEntity()->AddComponent<MeshComponent>(Primitives::Plane(5.0f), "PixelShader.hlsl");
-	scene->SpawnEntity<SkyDome>();
+	std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
+	bunnyEntity->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
+	bunnyEntity->Translate(Vector{ 0.0f, 0.6f, 0.0f });
+	
+	std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
+	floorEntity->Rotate(Vector{ 90.0f, 90.0f, 0.0f });
+	floorEntity->AddComponent<MeshComponent>(Primitives::Plane(10.0f), "PixelShader.hlsl");
+	floorEntity->Rotate(Vector{ 0.0f, 0.0f, -90.0f});
+
+	scene->SpawnEntity<SkyDome>("sky");
 
 	float deltaTime = 0.01f;
 	auto begin = std::chrono::high_resolution_clock::now();

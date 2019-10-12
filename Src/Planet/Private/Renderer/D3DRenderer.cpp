@@ -235,6 +235,10 @@ void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 		UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
 	}
 
+	DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(state.model.GetMatrix());
+	mFastConstantBufferData.model = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model.GetMatrix()));
+	UpdateBuffer(mFastConstantBuffer, &mFastConstantBufferData, sizeof(mFastConstantBufferData));
+
 	if (currentRenderState.mesh != state.mesh)
 	{
 		const unsigned int stride = sizeof(Vertex);

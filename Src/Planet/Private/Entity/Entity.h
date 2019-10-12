@@ -14,7 +14,7 @@ class Entity
 {
 	friend class Scene;
 public:
-
+	float rotateSpeed = 0.0f;
 	Entity();
 
 	// alignment for Direct X structures
@@ -39,6 +39,9 @@ public:
 
 	inline Transform GetTransform() const { return transform; }
 
+	inline const char* GetName() { return mName; }
+	inline void SetName(const char* name) { mName = name; }
+
 	void Translate(Vector translation);
 	void Rotate(Vector rotation);
 
@@ -47,13 +50,19 @@ public:
 
 	std::vector<std::shared_ptr<Component>> components;
 
+private:
+
+	void OnTransformChanged();
+
+	const char* mName = nullptr;
 	Scene* scene = nullptr;
 };
 
 template<class T, typename... Args>
 std::shared_ptr<T> Entity::AddComponent(Args... args)
 {
-	std::shared_ptr<T> newcomp = std::make_shared<T>(args...);
+	T* ptr = new T(args...);
+	std::shared_ptr<T> newcomp = std::shared_ptr<T>(ptr);
 	components.push_back(newcomp);
 
 	newcomp->parent = this;

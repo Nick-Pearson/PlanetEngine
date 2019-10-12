@@ -11,7 +11,7 @@ public:
 	Scene();
 
 	template<class T = Entity, typename... Args>
-	std::shared_ptr<T> SpawnEntity(Args... args);
+	std::shared_ptr<T> SpawnEntity(const char* name, Args... args);
 
 	void Update(float deltaSeconds);
 
@@ -21,13 +21,14 @@ private:
 };
 
 template<class T /*= Entity*/, typename... Args>
-std::shared_ptr<T> Scene::SpawnEntity(Args... args)
+std::shared_ptr<T> Scene::SpawnEntity(const char* name, Args... args)
 {
 	T* ptr = new T(args...);
 	std::shared_ptr<T> newEntity = std::shared_ptr<T>(ptr);
 	entities.push_back(newEntity);
 
 	newEntity->scene = this;
+	newEntity->SetName(name);
 	newEntity->OnSpawned();
 	return newEntity;
 }

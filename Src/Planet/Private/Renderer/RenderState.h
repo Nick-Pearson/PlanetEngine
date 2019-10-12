@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "../Math/Transform.h"
+
 class D3DShader;
 struct GPUMeshHandle;
 
@@ -28,6 +30,8 @@ public:
 	bool UseWorldMatrix;
 
 	GPUMeshHandle* mesh;
+	Transform model;
+	const char* debugName;
 
 	// vertex shader?
 	std::shared_ptr<D3DShader> pixelShader;

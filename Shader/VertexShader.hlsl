@@ -20,7 +20,7 @@ VS_Out main(float3 pos : Position, float3 norm : Normal)
 {
 	VS_Out res;
 
-	matrix modelWorldView = mul(world, view);
+	matrix modelWorldView = mul(mul(model, world), view);
 	
 	res.position = mul(float4(pos, 1.0f), modelWorldView);
 

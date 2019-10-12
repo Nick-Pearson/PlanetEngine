@@ -21,7 +21,7 @@ private:
 	Vector mSunColour = Vector{ 1.0f, 1.0f, 1.0f };
 	float mSunSkyStrength = 20.0f;
 
-	float mSunSpeed = 5.0f;
+	float mSunSpeed = 1.0f;
 
 	static std::unique_ptr<Texture3D> sScatteringTexture;
 	static std::unique_ptr<Texture2D> sTransmitanceTexture;
