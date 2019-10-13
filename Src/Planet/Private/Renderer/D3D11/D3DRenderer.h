@@ -55,7 +55,8 @@ class D3DRenderer
 	friend class D3DShader;
 
 public:
-	D3DRenderer( const Window& targetWindow );
+	D3DRenderer(const Window& targetWindow,	Microsoft::WRL::ComPtr <ID3D11Device> mDevice, 
+		Microsoft::WRL::ComPtr <IDXGISwapChain> mSwapChain, Microsoft::WRL::ComPtr <ID3D11DeviceContext> mContext );
 	D3DRenderer(const D3DRenderer&) = delete;
 	D3DRenderer& operator=(const D3DRenderer&) = delete;
 	~D3DRenderer();

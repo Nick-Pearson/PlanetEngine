@@ -1,6 +1,8 @@
 #include "Window.h"
 
 #include "../PlanetEngine.h"
+#include "../../../../Lib/imgui-1.73/imgui.h"
+#include "../../../../Lib/imgui-1.73/imgui_impl_win32.h"
 
 namespace
 {
@@ -80,6 +82,10 @@ LRESULT CALLBACK Window::sProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wPara
 LRESULT CALLBACK Window::ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	// do some window stuff
+	if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+	{
+		return true;
+	}
 
 	return enginePtr->ProcessWindowMessage(hWnd, msg, wParam, lParam);
 }

@@ -2,6 +2,9 @@
 
 #include <memory>
 
+#include <d3d11.h>
+#include <wrl/client.h>
+
 #include "../Platform/Window.h"
 #include "Renderer.h"
 
@@ -14,6 +17,7 @@ class RenderManager
 public:
 
 	RenderManager(const Window* window);
+	~RenderManager();
 
 	void RenderFrame();
 	void SetCamera(std::shared_ptr<CameraComponent> camera);
@@ -21,6 +25,14 @@ public:
 	inline Renderer* GetRenderer() const { return mRenderer; }
 
 private:
+
+	void InitD3D11Device(const Window* targetWindow);
+
+private:
+
+	Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
+	Microsoft::WRL::ComPtr <IDXGISwapChain> mSwapChain;
+	Microsoft::WRL::ComPtr <ID3D11DeviceContext> mContext;
 
 	std::shared_ptr<CameraComponent> mCamera;
 
