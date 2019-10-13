@@ -26,11 +26,6 @@ UIRenderer::~UIRenderer()
 
 void UIRenderer::Render()
 {
-	static bool show_demo_window = true;
-	if (show_demo_window)
-	{
-		ImGui::ShowDemoWindow(&show_demo_window);
-	}
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 }

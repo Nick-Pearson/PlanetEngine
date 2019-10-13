@@ -14,11 +14,12 @@ public:
 private:
 	std::shared_ptr<MeshComponent> mDomeMesh;
 
-	Quaternion mSunRotation;
+	bool mPauseTime = false;
+	float mCurrentTimeOfDay;
 	Vector mSunColour = Vector{ 1.0f, 1.0f, 1.0f };
-	float mSunSkyStrength = 20.0f;
+	float mSunSkyStrength = 10.0f;
 
-	float mSunSpeed = 1.0f;
+	float mDayLength = 10.0f;
 
 	//static std::unique_ptr<Texture3D> sScatteringTexture;
 	//static std::unique_ptr<Texture2D> sTransmitanceTexture;
