@@ -74,10 +74,10 @@ std::shared_ptr<Mesh> Primitives::Cube(float scale)
 std::shared_ptr<Mesh> Primitives::Plane(float scale)
 {
 	Vertex v[] = {
-		Vertex{ Vector{ scale *  1.0f, scale * -1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
-		Vertex{ Vector{ scale * -1.0f, scale *  1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
-		Vertex{ Vector{ scale *  1.0f, scale *  1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
-		Vertex{ Vector{ scale * -1.0f, scale * -1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f } },
+		Vertex{ Vector{ scale *  1.0f, scale * -1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f }, Vector2D{ 1.0f, 0.0f } },
+		Vertex{ Vector{ scale * -1.0f, scale *  1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f }, Vector2D{ 0.0f, 1.0f } },
+		Vertex{ Vector{ scale *  1.0f, scale *  1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f }, Vector2D{ 1.0f, 1.0f } },
+		Vertex{ Vector{ scale * -1.0f, scale * -1.0f, 0.0f }, Vector{ 0.0f, 0.0f, 1.0f }, Vector2D{ 0.0f, 0.0f } },
 	};
 	unsigned short t[] = {
 		0,1,2,

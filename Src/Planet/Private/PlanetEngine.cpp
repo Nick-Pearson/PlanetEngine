@@ -17,6 +17,8 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include "Material/Material.h"
+#include "Texture/Texture2D.h"
 
 PlanetEngine::PlanetEngine()
 {
@@ -51,6 +53,14 @@ void PlanetEngine::Run()
 
 	std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
+	std::shared_ptr<Material> standardMaterial = std::make_shared<Material>("PixelShader.hlsl");
+	std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
+
+	std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>(512u, 512u);
+	texture->Fill(Colour{0, 0, 255, 255});
+
+	texturedMaterial->AddTexture(texture);
+
 	std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
 	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
 	cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
@@ -58,13 +68,17 @@ void PlanetEngine::Run()
 	mRenderManager->SetCamera(cameraComp);
 
 	std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
-	bunnyEntity->AddComponent<MeshComponent>(bunny, "PixelShader.hlsl");
+	bunnyEntity->AddComponent<MeshComponent>(bunny, standardMaterial);
 	bunnyEntity->Translate(Vector{ 0.0f, 0.6f, 0.0f });
 	
 	std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
-	floorEntity->Rotate(Vector{ 90.0f, 90.0f, 0.0f });
-	floorEntity->AddComponent<MeshComponent>(Primitives::Plane(10.0f), "PixelShader.hlsl");
-	floorEntity->Rotate(Vector{ 0.0f, 0.0f, -90.0f});
+	floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
+	floorEntity->AddComponent<MeshComponent>(Primitives::Plane(10.0f), standardMaterial);
+
+	std::shared_ptr<Entity> planeEntity = scene->SpawnEntity("floor");
+	planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
+	planeEntity->Translate(Vector{ -4.0f, -2.0f, -2.0f });
+	planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
 
 	scene->SpawnEntity<SkyDome>("sky");
 

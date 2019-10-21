@@ -28,26 +28,26 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -129,6 +129,7 @@
     <ClCompile Include="Src\Planet\Private\Entity\Component.cpp" />
     <ClCompile Include="Src\Planet\Private\Entity\Entity.cpp" />
     <ClCompile Include="Src\Planet\Private\Input\InputManager.cpp" />
+    <ClCompile Include="Src\Planet\Private\Material\Material.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Elipsoid.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Quaternion.cpp" />
     <ClCompile Include="Src\Planet\Private\Math\Transform.cpp" />
@@ -142,8 +143,10 @@
     <ClCompile Include="Src\Planet\Private\Platform\Window.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3D11\D3DRenderer.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\D3D11\D3DShader.cpp" />
+    <ClCompile Include="Src\Planet\Private\Renderer\D3D11\D3DTexture.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\RenderManager.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\UIRenderer.cpp" />
+    <ClCompile Include="Src\Planet\Private\Texture\Texture2D.cpp" />
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
     <ClCompile Include="Src\Planet\Private\World\Scene.cpp" />
     <ClCompile Include="Src\Planet\Private\World\SkyDome.cpp" />
@@ -164,11 +167,13 @@
     <ClInclude Include="Src\Planet\Private\Entity\Entity.h" />
     <ClInclude Include="Src\Planet\Private\Input\InputManager.h" />
     <ClInclude Include="Src\Planet\Private\Input\KeyCode.h" />
+    <ClInclude Include="Src\Planet\Private\Material\Material.h" />
     <ClInclude Include="Src\Planet\Private\Math\Elipsoid.h" />
     <ClInclude Include="Src\Planet\Private\Math\Math.h" />
     <ClInclude Include="Src\Planet\Private\Math\Quaternion.h" />
     <ClInclude Include="Src\Planet\Private\Math\Transform.h" />
     <ClInclude Include="Src\Planet\Private\Math\Vector.h" />
+    <ClInclude Include="Src\Planet\Private\Math\Vector2D.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\Mesh.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\MeshComponent.h" />
     <ClInclude Include="Src\Planet\Private\Mesh\GPUResourceManager.h" />
@@ -185,11 +190,17 @@
     <ClInclude Include="Src\Planet\Private\Renderer\RenderManager.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\RenderState.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\UIRenderer.h" />
+    <ClInclude Include="Src\Planet\Private\Renderer\D3D11\D3DTexture.h" />
+    <ClInclude Include="Src\Planet\Private\Texture\Texture2D.h" />
     <ClInclude Include="Src\Planet\Private\World\CameraComponent.h" />
     <ClInclude Include="Src\Planet\Private\World\Scene.h" />
     <ClInclude Include="Src\Planet\Private\World\SkyDome.h" />
   </ItemGroup>
   <ItemGroup>
+    <FxCompile Include="Shader\FallbackShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
     <FxCompile Include="Shader\PixelShader.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
@@ -200,7 +211,13 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="Shader\VertexShader.hlsl" />
+    <FxCompile Include="Shader\TexturedShader.hlsl">
+      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Pixel</ShaderType>
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
+    <FxCompile Include="Shader\VertexShader.hlsl">
+      <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">5.0</ShaderModel>
+    </FxCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

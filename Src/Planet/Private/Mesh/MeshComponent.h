@@ -6,11 +6,12 @@
 #include "../Renderer/RenderState.h"
 
 class Mesh;
+class Material;
 
 class MeshComponent : public Component
 {
 public:
-	MeshComponent(std::shared_ptr<Mesh> mesh, const char* shaderName);
+	MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
 
 	void SetVisibility(bool newVisibility);
 
@@ -26,7 +27,7 @@ private:
 
 	bool mVisible = false;
 	std::shared_ptr<Mesh> mMesh;
-	const char* mShaderName;
+	std::shared_ptr<Material> mMaterial;
 
 	RenderState renderState;
 	RenderState* renderStatePtr = nullptr;

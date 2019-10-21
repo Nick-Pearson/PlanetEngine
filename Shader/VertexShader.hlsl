@@ -13,10 +13,11 @@ struct VS_Out
 {
 	float3 normal : Color0;
 	float3 worldPos : Color1;
+	float2 texCoord : TexCoord;
 	float4 position : SV_Position;
 };
 
-VS_Out main(float3 pos : Position, float3 norm : Normal)
+VS_Out main(float3 pos : Position, float3 norm : Normal, float2 texCoord : TexCoord)
 {
 	VS_Out res;
 
@@ -27,6 +28,7 @@ VS_Out main(float3 pos : Position, float3 norm : Normal)
 	float4 translatedPos = mul(float4(pos, 1.0f), model);
 	res.normal = normalize(mul(norm, (float3x3)model));
 	res.worldPos = float3(translatedPos.x, translatedPos.y, translatedPos.z);
+	res.texCoord = texCoord;
 
 	return res;
 }

@@ -5,12 +5,14 @@
 #include "../PlanetEngine.h"
 #include "../Renderer/RenderManager.h"
 #include "../../../../Lib/imgui-1.73/imgui.h"
+#include "../Material/Material.h"
 
 SkyDome::SkyDome()
 {
 	std::shared_ptr<Mesh> mesh = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(1.0f), 5);
 	mesh->FlipFaces();
-	mDomeMesh = AddComponent<MeshComponent>(mesh, "SkySphere.hlsl");
+	std::shared_ptr<Material> skyMaterial = std::make_shared<Material>("SkySphere.hlsl");
+	mDomeMesh = AddComponent<MeshComponent>(mesh, skyMaterial);
 	mDomeMesh->SetUseDepthBuffer(false);
 	mDomeMesh->SetUseWorldMatrix(false);
 }

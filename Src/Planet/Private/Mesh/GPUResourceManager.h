@@ -10,7 +10,9 @@
 #include <unordered_map>
 
 class Mesh;
+class Material;
 class D3DShader;
+class D3DTexture;
 
 struct GPUMeshHandle
 {
@@ -25,6 +27,13 @@ struct GPUMeshHandle
 	}
 };
 
+struct GPUMaterialHandle
+{
+	std::shared_ptr<Material> material;
+	std::shared_ptr<D3DShader> shader;
+	std::vector<std::shared_ptr<D3DTexture>> textures;
+};
+
 class GPUResourceManager
 {
 public:
@@ -35,13 +44,16 @@ public:
 	void LoadMesh(std::shared_ptr<Mesh> mesh);
 	void UnloadMesh(std::shared_ptr<Mesh> mesh);
 
-	std::shared_ptr<D3DShader> LoadShader(const char* ShaderFile);
+	void LoadMaterial(std::shared_ptr<Material> material);
 
 private:
+	
+	std::shared_ptr<D3DShader> LoadShader(const char* ShaderFile);
 
 	void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, Microsoft::WRL::ComPtr<ID3D11Buffer>& outBuffer);
 
 	LinkedList <GPUMeshHandle> mLoadedMeshes;
+	LinkedList <GPUMaterialHandle> mLoadedMaterials;
 
 	std::unordered_map<std::string, std::shared_ptr<D3DShader>> loadedShaders;
 

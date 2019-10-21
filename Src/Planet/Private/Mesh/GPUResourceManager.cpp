@@ -3,6 +3,9 @@
 #include "Mesh.h"
 #include "../Renderer/D3D11/D3DRenderer.h"
 #include "../Renderer/D3D11/D3DShader.h"
+#include "../Renderer/D3D11/D3DTexture.h"
+#include "../Material/Material.h"
+#include "../Texture/Texture2D.h"
 
 GPUResourceManager::GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device) :
 	mDevice(device)
@@ -32,6 +35,25 @@ void GPUResourceManager::LoadMesh(std::shared_ptr<Mesh> mesh)
 void GPUResourceManager::UnloadMesh(std::shared_ptr<Mesh> mesh)
 {
 
+}
+
+void GPUResourceManager::LoadMaterial(std::shared_ptr<Material> material)
+{
+	std::shared_ptr <D3DShader> compiledShader = LoadShader(material->GetShaderPath().c_str());
+
+	GPUMaterialHandle entry;
+	entry.material = material;
+	entry.shader = compiledShader;
+
+	int numTextures = material->GetNumTextures();
+	for (int i = 0; i < numTextures; ++i)
+	{
+		std::shared_ptr<Texture2D> texture = material->GetTextureAt(i);
+		entry.textures.push_back(std::make_shared<D3DTexture>(texture.get(), mDevice));
+	}
+
+	GPUMaterialHandle* ptr = mLoadedMaterials.Add(entry);
+	material->mHandle = ptr;
 }
 
 std::shared_ptr<D3DShader> GPUResourceManager::LoadShader(const char* ShaderFile)

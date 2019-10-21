@@ -2,6 +2,7 @@
 
 #include "../../Platform/Window.h"
 #include "D3DShader.h"
+#include "D3DTexture.h"
 #include <wrl/client.h>
 #include <D3Dcompiler.h>
 #include "../../Mesh/GPUResourceManager.h"
@@ -78,6 +79,7 @@ D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3
 	{
 		{ "Position",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0 },
 		{ "Normal",0,DXGI_FORMAT_R32G32B32_FLOAT,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0 },
+		{ "TexCoord",0,DXGI_FORMAT_R32G32_FLOAT,0,24u,D3D11_INPUT_PER_VERTEX_DATA,0 },
 	};
 	d3dAssert(mDevice->CreateInputLayout(
 		ied, (UINT)std::size(ied),
@@ -214,9 +216,13 @@ void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 		mContext->IASetIndexBuffer(state.mesh->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
 	}
 
-	if (currentRenderState.pixelShader != state.pixelShader)
+	if (currentRenderState.material != state.material)
 	{
-		state.pixelShader->Use(mContext.Get());
+		state.material->shader->Use(mContext.Get());
+		for (unsigned int i = 0; i < state.material->textures.size(); ++i)
+		{
+			state.material->textures[i]->Use(mContext.Get(), i);
+		}
 	}
 
 	currentRenderState = state;

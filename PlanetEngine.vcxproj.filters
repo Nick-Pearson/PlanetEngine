@@ -105,6 +105,15 @@
     <ClCompile Include="Src\Planet\Private\Renderer\UIRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Renderer\D3D11\D3DTexture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Texture\Texture2D.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Planet\Private\Material\Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Src\Planet\Private\PlanetEngine.h">
@@ -224,10 +233,24 @@
     <ClInclude Include="Src\Planet\Private\Renderer\UIRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Math\Vector2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Renderer\D3D11\D3DTexture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Texture\Texture2D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Planet\Private\Material\Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shader\VertexShader.hlsl" />
     <FxCompile Include="Shader\PixelShader.hlsl" />
     <FxCompile Include="Shader\SkySphere.hlsl" />
+    <FxCompile Include="Shader\TexturedShader.hlsl" />
+    <FxCompile Include="Shader\FallbackShader.hlsl" />
   </ItemGroup>
 </Project>

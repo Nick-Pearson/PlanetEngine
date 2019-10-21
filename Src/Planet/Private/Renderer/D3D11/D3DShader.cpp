@@ -21,10 +21,11 @@ D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::C
 	Microsoft::WRL::ComPtr<ID3DBlob> ErrorBlob;
 	d3dAssert(D3DCompileFromFile(fullpath.c_str(), nullptr, nullptr, "main", shaderTarget, compileFlags, 0u, &mShaderBlob, &ErrorBlob));
 
-	if (ErrorBlob)
+	if (ErrorBlob || mShaderBlob == nullptr)
 	{
-		P_ERROR(Shader, TEXT("Error compiling shader file: ..."), filename);
-		//std::cout << (const char*)ErrorBlob->GetBufferPointer() << std::endl;
+		P_ERROR(Shader, TEXT("Error compiling shader file: %S"), filename);
+		const char* message = (const char*)ErrorBlob->GetBufferPointer();
+		P_LOG(Shader, TEXT("%s"), message);
 		return;
 	}
 

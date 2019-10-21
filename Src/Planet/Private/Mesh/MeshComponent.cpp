@@ -7,9 +7,10 @@
 #include "Mesh.h"
 #include "../Entity/Entity.h"
 #include "../Renderer/RenderManager.h"
+#include "../Material/Material.h"
 
-MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, const char* shaderName) :
-	mMesh(mesh), mShaderName(shaderName)
+MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material) :
+	mMesh(mesh), mMaterial(material)
 {
 }
 
@@ -54,9 +55,10 @@ void MeshComponent::OnSpawned()
 
 	Renderer* renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
 	renderer->GetResourceManager()->LoadMesh(mMesh);
+	renderer->GetResourceManager()->LoadMaterial(mMaterial);
 
 	renderState.mesh = mMesh->GetGPUHandle();
-	renderState.pixelShader = renderer->GetResourceManager()->LoadShader(mShaderName);
+	renderState.material = mMaterial->GetGPUHandle();
 	renderState.model = GetWorldTransform();
 
 	SetVisibility(true);
