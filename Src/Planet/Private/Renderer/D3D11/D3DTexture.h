@@ -14,5 +14,6 @@ public:
 
 private:
 
+	Microsoft::WRL::ComPtr <struct ID3D11SamplerState> mSamplerState;
 	Microsoft::WRL::ComPtr <struct ID3D11ShaderResourceView> mTextureView;
 };

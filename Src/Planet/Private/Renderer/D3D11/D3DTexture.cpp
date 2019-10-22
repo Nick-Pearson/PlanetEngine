@@ -32,6 +32,13 @@ D3DTexture::D3DTexture(const Texture2D* texture, Microsoft::WRL::ComPtr <ID3D11D
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 	inDevice->CreateShaderResourceView(d3d11Texture.Get(), &srvDesc, &mTextureView);
+
+	D3D11_SAMPLER_DESC samplerDesc = {};
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	inDevice->CreateSamplerState(&samplerDesc, &mSamplerState);
 }
 
 D3DTexture::~D3DTexture()
@@ -41,4 +48,5 @@ D3DTexture::~D3DTexture()
 void D3DTexture::Use(ID3D11DeviceContext* context, int slot)
 {
 	context->PSSetShaderResources(slot, 1u, mTextureView.GetAddressOf());
+	context->PSSetSamplers(slot, 1, mSamplerState.GetAddressOf());
 }
