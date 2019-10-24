@@ -69,7 +69,10 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>I:\Documents\Programming\PlanetEngine\Lib;I:\Documents\Programming\PlanetEngine\Lib\imgui-1.73;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -102,6 +105,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -147,6 +151,7 @@
     <ClCompile Include="Src\Planet\Private\Renderer\RenderManager.cpp" />
     <ClCompile Include="Src\Planet\Private\Renderer\UIRenderer.cpp" />
     <ClCompile Include="Src\Planet\Private\Texture\Texture2D.cpp" />
+    <ClCompile Include="Src\Planet\Private\Texture\TextureFactory.cpp" />
     <ClCompile Include="Src\Planet\Private\WinMain.cpp" />
     <ClCompile Include="Src\Planet\Private\World\Scene.cpp" />
     <ClCompile Include="Src\Planet\Private\World\SkyDome.cpp" />
@@ -192,6 +197,7 @@
     <ClInclude Include="Src\Planet\Private\Renderer\UIRenderer.h" />
     <ClInclude Include="Src\Planet\Private\Renderer\D3D11\D3DTexture.h" />
     <ClInclude Include="Src\Planet\Private\Texture\Texture2D.h" />
+    <ClInclude Include="Src\Planet\Private\Texture\TextureFactory.h" />
     <ClInclude Include="Src\Planet\Private\World\CameraComponent.h" />
     <ClInclude Include="Src\Planet\Private\World\Scene.h" />
     <ClInclude Include="Src\Planet\Private\World\SkyDome.h" />

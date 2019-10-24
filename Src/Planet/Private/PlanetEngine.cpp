@@ -19,6 +19,7 @@
 #include <thread>
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
+#include "Texture/TextureFactory.h"
 
 PlanetEngine::PlanetEngine()
 {
@@ -56,8 +57,7 @@ void PlanetEngine::Run()
 	std::shared_ptr<Material> standardMaterial = std::make_shared<Material>("PixelShader.hlsl");
 	std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
 
-	std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>(512u, 512u);
-	texture->Fill(Colour{0, 0, 255, 255});
+	std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
 
 	texturedMaterial->AddTexture(texture);
 

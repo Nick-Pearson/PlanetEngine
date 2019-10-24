@@ -1,8 +1,8 @@
 #include "Window.h"
 
 #include "../PlanetEngine.h"
-#include "../../../../Lib/imgui-1.73/imgui.h"
-#include "../../../../Lib/imgui-1.73/imgui_impl_win32.h"
+#include "imgui.h"
+#include "imgui_impl_win32.h"
 
 namespace
 {

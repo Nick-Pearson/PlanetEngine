@@ -4,7 +4,7 @@
 #include "../Renderer/D3D11/D3DRenderer.h"
 #include "../PlanetEngine.h"
 #include "../Renderer/RenderManager.h"
-#include "../../../../Lib/imgui-1.73/imgui.h"
+#include "imgui.h"
 #include "../Material/Material.h"
 
 SkyDome::SkyDome()
