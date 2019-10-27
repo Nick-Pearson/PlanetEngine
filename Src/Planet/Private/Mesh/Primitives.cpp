@@ -69,6 +69,7 @@ std::shared_ptr<Mesh> Primitives::Cube(float scale)
 	};
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
 	cube->RecalculateNormals();
+	return cube;
 }
 
 std::shared_ptr<Mesh> Primitives::Plane(float scale)

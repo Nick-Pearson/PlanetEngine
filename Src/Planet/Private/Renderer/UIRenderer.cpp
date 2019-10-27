@@ -1,9 +1,9 @@
 #include "UIRenderer.h"
 
 #include "../Platform/Window.h"
+#include "../Platform/planet_imgui.h"
 
 #include "imgui.h"
-#include "imgui_impl_win32.h"
 #include "imgui_impl_dx11.h"
 
 UIRenderer::UIRenderer(const Window* window, Microsoft::WRL::ComPtr <ID3D11Device> device, Microsoft::WRL::ComPtr <ID3D11DeviceContext> context)
