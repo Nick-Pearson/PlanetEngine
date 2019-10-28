@@ -1,7 +1,7 @@
 #include "MeshComponent.h"
 
 #include "../Renderer/Renderer.h"
-#include "../PlanetEngine.h"
+#include "PlanetEngine.h"
 #include "GPUResourceManager.h"
 #include "../Renderer/D3D11/D3DShader.h"
 #include "Mesh.h"

@@ -4,11 +4,12 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
-            "name": "(Windows) Launch",
+            "name": "Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bazel-bin/planet-engine.exe",
+            "program": "${workspaceFolder}/bazel-bin/planet-game",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

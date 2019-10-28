@@ -1,6 +1,6 @@
 #include "Window.h"
 
-#include "../PlanetEngine.h"
+#include "PlanetEngine.h"
 #include "imgui.h"
 #include "planet_imgui.h"
 

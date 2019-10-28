@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Platform/Platform.h"
-#include "KeyCode.h"
+#include "Input/KeyCode.h"
 
 class InputManager
 #if PLATFORM_WIN

@@ -1,6 +1,6 @@
 #include "FlyCam.h"
+#include "PlanetEngine.h"
 #include "../Input/InputManager.h"
-#include "../PlanetEngine.h"
 #include "../World/CameraComponent.h"
 
 FlyCam::FlyCam()

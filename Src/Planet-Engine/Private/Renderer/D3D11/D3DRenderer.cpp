@@ -1,6 +1,6 @@
 #include "D3DRenderer.h"
 
-#include "../../Platform/Window.h"
+#include "Platform/Window.h"
 #include "D3DShader.h"
 #include "D3DTexture.h"
 #include <wrl/client.h>

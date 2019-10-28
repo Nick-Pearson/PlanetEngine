@@ -26,3 +26,13 @@ cc_library(
     ],
     linkstatic=True
 )
+
+cc_library(
+    name = "stb",
+    hdrs = [
+        "stb/stb_image.h",
+    ],
+    includes = [
+        "stb/",
+    ],
+)
