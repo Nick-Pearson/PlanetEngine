@@ -6,7 +6,7 @@
 #include <DirectXMath.h>
 #include <iostream>
 #include <wrl/client.h>
-#include "../../Container/LinkedList.h"
+#include "Container/LinkedList.h"
 #include "../RenderState.h"
 #include "../../PlanetLogging.h"
 #include "../../Math/Vector.h"

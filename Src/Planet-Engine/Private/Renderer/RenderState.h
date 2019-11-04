@@ -30,4 +30,13 @@ public:
 	Transform model;
 	const char* debugName;
 
+	bool operator==(const RenderState& other) const
+	{
+		return UseDepthBuffer == other.UseDepthBuffer &&
+			UseWorldMatrix == other.UseWorldMatrix &&
+			mesh == other.mesh &&
+			material == other.material &&
+			model == other.model &&
+			debugName == other.debugName;
+	}
 };

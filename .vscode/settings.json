@@ -1,6 +1,12 @@
 {
     "cquery.cacheDirectory": "${workspaceFolder}/.vscode/cquery_cached_index/",
     "files.associations": {
-        "memory": "cpp"
+        "memory": "cpp",
+        "functional": "cpp",
+        "optional": "cpp",
+        "regex": "cpp",
+        "system_error": "cpp",
+        "type_traits": "cpp",
+        "xtr1common": "cpp"
     }
 }

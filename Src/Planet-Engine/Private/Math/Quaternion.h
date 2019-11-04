@@ -36,6 +36,12 @@ public:
 	{
 		return Vector(DirectX::XMVector3Rotate(other.ToVectorReg(), value));
 	}
+	
+	bool operator==(const Quaternion& other) const
+	{
+		// TODO: Does this account for Quaternions having multiple representations for the same angle?
+		return DirectX::XMVector3Equal(value, other.value);
+	}
 
 public:
 

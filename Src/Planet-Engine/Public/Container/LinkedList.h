@@ -68,13 +68,41 @@ T* LinkedList<T>::Add(const T& item)
 template<typename T>
 bool LinkedList<T>::Remove(const T& item)
 {
-	return false;
+	Node* prev = nullptr;
+	Node* node = list;
+	while (node != nullptr)
+	{
+		if (&node->data == &item || node->data == item)
+		{
+			break;
+		}
+
+		prev = node;
+		node = node->next;
+	}
+
+	if (node == nullptr) return false;
+
+	if (prev != nullptr)
+	{
+		prev->next = node->next;
+	}
+	else
+	{
+		list = node->next;
+	}
+	--size;
+	DeleteNode(node);
+
+	return true;
 }
 
 template<typename T>
 bool LinkedList<T>::Remove(const T* item)
 {
-	return false;
+	if (item == nullptr) return false;
+
+	return Remove(*item);
 }
 
 template<typename T>
@@ -92,5 +120,6 @@ typename LinkedList<T>::Node* LinkedList<T>::CreateNode(const T& data)
 template<typename T>
 void LinkedList<T>::DeleteNode(Node* node)
 {
-
+	node->data.~T();
+	free(node);
 }

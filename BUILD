@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary")
 
 cc_library(
     name = "planet-engine",
@@ -14,6 +14,7 @@ cc_library(
         "Src/Planet-Engine/Public/**/*.h",
     ]),
     defines = ["PLATFORM_WIN=1"],
+    visibility = ["//visibility:public"],
 )
 
 cc_binary(
