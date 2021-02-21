@@ -6,7 +6,7 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "bazel build planet-engine && bazel build planet-game",
+            "command": "bazel build :planet-engine :planet-game -c dbg",
             "group": {
                 "kind": "build",
                 "isDefault": true

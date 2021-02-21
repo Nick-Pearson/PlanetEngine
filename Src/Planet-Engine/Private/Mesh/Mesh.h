@@ -3,8 +3,8 @@
 #include <vector>
 
 #include "GPUResourceManager.h"
-#include "../Math/Vector.h"
-#include "../Math/Vector2D.h"
+#include "Math/Vector.h"
+#include "Math/Vector2D.h"
 
 struct Vertex
 {
@@ -25,15 +25,10 @@ public:
 	Mesh(const Vertex* verticies, size_t vertexCount, const unsigned short* triangles, size_t trangleCount);
 	Mesh(const std::vector<Vertex>& verticies, const std::vector<unsigned short>& triangles);
 
-	inline bool IsLoaded() const { return handle != nullptr; }
-	inline GPUMeshHandle* GetGPUHandle() const { return handle; }
-
 	void RecalculateNormals();
 	void FlipFaces();
 
 private:
 	std::vector<Vertex> mVerticies;
 	std::vector<unsigned short> mTriangles;
-
-	GPUMeshHandle* handle;
 };

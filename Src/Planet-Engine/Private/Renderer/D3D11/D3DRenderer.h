@@ -9,9 +9,9 @@
 #include "Container/LinkedList.h"
 #include "../RenderState.h"
 #include "../../PlanetLogging.h"
-#include "../../Math/Vector.h"
+#include "Math/Vector.h"
 
-#define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { P_ERROR(Renderer, TEXT("Err")) } }
+#define d3dAssert( E ) { HRESULT r = (E); if(r != S_OK) { P_ERROR(TEXT("Err")) } }
 
 #define d3dFlushDebugMessages() \
 	{ \
@@ -78,7 +78,7 @@ public:
 	// renders a particular camera
 	void Render(std::shared_ptr<CameraComponent> camera);
 
-	inline GPUResourceManager* GetResourceManager() const { return mMeshManager.get(); }
+	inline GPUResourceManager* GetResourceManager() const { return mResourceManager.get(); }
 
 	RenderState* AddRenderState(const RenderState& state);
 	void RemoveRenderState(const RenderState* state);
@@ -145,7 +145,7 @@ private:
 
 	RenderState currentRenderState;
 
-	std::shared_ptr <GPUResourceManager> mMeshManager;
+	std::shared_ptr <GPUResourceManager> mResourceManager;
 
 	float aspectRatio;
 };

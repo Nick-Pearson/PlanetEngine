@@ -2,6 +2,7 @@
 #include "PlanetEngine.h"
 #include "../Input/InputManager.h"
 #include "../World/CameraComponent.h"
+#include "imgui.h"
 
 FlyCam::FlyCam()
 {
@@ -54,4 +55,14 @@ void FlyCam::OnUpdate(float deltaSeconds)
 
 	Rotate(rotation * deltaSeconds * mTurnSpeed);
 	Translate((transform.rotation * movement) * deltaSeconds * mMoveSpeed);
+
+	
+	ImGui::Begin("Camera");
+	if (ImGui::Button("Reset Camera"))
+	{
+		transform = Transform();
+		Translate(Vector{ 0.0f, 4.0f, 10.0f });
+		Rotate(Vector{ 0.0f, 180.0f, 0.0f });
+	}
+	ImGui::End();
 }

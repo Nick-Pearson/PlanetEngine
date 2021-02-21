@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "../Math/Elipsoid.h"
+#include "Math/Elipsoid.h"
 #include "Mesh.h"
 
 class Primitives

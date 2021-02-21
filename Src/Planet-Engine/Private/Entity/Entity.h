@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "../Math/Transform.h"
+#include "Math/Transform.h"
 #include "Component.h"
 
 class Scene;

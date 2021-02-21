@@ -1,7 +1,7 @@
 // atmosphere radius (in km)
-#define RA 6420e3f
+#define RA 6420000.0f
 // earth radius (in km)
-#define RE 6360e3f
+#define RE 6360000.0f
 
 //Thickness of the atmosphere if density was uniform for Rayliegh and Mie
 #define HR 7994.0f
@@ -12,7 +12,7 @@
 
 #define PI 3.14159265359f
 
-#define BETA_R float3(5.5e-6f, 13.0e-6f, 22.4e-6f)
+#define BETA_R float3(3.8e-6f, 13.5e-6f, 33.1e-6f)
 #define BETA_M float3(21e-6f, 21e-6f, 21e-6f)
 
 cbuffer CBuff_World
@@ -23,42 +23,49 @@ cbuffer CBuff_World
 	float3 sunCol;
 };
 
-float intersect_atmosphere(float3 orig, float3 dir)
+float intersect_atmosphere(float3 orig, float3 dir, out float t0, out float t1)
 {
-	float3 rc = -orig;
+	const float3 rc = -orig; // -100
+	const float radius2 = RA * RA; // 400000
 
 	float tca = dot(rc, dir);
 	float d2 = dot(rc, rc) - (tca * tca);
-
-	const float radius2 = RA * RA;
 	
 	// shouldn't happen
-	if (d2 > radius2) return -1.0f;
+	if (d2 > radius2) return false;
 
-	return tca + sqrt(radius2 - d2);
+	float thc = sqrt(radius2 - d2);
+	t0 = tca - thc;
+	t1 = tca + thc;
+	return true;
 }
 
 float rayleigh_phase(float mu)
 {
-	return (3.f + (3.f * mu * mu)) / (16.f * PI);
+	return 3.f / (16.f * PI) * (1 + mu * mu);
 }
 
 float mie_phase(float mu)
 {
-	const float g = 0.95f;
+	const float g = 0.76f;
 	const float g2 = g * g;
-	return (1.0f - g2) / ((4.0f+PI) * pow(abs(1.0f + g2 - (2.0f*g*mu)), 1.5f));
+	return 3.f / (8.f * PI) * ((1.f - g2) * (1.f + mu * mu)) / ((2.f + g2) * pow(abs(1.0f + g2 - 2.0f * g * mu), 1.3f));
 }
 
-float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
+float4 main(float3 normal : Color0) : SV_Target
 {
-	float3 dir = -normal;
-	float3 orig = float3(0.0f, RE + 1.0f, 0.0f);
+	float3 dir = normalize(-normal);
+	float3 orig = float3(0.0f, RE * 1.0f, 0.0f);
 
 	// work out the amount of atmosphere we are looking through
-	float t = intersect_atmosphere(orig, dir);
+	float t0, t1;
+	if (!intersect_atmosphere(orig, dir, t0, t1))
+	{
+		return float4(1.0f, 0.0f, 1.0f, 1.0f);
+	}
+	t0 = max(t0, 0);
 
-	const float segmentLen = t / float(NUM_SAMPLES);
+	const float segmentLen = (t1 - t0) / float(NUM_SAMPLES);
 	const float mu = dot(dir, sunDir);
 	
 	const float phaseR = rayleigh_phase(mu);
@@ -66,7 +73,7 @@ float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 	
 	float opticalDepthR = 0.0f;
 	float opticalDepthM = 0.0f;
-	float tCurrent = 0.0f;
+	float tCurrent = t0;
 
 	float3 sumR = float3(0.0f, 0.0f, 0.0f);
 	float3 sumM = float3(0.0f, 0.0f, 0.0f);
@@ -78,22 +85,25 @@ float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 		float height = length(samplePosition) - RE;
 
 		// compute optical depth for light
-		float hr = exp(-height / HR) * segmentLen;
-		float hm = exp(-height / HM) * segmentLen;
+		const float hr = exp(-height / HR) * segmentLen;
+		const float hm = exp(-height / HM) * segmentLen;
 		opticalDepthR += hr;
 		opticalDepthM += hm;
 
 		// calculate sun light
-		float tLight = intersect_atmosphere(samplePosition, sunDir);
-		if (tLight < 0.0f) return float4(1.0f, 0.0f, 1.0f, 1.0f);
-		float segmentLengthLight = tLight / float(NUM_SAMPLES_LIGHT);
+		float t0Light, t1Light;
+		if (!intersect_atmosphere(samplePosition, sunDir, t0Light, t1Light))
+		{
+			return float4(0.0f, 1.0f, 0.0f, 1.0f);
+		}
+		float segmentLengthLight = t1Light / float(NUM_SAMPLES_LIGHT);
 		float tCurrentLight = 0.0f;
 		float opticalDepthLightR = 0.0f;
 		float opticalDepthLightM = 0.0f;
 
 		int j = 0;
 
-		[unroll(NUM_SAMPLES_LIGHT)]
+		[loop]
 		for (; j < NUM_SAMPLES_LIGHT; ++j)
 		{
 			float3 samplePositionLight = samplePosition + (tCurrentLight + segmentLengthLight * 0.5f) * sunDir;
@@ -101,7 +111,7 @@ float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 
 			if (heightLight < 0.0f) break;
 
-			opticalDepthLightR += exp(-heightLight / HM) * segmentLengthLight;
+			opticalDepthLightR += exp(-heightLight / HR) * segmentLengthLight;
 			opticalDepthLightM += exp(-heightLight / HM) * segmentLengthLight;
 
 			tCurrentLight += segmentLengthLight;
@@ -120,6 +130,8 @@ float4 main(float3 normal : Color0, float3 worldPos : Color1) : SV_Target
 		tCurrent += segmentLen;
 	}
 
-	float3 col = (sumR * phaseR * BETA_R + sumM * phaseM * BETA_M) * sunSkyStrength;
-	return float4(col, 1.0f);
+	float3 col = float3(0.0f, 0.0f, 0.0f);
+	col += sumR * phaseR * BETA_R;
+	col += sumM * phaseM * BETA_M;
+	return float4(col * sunSkyStrength, 1.0f);
 }

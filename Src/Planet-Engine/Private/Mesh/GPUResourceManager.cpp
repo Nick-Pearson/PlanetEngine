@@ -16,9 +16,9 @@ GPUResourceManager::~GPUResourceManager()
 {
 }
 
-void GPUResourceManager::LoadMesh(std::shared_ptr<Mesh> mesh)
+GPUMeshHandle* GPUResourceManager::LoadMesh(std::shared_ptr<Mesh> mesh)
 {
-	if (!mesh) return;
+	if (!mesh) return nullptr;
 
 	GPUMeshHandle entry;
 	entry.mesh = mesh;
@@ -28,8 +28,7 @@ void GPUResourceManager::LoadMesh(std::shared_ptr<Mesh> mesh)
 	CreateBuffer((const void*)mesh->mVerticies.data(), mesh->mVerticies.size(), sizeof(Vertex), D3D11_BIND_VERTEX_BUFFER, entry.vertexBuffer);
 	CreateBuffer((const void*)mesh->mTriangles.data(), mesh->mTriangles.size(), sizeof(unsigned short), D3D11_BIND_INDEX_BUFFER, entry.triangleBuffer);
 
-	GPUMeshHandle* ptr = mLoadedMeshes.Add(entry);
-	mesh->handle = ptr;
+	return mLoadedMeshes.Add(entry);
 }
 
 void GPUResourceManager::UnloadMesh(std::shared_ptr<Mesh> mesh)
@@ -37,46 +36,66 @@ void GPUResourceManager::UnloadMesh(std::shared_ptr<Mesh> mesh)
 
 }
 
-void GPUResourceManager::LoadMaterial(std::shared_ptr<Material> material)
+std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(std::shared_ptr<Material> material)
 {
-	std::shared_ptr <D3DShader> compiledShader = LoadShader(material->GetShaderPath().c_str());
+	auto existing = mLoadedMaterials.find(material->GetShaderPath());
+	if (existing != mLoadedMaterials.end())
+	{
+		P_LOG("Reusing existing loaded shader for %s", material->GetShaderPath().c_str());
+		return existing->second;
+	}
 
-	GPUMaterialHandle entry;
-	entry.material = material;
-	entry.shader = compiledShader;
+	std::shared_ptr <D3DShader> compiledShader = LoadShader(material->GetShaderPath(), false);
+
+	std::shared_ptr<GPUMaterialHandle> entry = std::make_shared<GPUMaterialHandle>();
+	entry->material = material;
+	entry->shader = compiledShader;
 
 	int numTextures = material->GetNumTextures();
 	for (int i = 0; i < numTextures; ++i)
 	{
 		std::shared_ptr<Texture2D> texture = material->GetTextureAt(i);
-		entry.textures.push_back(std::make_shared<D3DTexture>(texture.get(), mDevice));
+		entry->textures.push_back(std::make_shared<D3DTexture>(texture.get(), mDevice));
 	}
 
-	GPUMaterialHandle* ptr = mLoadedMaterials.Add(entry);
-	material->mHandle = ptr;
+	mLoadedMaterials.emplace(material->GetShaderPath(), entry);
+	return entry;
 }
 
-std::shared_ptr<D3DShader> GPUResourceManager::LoadShader(const char* ShaderFile)
+void GPUResourceManager::ReloadAllShaders()
 {
-	std::string key = ShaderFile;
-
-	auto it = loadedShaders.find(key);
-	if (it != loadedShaders.end())
+	P_LOG("Reloading all shaders");
+	for (auto i : mLoadedMaterials)
 	{
-		return it->second;
+		std::shared_ptr <D3DShader> compiledShader = LoadShader(i.first, true);
+		i.second->shader = compiledShader;
+	}
+}
+
+std::shared_ptr<D3DShader> GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)
+{
+	if (!force)
+	{
+		auto it = loadedShaders.find(shaderFile);
+		if (it != loadedShaders.end())
+		{
+			return it->second;
+		}
 	}
 
-	wchar_t* unicodeStr = new wchar_t[key.size() + 1];
-	unicodeStr[key.size()] = 0;
-	for (unsigned int i = 0; i < key.size(); ++i)
+	P_LOG("Loading shader file %s", shaderFile.c_str());
+
+	wchar_t* unicodeStr = new wchar_t[shaderFile.size() + 1];
+	unicodeStr[shaderFile.size()] = 0;
+	for (unsigned int i = 0; i < shaderFile.size(); ++i)
 	{
-		unicodeStr[i] = key[i];
+		unicodeStr[i] = shaderFile[i];
 	}
 
 	std::shared_ptr<D3DShader> shader = std::make_shared<D3DShader>(unicodeStr, ShaderType::Pixel, mDevice);
 	delete unicodeStr;
 
-	loadedShaders.emplace(key, shader);
+	loadedShaders.emplace(shaderFile, shader);
 
 	return shader;
 }

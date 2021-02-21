@@ -3,14 +3,20 @@
 #include "Platform/Platform.h"
 #include <iostream>
 #include "Container/String.h"
+#include <ctime>
 
-#define P_LOG(Category, Format, ...) \
+#define P_LOG(Format, ...) \
 	{ \
 	String msg =  String::Printf(Format, ##__VA_ARGS__); \
-	String LogMsg = String::Printf(TEXT("[%s] %s\n"), #Category , *msg); \
-	std::cout << *LogMsg << std::endl; \
+	time_t * rawtime = new time_t; \
+	struct tm * timeinfo; \
+	time(rawtime); \
+	timeinfo = localtime(rawtime); \
+	char buf[80]; \
+    strftime(buf, sizeof(buf), "%X", timeinfo); \
+	String LogMsg = String::Printf(TEXT("%s [%s] %s\n"), buf, typeid(*this).name(), *msg); \
 	OutputDebugString(*LogMsg); \
 	}
 
 
-#define P_ERROR(Category, Format, ...) P_LOG(Category, Format, ##__VA_ARGS__)
+#define P_ERROR(Format, ...) P_LOG(Format, ##__VA_ARGS__)

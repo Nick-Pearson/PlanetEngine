@@ -13,6 +13,7 @@
 #include "Input/InputManager.h"
 #include "Editor/FlyCam.h"
 #include "Renderer/RenderManager.h"
+#include "imgui.h"
 
 #include <memory>
 #include <chrono>
@@ -64,7 +65,7 @@ void PlanetEngine::Run()
 	std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
 	std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
 	cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
-	cameraEntity->Rotate(Vector{ 15.0f, 180.0f, 0.0f });
+	cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
 	mRenderManager->SetCamera(cameraComp);
 
 	std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
@@ -75,7 +76,7 @@ void PlanetEngine::Run()
 	floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
 	floorEntity->AddComponent<MeshComponent>(Primitives::Plane(10.0f), standardMaterial);
 
-	std::shared_ptr<Entity> planeEntity = scene->SpawnEntity("floor");
+	std::shared_ptr<Entity> planeEntity = scene->SpawnEntity("wall");
 	planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
 	planeEntity->Translate(Vector{ -4.0f, -2.0f, -2.0f });
 	planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);

@@ -26,6 +26,8 @@ public:
 
 private:
 
+	void RenderDebugUI();
+
 	void InitD3D11Device(const Window* targetWindow);
 
 private:
@@ -39,4 +41,6 @@ private:
 	const Window* mWindow;
 	Renderer* mRenderer;
 	class UIRenderer* mUIRenderer;
+
+	long long lastFrameMS = 1;
 };

@@ -23,9 +23,9 @@ D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::C
 
 	if (ErrorBlob || mShaderBlob == nullptr)
 	{
-		P_ERROR(Shader, TEXT("Error compiling shader file: %S"), filename);
+		P_ERROR(TEXT("Error compiling shader file: %S"), filename);
 		const char* message = (const char*)ErrorBlob->GetBufferPointer();
-		P_LOG(Shader, TEXT("%s"), message);
+		P_LOG(TEXT("%s"), message);
 		return;
 	}
 

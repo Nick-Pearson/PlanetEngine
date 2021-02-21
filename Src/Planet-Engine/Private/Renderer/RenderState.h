@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "../Math/Transform.h"
+#include "Math/Transform.h"
 
 class D3DShader;
 struct GPUMeshHandle;
@@ -26,7 +26,7 @@ public:
 	bool UseWorldMatrix;
 
 	GPUMeshHandle* mesh;
-	GPUMaterialHandle* material;
+	std::shared_ptr<GPUMaterialHandle> material;
 	Transform model;
 	const char* debugName;
 

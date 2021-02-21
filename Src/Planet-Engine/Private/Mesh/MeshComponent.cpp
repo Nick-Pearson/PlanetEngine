@@ -54,11 +54,9 @@ void MeshComponent::OnSpawned()
 	Component::OnSpawned();
 
 	Renderer* renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
-	renderer->GetResourceManager()->LoadMesh(mMesh);
-	renderer->GetResourceManager()->LoadMaterial(mMaterial);
 
-	renderState.mesh = mMesh->GetGPUHandle();
-	renderState.material = mMaterial->GetGPUHandle();
+	renderState.mesh = renderer->GetResourceManager()->LoadMesh(mMesh);
+	renderState.material = renderer->GetResourceManager()->LoadMaterial(mMaterial);
 	renderState.model = GetWorldTransform();
 
 	SetVisibility(true);

@@ -1,7 +1,11 @@
 #include "RenderManager.h"
 
 #include "D3D11/D3DRenderer.h"
+#include "Mesh/GPUResourceManager.h"
 #include "UIRenderer.h"
+
+#include "imgui.h"
+#include <chrono>
 
 RenderManager::RenderManager(const Window* window) :
 	mWindow(window)
@@ -17,13 +21,32 @@ RenderManager::~RenderManager()
 	delete mUIRenderer;
 }
 
+using namespace std::chrono;
+
 void RenderManager::RenderFrame()
 {
+	high_resolution_clock::time_point start = high_resolution_clock::now();
 	mRenderer->Render(mCamera);
+	RenderDebugUI();
 	mUIRenderer->Render();
 	mRenderer->SwapBuffers();
-	mUIRenderer->NewFrame();
+	mUIRenderer->NewFrame();	
+	auto time = high_resolution_clock::now() - start;
+	lastFrameMS = time/std::chrono::milliseconds(1);
 }
+
+void RenderManager::RenderDebugUI()
+{
+	ImGui::Begin("Rendering");
+	auto fps = lastFrameMS > 0 ? 1000 / lastFrameMS : 0;
+	ImGui::Text("%d FPS (%d ms)", fps, lastFrameMS);
+	if (ImGui::Button("Reload all shaders"))
+	{
+		mRenderer->GetResourceManager()->ReloadAllShaders();
+	}
+	ImGui::End();
+}
+
 
 void RenderManager::SetCamera(std::shared_ptr<CameraComponent> camera)
 {

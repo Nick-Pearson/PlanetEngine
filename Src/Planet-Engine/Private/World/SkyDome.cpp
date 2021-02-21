@@ -34,7 +34,6 @@ void SkyDome::OnUpdate(float deltaSeconds)
 
 	PlanetEngine::Get()->GetRenderManager()->GetRenderer()->UpdateWorldBuffer(WorldBufferData(sunRotation * Vector{0.0f, 1.0f, 0.0f}, mSunSkyStrength, mSunColour));
 
-	bool open = true;
 	ImGui::Begin("Sky Dome");
 	ImGui::SliderFloat("Sun Strength", &mSunSkyStrength, 0.0f, 50.0f, "%.2f strength");
 	ImGui::Checkbox("Pause Time", &mPauseTime);

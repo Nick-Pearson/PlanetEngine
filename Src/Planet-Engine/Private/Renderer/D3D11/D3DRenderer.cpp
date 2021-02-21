@@ -8,7 +8,7 @@
 #include "../../Mesh/GPUResourceManager.h"
 #include "../../Mesh/Mesh.h"
 #include "../../World/CameraComponent.h"
-#include "../../Math/Transform.h"
+#include "Math/Transform.h"
 
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
@@ -111,7 +111,7 @@ D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3
 
 	DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
 
-	mMeshManager = std::make_shared<GPUResourceManager>(mDevice);
+	mResourceManager = std::make_shared<GPUResourceManager>(mDevice);
 }
 
 D3DRenderer::~D3DRenderer()
