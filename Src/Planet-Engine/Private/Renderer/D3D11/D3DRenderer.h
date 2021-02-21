@@ -100,6 +100,9 @@ private:
 	Microsoft::WRL::ComPtr <ID3D11DepthStencilView> mDepthStencilView;
 	Microsoft::WRL::ComPtr <IDXGIInfoQueue> mDxgiInfoQueue;
 
+	Microsoft::WRL::ComPtr<ID3D11BlendState> mAlphaBlendState;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
+
 	// standard vertex shader, later will be specified based on which vertex attributes a mesh has
 	std::shared_ptr<D3DShader> vertexShader;
 

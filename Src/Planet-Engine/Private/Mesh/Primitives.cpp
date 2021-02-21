@@ -33,14 +33,14 @@ std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& el
 std::shared_ptr<Mesh> Primitives::Cube(float scale)
 {
 	Vertex v[] = {
-		Vector{ -1.0f, -1.0f, 1.0f },
-		Vector{ 1.0f,  -1.0f, 1.0f },
-		Vector{ -1.0f, -1.0f, -1.0f },
-		Vector{ 1.0f,  -1.0f, -1.0f },
-		Vector{ -1.0f, 1.0f, 1.0f },
-		Vector{ 1.0f,  1.0f, 1.0f },
-		Vector{ -1.0f, 1.0f, -1.0f },
-		Vector{ 1.0f,  1.0f, -1.0f },
+		Vertex{ Vector{ -1.0f, -1.0f, 1.0f },  Vector{}, Vector2D{ 0.0f, 1.0f } },
+		Vertex{ Vector{ 1.0f,  -1.0f, 1.0f },  Vector{}, Vector2D{ 1.0f, 1.0f } },
+		Vertex{ Vector{ -1.0f, -1.0f, -1.0f }, Vector{}, Vector2D{ 0.0f, 0.0f } },
+		Vertex{ Vector{ 1.0f,  -1.0f, -1.0f }, Vector{}, Vector2D{ 1.0f, 0.0f } },
+		Vertex{ Vector{ -1.0f, 1.0f, 1.0f },   Vector{}, Vector2D{ 0.0f, 1.0f } },
+		Vertex{ Vector{ 1.0f,  1.0f, 1.0f },   Vector{}, Vector2D{ 1.0f, 1.0f } },
+		Vertex{ Vector{ -1.0f, 1.0f, -1.0f },  Vector{}, Vector2D{ 0.0f, 0.0f } },
+		Vertex{ Vector{ 1.0f,  1.0f, -1.0f},   Vector{}, Vector2D{ 1.0f, 0.0f }}
 	};
 	unsigned short t[] = {
 		// front
@@ -69,6 +69,7 @@ std::shared_ptr<Mesh> Primitives::Cube(float scale)
 	};
 	std::shared_ptr<Mesh> cube = std::make_shared<Mesh>(v, 8, t, 36);
 	cube->RecalculateNormals();
+	cube->Scale(Vector{ scale, scale, scale });
 	return cube;
 }
 

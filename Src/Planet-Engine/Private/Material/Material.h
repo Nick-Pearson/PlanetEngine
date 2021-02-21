@@ -16,8 +16,11 @@ public:
 	void AddTexture(std::shared_ptr<Texture2D> texture);
 	inline std::shared_ptr<Texture2D> GetTextureAt(int slot) const { return mTextures[slot]; }
 	inline int GetNumTextures() const { return mTextures.size(); }
+	inline void EnableAlphaBlending() { mAlpha = true; }
+	inline bool IsAlphaBlendingEnabled() { return mAlpha; }
 
 private:
+	bool mAlpha= false;
 	std::string mShaderPath;
 	std::vector<std::shared_ptr<Texture2D>> mTextures;
 };

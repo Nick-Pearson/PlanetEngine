@@ -32,6 +32,7 @@ struct GPUMaterialHandle
 	std::shared_ptr<Material> material;
 	std::shared_ptr<D3DShader> shader;
 	std::vector<std::shared_ptr<D3DTexture>> textures;
+	bool alpha;
 };
 
 class GPUResourceManager

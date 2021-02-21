@@ -61,3 +61,12 @@ void Mesh::FlipFaces()
 		v.normal *= -1.0f;
 	}
 }
+
+
+void Mesh::Scale(const Vector& scaleFactor)
+{
+	for (Vertex& v : mVerticies)
+	{
+		v.positon *= scaleFactor;
+	}
+}

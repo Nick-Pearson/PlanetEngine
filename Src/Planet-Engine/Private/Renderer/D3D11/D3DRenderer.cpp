@@ -104,6 +104,28 @@ D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3
 	ID3D11Buffer* PixBuffers[1] = { mWorldPixelBuffer.Get() };
 	mContext->PSSetConstantBuffers(0u, 1u, PixBuffers);
 
+	{
+		D3D11_BLEND_DESC blendDesc = CD3D11_BLEND_DESC{ CD3D11_DEFAULT{} };
+		auto& brt = blendDesc.RenderTarget[0];
+		brt.BlendEnable = TRUE;
+		brt.SrcBlend = D3D11_BLEND_SRC_ALPHA;
+		brt.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+		brt.BlendOp = D3D11_BLEND_OP_ADD;
+		brt.SrcBlendAlpha = D3D11_BLEND_ZERO;
+		brt.DestBlendAlpha = D3D11_BLEND_ZERO;
+		brt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		brt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		d3dAssert(mDevice->CreateBlendState(&blendDesc, &mAlphaBlendState));
+	}
+	{
+		D3D11_BLEND_DESC blendDesc = CD3D11_BLEND_DESC{ CD3D11_DEFAULT{} };
+		auto& brt = blendDesc.RenderTarget[0];
+		brt.BlendEnable = FALSE;
+		brt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+		d3dAssert(mDevice->CreateBlendState(&blendDesc, &mNoAlphaBlendState));
+	}
+	mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
+
 	const auto hModDxgiDebug = LoadLibraryEx("dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
 	// get address of DXGIGetDebugInterface in dll
 	typedef HRESULT (WINAPI* DXGIGetDebugInterface)(REFIID, IDXGIInfoQueue **);
@@ -222,6 +244,15 @@ void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 		for (unsigned int i = 0; i < state.material->textures.size(); ++i)
 		{
 			state.material->textures[i]->Use(mContext.Get(), i);
+		}
+
+		if (state.material->alpha)
+		{
+			mContext->OMSetBlendState(mAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
+		}
+		else
+		{
+			mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
 		}
 	}
 

@@ -50,6 +50,7 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(std::shared_
 	std::shared_ptr<GPUMaterialHandle> entry = std::make_shared<GPUMaterialHandle>();
 	entry->material = material;
 	entry->shader = compiledShader;
+	entry->alpha = material->IsAlphaBlendingEnabled();
 
 	int numTextures = material->GetNumTextures();
 	for (int i = 0; i < numTextures; ++i)

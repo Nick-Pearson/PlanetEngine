@@ -9,7 +9,7 @@
 
 SkyDome::SkyDome()
 {
-	std::shared_ptr<Mesh> mesh = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(1.0f), 5);
+	std::shared_ptr<Mesh> mesh = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(1.0f), 3);
 	mesh->FlipFaces();
 	std::shared_ptr<Material> skyMaterial = std::make_shared<Material>("SkySphere.hlsl");
 	mDomeMesh = AddComponent<MeshComponent>(mesh, skyMaterial);

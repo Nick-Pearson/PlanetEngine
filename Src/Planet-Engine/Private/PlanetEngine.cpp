@@ -10,6 +10,7 @@
 #include "Mesh/MeshComponent.h"
 #include "World/CameraComponent.h"
 #include "World/SkyDome.h"
+#include "World/CloudBox.h"
 #include "Input/InputManager.h"
 #include "Editor/FlyCam.h"
 #include "Renderer/RenderManager.h"
@@ -82,6 +83,7 @@ void PlanetEngine::Run()
 	planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
 
 	scene->SpawnEntity<SkyDome>("sky");
+	// scene->SpawnEntity<CloudBox>("clouds");
 
 	float deltaTime = 0.01f;
 	auto begin = std::chrono::high_resolution_clock::now();

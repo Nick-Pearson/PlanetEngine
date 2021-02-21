@@ -28,6 +28,8 @@ public:
 	void RecalculateNormals();
 	void FlipFaces();
 
+	void Scale(const Vector& scaleFactor);
+
 private:
 	std::vector<Vertex> mVerticies;
 	std::vector<unsigned short> mTriangles;
