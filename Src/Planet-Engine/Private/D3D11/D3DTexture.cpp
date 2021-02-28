@@ -2,7 +2,7 @@
 
 #include <d3d11.h>
 
-#include "../../Texture/Texture2D.h"
+#include "../Texture/Texture2D.h"
 
 D3DTexture::D3DTexture(const Texture2D* texture, Microsoft::WRL::ComPtr <ID3D11Device> inDevice)
 {

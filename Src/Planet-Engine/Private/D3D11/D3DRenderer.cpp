@@ -8,9 +8,9 @@
 #include "Platform/Window.h"
 #include "D3DShader.h"
 #include "D3DTexture.h"
-#include "../../Mesh/GPUResourceManager.h"
-#include "../../Mesh/Mesh.h"
-#include "../../World/CameraComponent.h"
+#include "../Mesh/GPUResourceManager.h"
+#include "../Mesh/Mesh.h"
+#include "../World/CameraComponent.h"
 #include "Math/Transform.h"
 
 #pragma comment(lib, "d3d11.lib")

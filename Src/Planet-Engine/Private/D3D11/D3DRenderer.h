@@ -9,8 +9,8 @@
 #include "Platform/PlanetWindows.h"
 #include <DirectXMath.h>
 #include "Container/LinkedList.h"
-#include "../RenderState.h"
-#include "../../PlanetLogging.h"
+#include "../renderer/RenderState.h"
+#include "../PlanetLogging.h"
 #include "Math/Vector.h"
 
 #define d3dAssert( E ) { HRESULT r = (E); if (r != S_OK) { P_ERROR(TEXT("Err")) } }

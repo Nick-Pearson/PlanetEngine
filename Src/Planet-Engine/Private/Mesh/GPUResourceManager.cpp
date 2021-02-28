@@ -3,9 +3,9 @@
 #include <string>
 
 #include "Mesh.h"
-#include "../Renderer/D3D11/D3DRenderer.h"
-#include "../Renderer/D3D11/D3DShader.h"
-#include "../Renderer/D3D11/D3DTexture.h"
+#include "../D3D11/D3DRenderer.h"
+#include "../D3D11/D3DShader.h"
+#include "../D3D11/D3DTexture.h"
 #include "../Material/Material.h"
 #include "../Texture/Texture2D.h"
 
@@ -50,7 +50,7 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(std::shared_
     auto existing = mLoadedMaterials.find(material->GetShaderPath());
     if (existing != mLoadedMaterials.end())
     {
-        P_LOG("Reusing existing loaded shader for %s", material->GetShaderPath().c_str());
+        P_LOG("Reusing existing loaded material for %s", material->GetShaderPath().c_str());
         return existing->second;
     }
 
