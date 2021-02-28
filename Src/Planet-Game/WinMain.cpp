@@ -3,12 +3,12 @@
 
 int CALLBACK WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nShowCmd)
 {
-	PlanetEngine* eng = PlanetEngine::Get();
-	
-	eng->Run();
-	int code = eng->GetExitCode();
+    PlanetEngine* eng = PlanetEngine::Get();
 
-	//eng->Shutdown();
+    eng->Run();
+    int code = eng->GetExitCode();
 
-	return code;
+    // eng->Shutdown();
+
+    return code;
 }

@@ -7,12 +7,12 @@
 
 std::shared_ptr<Texture2D> TextureFactory::fromFile(const char* filepath)
 {
-	int width, height, components;
-	unsigned char *data = stbi_load(filepath, &width, &height, &components, 4);
+    int width, height, components;
+    unsigned char *data = stbi_load(filepath, &width, &height, &components, 4);
 
-	std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>(width, height);
-	memcpy(texture->GetData(), data, width * height * sizeof(unsigned char) * 4);
+    std::shared_ptr<Texture2D> texture = std::make_shared<Texture2D>(width, height);
+    memcpy(texture->GetData(), data, width * height * sizeof(unsigned char) * 4);
 
-	stbi_image_free(data);
-	return texture;
+    stbi_image_free(data);
+    return texture;
 }

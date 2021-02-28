@@ -6,25 +6,24 @@
 
 enum class ShaderType
 {
-	Vertex,
-	Pixel
+    Vertex,
+    Pixel
 };
 
 class D3DShader
 {
-public:
-	D3DShader(const wchar_t* filepath, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice);
-	~D3DShader();
+ public:
+    D3DShader(const wchar_t* filepath, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice);
+    ~D3DShader();
 
-	void Use(ID3D11DeviceContext* context);
+    void Use(ID3D11DeviceContext* context);
 
-	ID3DBlob* mShaderBlob = nullptr;
+    ID3DBlob* mShaderBlob = nullptr;
 
-private:
+ private:
+    ShaderType shaderType;
+    Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
 
-	ShaderType shaderType;
-	Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
-
-	Microsoft::WRL::ComPtr <ID3D11PixelShader> mPixelHandle;
-	Microsoft::WRL::ComPtr <ID3D11VertexShader> mVertexHandle;
+    Microsoft::WRL::ComPtr <ID3D11PixelShader> mPixelHandle;
+    Microsoft::WRL::ComPtr <ID3D11VertexShader> mVertexHandle;
 };

@@ -1,148 +1,146 @@
 #pragma once
 
-#include "../Platform/Platform.h"
 #include <cstdarg>
+
+#include "../Platform/Platform.h"
 
 // TODO: Rewrite this in terms of some array class
 class String
 {
-public:
+ public:
+    // Constructor and Destructor
+    String()
+    {
+        Empty();
+    }
 
-	// Constructor and Destructor
-	String()
-	{
-		Empty();
-	}
+    String(const String& other)
+    {
+        *this = other;
+    }
 
-	String(const String& other)
-	{
-		*this = other;
-	}
+    String(String&& other)
+    {
+        *this = other;
+    }
 
-	String(String&& other)
-	{
-		*this = other;
-	}
+    template<typename CharType>
+    explicit String(const CharType* charArray)
+    {
+        int len = 0;
+        const CharType* charPtr = charArray;
+        while (*charPtr != 0)
+        {
+            ++len;
+            ++charPtr;
+        }
 
-	template<typename CharType>
-	String(const CharType* charArray)
-	{
-		int len = 0;
-		const CharType* charPtr = charArray;
-		while (*charPtr != 0)
-		{
-			++len;
-			++charPtr;
-		}
+        ResizeTo(len);
 
-		ResizeTo(len);
+        if (sizeof(TCHAR) == sizeof(CharType))
+        {
+            memcpy(mData, charArray, (len + 1) * sizeof(TCHAR));
+        }
+        else
+        {
+            for (int i = 0; i <= len; ++i)
+            {
+                mData[i] = (TCHAR)charArray[i];
+            }
+        }
+    }
 
-		if (sizeof(TCHAR) == sizeof(CharType))
-		{
-			memcpy(mData, charArray, (len + 1) * sizeof(TCHAR));
-		}
-		else
-		{
-			for (int i = 0; i <= len; ++i)
-			{
-				mData[i] = (TCHAR)charArray[i];
-			}
-		}
-	}
+    explicit String(unsigned char c)
+    {
+        ResizeTo(1);
+        mData[0] = c;
+    }
 
-	String(unsigned char c)
-	{
-		ResizeTo(1);
-		mData[0] = c;
-	}
-
-	~String();
+    ~String();
 
 
-	// Operators
+    // Operators
 
-	const TCHAR* operator*() const
-	{
-		return mData;
-	}
+    const TCHAR* operator*() const
+    {
+        return mData;
+    }
 
-	TCHAR& operator[](int idx)
-	{
-		return mData[idx];
-	}
+    TCHAR& operator[](int idx)
+    {
+        return mData[idx];
+    }
 
-	const TCHAR& operator[](int idx) const
-	{
-		return mData[idx];
-	}
+    const TCHAR& operator[](int idx) const
+    {
+        return mData[idx];
+    }
 
-	void operator+=(TCHAR c)
-	{
-		ResizeTo(mLength + 1);
-		mData[mLength-1] = c;
-	}
+    void operator+=(TCHAR c)
+    {
+        ResizeTo(mLength + 1);
+        mData[mLength-1] = c;
+    }
 
-	void operator+=(const String& other)
-	{
-		ResizeTo(mLength + other.Length());
-		memcpy(mData + (mLength - other.Length()), other.mData, other.Length());
-	}
+    void operator+=(const String& other)
+    {
+        ResizeTo(mLength + other.Length());
+        memcpy(mData + (mLength - other.Length()), other.mData, other.Length());
+    }
 
-	String& operator=(String&& other)
-	{
-		mData = other.mData;
-		mLength = other.mLength;
+    String& operator=(String&& other)
+    {
+        mData = other.mData;
+        mLength = other.mLength;
 
-		other.mData = nullptr;
-		other.ResizeTo(0);
-		return *this;
-	}
-	
-	String& operator=(const String& other)
-	{
-		ResizeTo(other.Length());
-		memcpy(mData, other.mData, other.Length() + 1 * sizeof(TCHAR));
-		return *this;
-	}
+        other.mData = nullptr;
+        other.ResizeTo(0);
+        return *this;
+    }
 
-public:
-	// statics:
+    String& operator=(const String& other)
+    {
+        ResizeTo(other.Length());
+        memcpy(mData, other.mData, other.Length() + 1 * sizeof(TCHAR));
+        return *this;
+    }
 
-	static inline String Printf(TCHAR* Format)
-	{
-		return String{ Format };
-	}
+ public:
+    // statics:
 
-	template<typename... Args>
-	static inline String Printf(TCHAR* Format, Args... args)
-	{
-		return PrintfInternal(Format, args...);
-	}
+    static inline String Printf(TCHAR* Format)
+    {
+        return String{ Format };
+    }
 
-	static String PrintfInternal(TCHAR* Format, ...);
+    template<typename... Args>
+    static inline String Printf(TCHAR* Format, Args... args)
+    {
+        return PrintfInternal(Format, args...);
+    }
 
-	static String FromFloat(float value);
-	static String FromInt(int value);
+    static String PrintfInternal(TCHAR* Format, ...);
 
-public:
-	// Member functions
+    static String FromFloat(float value);
+    static String FromInt(int value);
 
-	inline int Length() const { return mLength; }
+ public:
+    // Member functions
 
-	inline void Empty() { ResizeTo(0); }
+    inline int Length() const { return mLength; }
 
-	void Replace(int startIdx, int endIdx, const String& string);
+    inline void Empty() { ResizeTo(0); }
 
-	void Reverse();
+    void Replace(int startIdx, int endIdx, const String& string);
 
-private:
+    void Reverse();
 
-	void ResizeTo(int NewSize);
+ private:
+    void ResizeTo(int NewSize);
 
-private:
+ private:
+    TCHAR* mData = nullptr;
 
-	TCHAR* mData = nullptr;
-
-	// length of the underlying string, one less than the length of the data array
-	int mLength = 0;
+    // length of the underlying string, one less than the length of the data array
+    int mLength = 0;
 };

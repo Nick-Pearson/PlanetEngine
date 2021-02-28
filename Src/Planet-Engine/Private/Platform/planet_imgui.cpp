@@ -7,9 +7,9 @@
 //  [X] Platform: Keyboard arrays indexed using VK_* Virtual Key Codes, e.g. ImGui::IsKeyPressed(VK_SPACE).
 //  [X] Platform: Gamepad support. Enabled with 'io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad'.
 
+#include <tchar.h>
 #include "imgui.h"
 #include "planet_imgui.h"
-#include <tchar.h>
 
 // CHANGELOG
 // (minor and older changes stripped away, please see git history for details)

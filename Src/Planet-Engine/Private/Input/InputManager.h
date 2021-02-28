@@ -5,24 +5,22 @@
 
 class InputManager
 #if PLATFORM_WIN
-	: public IWindowsMessageHandler
+    : public IWindowsMessageHandler
 #endif
 {
-public:
-	InputManager();
+ public:
+    InputManager();
 
 #if PLATFORM_WIN
-	bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) override;
+    bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) override;
 #endif
 
-	inline bool GetIsKeyDown(KeyCode key) const
-	{
-		if (key == KeyCode::INVALID) return false;
-		return keys[(int)key];
-	}
+    inline bool GetIsKeyDown(KeyCode key) const
+    {
+        if (key == KeyCode::INVALID) return false;
+        return keys[static_cast<int>(key)];
+    }
 
-private:
-
-	bool keys[(int)KeyCode::INVALID];
-
+ private:
+    bool keys[static_cast<int>(KeyCode::INVALID)];
 };

@@ -15,4 +15,4 @@
 bool     ImGui_ImplWin32_Init(void* hwnd);
 void     ImGui_ImplWin32_Shutdown();
 void     ImGui_ImplWin32_NewFrame();
-LRESULT	ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

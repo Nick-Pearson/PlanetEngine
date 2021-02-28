@@ -6,20 +6,19 @@
 
 struct Transform
 {
-public:
+ public:
+    Transform();
 
-	Transform();
+    DirectX::XMMATRIX GetMatrix() const;
 
-	DirectX::XMMATRIX GetMatrix() const;
+    Quaternion rotation;
+    Vector location;
+    Vector scale;
 
-	Quaternion rotation;
-	Vector location;
-	Vector scale;
-
-	bool operator==(const Transform& other) const
-	{
-		return rotation == other.rotation &&
-			location == other.location &&
-			scale == other.scale;
-	}
+    bool operator==(const Transform& other) const
+    {
+        return rotation == other.rotation &&
+            location == other.location &&
+            scale == other.scale;
+    }
 };

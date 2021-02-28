@@ -5,176 +5,175 @@
 
 struct Vector
 {
-public:
-	float x = 0.0f;
-	float y = 0.0f;
-	float z = 0.0f;
+ public:
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
 
-	Vector(float inX = 0.0f, float inY = 0.0f, float inZ = 0.0f) : 
-		x(inX), y(inY), z(inZ)
-	{}
-	
-	Vector(const DirectX::XMVECTOR& vecReg)
-	{
-		x = DirectX::XMVectorGetX(vecReg);
-		y = DirectX::XMVectorGetY(vecReg);
-		z = DirectX::XMVectorGetZ(vecReg);
-	}
+    explicit Vector(float inX = 0.0f, float inY = 0.0f, float inZ = 0.0f) :
+        x(inX), y(inY), z(inZ)
+    {}
 
-	Vector operator/(const Vector& other)
-	{
-		Vector res = *this;
-		res /= other;
-		return res;
-	}
+    explicit Vector(const DirectX::XMVECTOR& vecReg)
+    {
+        x = DirectX::XMVectorGetX(vecReg);
+        y = DirectX::XMVectorGetY(vecReg);
+        z = DirectX::XMVectorGetZ(vecReg);
+    }
 
-	Vector& operator/=(const Vector& other)
-	{
-		x /= other.x;
-		y /= other.y;
-		z /= other.z;
-		return *this;
-	}
+    Vector operator/(const Vector& other)
+    {
+        Vector res = *this;
+        res /= other;
+        return res;
+    }
 
-	Vector operator/(float other)
-	{
-		Vector res = *this;
-		res /= other;
-		return res;
-	}
+    Vector& operator/=(const Vector& other)
+    {
+        x /= other.x;
+        y /= other.y;
+        z /= other.z;
+        return *this;
+    }
 
-	Vector& operator/=(float value)
-	{
-		x /= value;
-		y /= value;
-		z /= value;
-		return *this;
-	}
+    Vector operator/(float other)
+    {
+        Vector res = *this;
+        res /= other;
+        return res;
+    }
 
-	Vector operator*(const Vector& other)
-	{
-		Vector res = *this;
-		res *= other;
-		return res;
-	}
+    Vector& operator/=(float value)
+    {
+        x /= value;
+        y /= value;
+        z /= value;
+        return *this;
+    }
 
-	Vector& operator*=(const Vector& other)
-	{
-		x *= other.x;
-		y *= other.y;
-		z *= other.z;
-		return *this;
-	}
+    Vector operator*(const Vector& other)
+    {
+        Vector res = *this;
+        res *= other;
+        return res;
+    }
 
-	Vector operator*(float other)
-	{
-		Vector res = *this;
-		res *= other;
-		return res;
-	}
+    Vector& operator*=(const Vector& other)
+    {
+        x *= other.x;
+        y *= other.y;
+        z *= other.z;
+        return *this;
+    }
 
-	Vector& operator*=(float value)
-	{
-		x *= value;
-		y *= value;
-		z *= value;
-		return *this;
-	}
+    Vector operator*(float other)
+    {
+        Vector res = *this;
+        res *= other;
+        return res;
+    }
 
-	Vector operator+(const Vector& other)
-	{
-		Vector res = *this;
-		res += other;
-		return res;
-	}
+    Vector& operator*=(float value)
+    {
+        x *= value;
+        y *= value;
+        z *= value;
+        return *this;
+    }
 
-	Vector& operator+=(const Vector& other)
-	{
-		x += other.x;
-		y += other.y;
-		z += other.z;
-		return *this;
-	}
-	
-	Vector operator-()
-	{
-		return *this * -1.0f;
-	}
+    Vector operator+(const Vector& other)
+    {
+        Vector res = *this;
+        res += other;
+        return res;
+    }
 
-	Vector operator-(float other)
-	{
-		Vector res = *this;
-		res *= other;
-		return res;
-	}
+    Vector& operator+=(const Vector& other)
+    {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+        return *this;
+    }
 
-	Vector& operator-=(float value)
-	{
-		x -= value;
-		y -= value;
-		z -= value;
-		return *this;
-	}
+    Vector operator-()
+    {
+        return *this * -1.0f;
+    }
 
-	Vector operator-(const Vector& other)
-	{
-		Vector res = *this;
-		res -= other;
-		return res;
-	}
+    Vector operator-(float other)
+    {
+        Vector res = *this;
+        res *= other;
+        return res;
+    }
 
-	Vector& operator-=(const Vector& other)
-	{
-		x -= other.x;
-		y -= other.y;
-		z -= other.z;
-		return *this;
-	}
+    Vector& operator-=(float value)
+    {
+        x -= value;
+        y -= value;
+        z -= value;
+        return *this;
+    }
 
-	bool operator==(const Vector& other) const
-	{
-		return x == other.x &&
-			y == other.y &&
-			z == other.z;
-	}
+    Vector operator-(const Vector& other)
+    {
+        Vector res = *this;
+        res -= other;
+        return res;
+    }
 
-public:
+    Vector& operator-=(const Vector& other)
+    {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+        return *this;
+    }
 
-	DirectX::XMVECTOR ToVectorReg() const
-	{
-		return DirectX::XMVectorSet(x, y, z, 1.0f);
-	}
+    bool operator==(const Vector& other) const
+    {
+        return x == other.x &&
+            y == other.y &&
+            z == other.z;
+    }
 
-	inline float Length() const
-	{
-		return std::sqrt(LengthSqrd());
-	}
+ public:
+    DirectX::XMVECTOR ToVectorReg() const
+    {
+        return DirectX::XMVectorSet(x, y, z, 1.0f);
+    }
 
-	float LengthSqrd() const
-	{
-		return (x * x) + (y * y) + (z * z);
-	}
+    inline float Length() const
+    {
+        return std::sqrt(LengthSqrd());
+    }
 
-	void Normalise()
-	{
-		float len = Length();
-		if (len < 0.001f) return;
+    float LengthSqrd() const
+    {
+        return (x * x) + (y * y) + (z * z);
+    }
 
-		*this = *this / len;
-	}
+    void Normalise()
+    {
+        float len = Length();
+        if (len < 0.001f) return;
 
-	bool IsZero() const
-	{
-		return x == 0.0f && y == 0.0f && z == 0.0f;
-	}
+        *this = *this / len;
+    }
 
-	Vector Cross(const Vector& other) const
-	{
-		Vector result;
-		result.x = (y * other.z) - (z * other.y);
-		result.y = (z * other.x) - (x * other.z);
-		result.z = (x * other.y) - (y * other.x);
+    bool IsZero() const
+    {
+        return x == 0.0f && y == 0.0f && z == 0.0f;
+    }
 
-		return result;
-	}
+    Vector Cross(const Vector& other) const
+    {
+        Vector result;
+        result.x = (y * other.z) - (z * other.y);
+        result.y = (z * other.x) - (x * other.z);
+        result.z = (x * other.y) - (y * other.x);
+
+        return result;
+    }
 };

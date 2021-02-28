@@ -12,11 +12,11 @@
 
 class IWindowsMessageHandler
 {
-public:
-	virtual bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) = 0;
+ public:
+    virtual bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) = 0;
 };
 
 namespace Platform
 {
-	extern KeyCode GetKeyCode(unsigned char VirtualKey);
+    extern KeyCode GetKeyCode(unsigned char VirtualKey);
 }

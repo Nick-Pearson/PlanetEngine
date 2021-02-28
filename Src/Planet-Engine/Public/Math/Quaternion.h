@@ -6,65 +6,62 @@
 __declspec(align(16))
 struct Quaternion
 {
-public:
+ public:
+    DirectX::XMVECTOR value;
 
-	DirectX::XMVECTOR value;
+    Quaternion()
+    {
+        value = DirectX::XMQuaternionIdentity();
+    }
 
-	Quaternion()
-	{
-		value = DirectX::XMQuaternionIdentity();
-	}
+    explicit Quaternion(const Vector& eulerAngles)
+    {
+        value = DirectX::XMQuaternionRotationRollPitchYaw(
+            Math::DegToRad(eulerAngles.x),
+            Math::DegToRad(eulerAngles.y),
+            Math::DegToRad(eulerAngles.z));
+    }
 
-	Quaternion(const Vector& eulerAngles)
-	{
-		value = DirectX::XMQuaternionRotationRollPitchYaw(Math::DegToRad(eulerAngles.x), Math::DegToRad(eulerAngles.y), Math::DegToRad(eulerAngles.z));
-	}
+ public:
+    void operator+=(const Vector& euler)
+    {
+        *this += Quaternion(euler);
+    }
 
-public:
+    void operator+=(const Quaternion& other)
+    {
+        value = DirectX::XMQuaternionMultiply(other.value, value);
+    }
 
-	void operator+=(const Vector& euler)
-	{
-		*this += Quaternion(euler);
-	}
+    Vector operator*(Vector other) const
+    {
+        return Vector(DirectX::XMVector3Rotate(other.ToVectorReg(), value));
+    }
 
-	void operator+=(const Quaternion& other)
-	{
-		value = DirectX::XMQuaternionMultiply(other.value, value);
-	}
+    bool operator==(const Quaternion& other) const
+    {
+        // TODO: Does this account for Quaternions having multiple representations for the same angle?
+        return DirectX::XMVector3Equal(value, other.value);
+    }
 
-	Vector operator*(Vector other) const
-	{
-		return Vector(DirectX::XMVector3Rotate(other.ToVectorReg(), value));
-	}
-	
-	bool operator==(const Quaternion& other) const
-	{
-		// TODO: Does this account for Quaternions having multiple representations for the same angle?
-		return DirectX::XMVector3Equal(value, other.value);
-	}
+ public:
+    inline void Normalise()
+    {
+        value = DirectX::XMQuaternionNormalize(value);
+    }
 
-public:
+    inline bool IsNormalised() const
+    {
+        return SizeSqrd() == 1.0f;
+    }
 
-	inline void Normalise()
-	{
-		value = DirectX::XMQuaternionNormalize(value);
-	}
+    inline float SizeSqrd() const
+    {
+        return DirectX::XMVectorGetX(DirectX::XMQuaternionLengthSq(value));
+    }
 
-	inline bool IsNormalised() const
-	{
-		return SizeSqrd() == 1.0f;
-	}
-
-	inline float SizeSqrd() const
-	{
-		return DirectX::XMVectorGetX(DirectX::XMQuaternionLengthSq(value));
-	}
-
-	inline float Size() const
-	{
-		return Math::Sqrt(SizeSqrd());
-	}
-
-private:
-
+    inline float Size() const
+    {
+        return Math::Sqrt(SizeSqrd());
+    }
 };

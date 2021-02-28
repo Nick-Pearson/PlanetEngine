@@ -1,14 +1,16 @@
 #pragma once
 
+#include <memory>
+
 #include "../Entity/Entity.h"
 
 class MeshComponent;
 
 class CloudBox: public Entity
 {
-public:
-	CloudBox();
+ public:
+    CloudBox();
 
-private:
-	std::shared_ptr<MeshComponent> mCloudMesh;
+ private:
+    std::shared_ptr<MeshComponent> mCloudMesh;
 };

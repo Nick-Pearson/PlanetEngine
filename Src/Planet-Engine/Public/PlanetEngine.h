@@ -1,46 +1,42 @@
 #pragma once
 
-#include "Platform/Platform.h"
-
 #include <vector>
+
+#include "Platform/Platform.h"
 
 class InputManager;
 class RenderManager;
 
 class PlanetEngine
 {
-protected:
-	PlanetEngine();
-	~PlanetEngine();
+ protected:
+    PlanetEngine();
+    ~PlanetEngine();
 
-public:
+ public:
+    static PlanetEngine* Get();
 
-	static PlanetEngine* Get();
+    void Run();
 
-	void Run();
+    inline int GetExitCode() const { return ExitCode; }
 
-	inline int GetExitCode() const { return ExitCode; }
-
-	inline RenderManager* GetRenderManager() const { return mRenderManager; }
-	inline InputManager* GetInputManager() const { return inputManager; }
+    inline RenderManager* GetRenderManager() const { return mRenderManager; }
+    inline InputManager* GetInputManager() const { return inputManager; }
 
 #if PLATFORM_WIN
-	void PumpWindowsMessages();
+    void PumpWindowsMessages();
 
-	LRESULT CALLBACK ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    LRESULT CALLBACK ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-	void RegisterMessageHandler(IWindowsMessageHandler* Handler);
-	void UnregisterMessageHandler(IWindowsMessageHandler* Handler);
-private:
-
-	std::vector<IWindowsMessageHandler*> messageHandlers;
+    void RegisterMessageHandler(IWindowsMessageHandler* Handler);
+    void UnregisterMessageHandler(IWindowsMessageHandler* Handler);
+ private:
+    std::vector<IWindowsMessageHandler*> messageHandlers;
 #endif
 
-private:
+ private:
+    int ExitCode;
 
-	int ExitCode;
-
-	RenderManager* mRenderManager;
-	InputManager* inputManager;
-
+    RenderManager* mRenderManager;
+    InputManager* inputManager;
 };
