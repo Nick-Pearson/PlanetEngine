@@ -127,5 +127,5 @@ void GPUResourceManager::CreateBuffer(const void* data,
     D3D11_SUBRESOURCE_DATA resourceData = {};
     resourceData.pSysMem = data;
 
-    d3dAssert(mDevice->CreateBuffer(&bufferDesc, &resourceData, &outBuffer));
+    d3dAssert(mDevice->CreateBuffer(&bufferDesc, &resourceData, outBuffer->GetAddressOf()));
 }

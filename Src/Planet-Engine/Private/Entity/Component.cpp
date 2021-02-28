@@ -22,3 +22,7 @@ void Component::OnDestroyed()
 void Component::OnUpdate(float deltaSeconds)
 {
 }
+
+void Component::OnEntityTransformChanged()
+{
+}

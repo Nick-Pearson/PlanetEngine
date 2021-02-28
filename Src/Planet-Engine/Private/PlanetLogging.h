@@ -12,7 +12,7 @@
     time_t * rawtime = new time_t; \
     struct tm * timeinfo; \
     time(rawtime); \
-    timeinfo = localtime_r(rawtime); \
+    timeinfo = localtime(rawtime); \
     char buf[80]; \
     strftime(buf, sizeof(buf), "%X", timeinfo); \
     String LogMsg = String::Printf(TEXT("%s [%s] %s\n"), buf, typeid(*this).name(), *msg); \

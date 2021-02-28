@@ -173,7 +173,7 @@ void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
     renderStates.SortToArray([&](const RenderState& a, const RenderState& b) {
         if (!a.UseDepthBuffer && b.UseDepthBuffer) return true;
         return false;
-    }, sortedStates);
+    }, &sortedStates);
 
     // draw each state
     for (const RenderState& state : sortedStates)
