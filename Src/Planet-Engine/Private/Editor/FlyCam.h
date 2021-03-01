@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "../Entity/Entity.h"
+#include "Entity/Entity.h"
 
 class CameraComponent;
 

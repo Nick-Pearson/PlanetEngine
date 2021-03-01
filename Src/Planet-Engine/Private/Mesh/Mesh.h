@@ -2,7 +2,6 @@
 
 #include <vector>
 
-#include "GPUResourceManager.h"
 #include "Math/Vector.h"
 #include "Math/Vector2D.h"
 

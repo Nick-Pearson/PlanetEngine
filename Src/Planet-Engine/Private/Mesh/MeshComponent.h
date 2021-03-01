@@ -2,8 +2,8 @@
 
 #include <memory>
 
-#include "../Entity/Component.h"
-#include "../Renderer/RenderState.h"
+#include "Entity/Component.h"
+#include "Render/RenderState.h"
 
 class Mesh;
 class Material;

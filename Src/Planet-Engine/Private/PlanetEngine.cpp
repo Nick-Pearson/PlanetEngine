@@ -3,6 +3,7 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <assert.h>
 
 #include "Platform/Window.h"
 #include "Mesh/Mesh.h"
@@ -16,26 +17,34 @@
 #include "World/SkyDome.h"
 #include "World/CloudBox.h"
 #include "Input/InputManager.h"
+#include "Input/ImGuiInput.h"
 #include "Editor/FlyCam.h"
-#include "Renderer/RenderManager.h"
-#include "imgui.h"
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
 #include "Texture/TextureFactory.h"
 
-PlanetEngine::PlanetEngine()
+// #include "imgui.h"
+
+namespace
 {
+    PlanetEngine* sEngine;
+}  // namespace
+
+PlanetEngine::PlanetEngine(RenderSystem* renderSystem)
+{
+    assert(sEngine == nullptr);
+    sEngine = this;
+    mRenderSystem = renderSystem;
 }
 
 PlanetEngine::~PlanetEngine()
 {
+    sEngine = nullptr;
 }
 
+// TODO: Remove this global
 PlanetEngine* PlanetEngine::Get()
 {
-    static PlanetEngine* sEngine = nullptr;
-
-    if (!sEngine) sEngine = new PlanetEngine{};
     return sEngine;
 }
 
@@ -43,13 +52,10 @@ class CameraComponent;
 
 void PlanetEngine::Run()
 {
-    Window window{1280, 720};
-    window.SetWindowName("PlanetEngine");
-
-    mRenderManager = new RenderManager{ &window };
-
     inputManager = new InputManager{};
     RegisterMessageHandler(inputManager);
+    ImGuiInput* imguiInput = new ImGuiInput{};
+    RegisterMessageHandler(imguiInput);
 
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
 
@@ -66,7 +72,6 @@ void PlanetEngine::Run()
     std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
     cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
-    mRenderManager->SetCamera(cameraComp);
 
     std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
     bunnyEntity->AddComponent<MeshComponent>(bunny, standardMaterial);
@@ -96,15 +101,15 @@ void PlanetEngine::Run()
         // ProcessInput();
 
         scene->Update(deltaTime);
-        mRenderManager->RenderFrame();
+        mRenderSystem->RenderFrame(*cameraComp.get());
 
         auto end = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(end - begin).count();
         begin = end;
     }
 
-    delete mRenderManager;
     UnregisterMessageHandler(inputManager);
+    delete imguiInput;
     delete inputManager;
 }
 

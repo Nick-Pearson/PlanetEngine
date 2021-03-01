@@ -1,5 +1,5 @@
 #include "Math/Transform.h"
-#include "../PlanetLogging.h"
+#include "PlanetLogging.h"
 
 Transform::Transform() :
     location()/*, rotation()*/, scale(1.0f, 1.0f, 1.0f)

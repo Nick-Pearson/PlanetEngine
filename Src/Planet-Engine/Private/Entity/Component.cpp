@@ -1,11 +1,11 @@
-#include "Component.h"
-#include "Entity.h"
+#include "Entity/Component.h"
+#include "Entity/Entity.h"
 
 Component::Component()
 {
 }
 
-Transform Component::GetWorldTransform()
+Transform Component::GetWorldTransform() const
 {
     return GetParent()->GetTransform();
     // * relativeTransform

@@ -1,5 +1,5 @@
 #include "InputManager.h"
-#include "../PlanetLogging.h"
+#include "PlanetLogging.h"
 
 InputManager::InputManager()
 {

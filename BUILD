@@ -17,11 +17,28 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_library(
+    name = "d3d-renderer",
+    deps = [":planet-engine", "//Lib:imgui", "//Lib:stb"],
+    srcs = glob([
+        "Src/D3DRenderer/Private/**/*.cpp",
+    ]),
+    includes = [
+        "Src/D3DRenderer/Private/",
+        "Src/D3DRenderer/Public/",
+    ],
+    hdrs = glob([
+        "Src/D3DRenderer/Public/**/*.h",
+    ]),
+    defines = [],
+    visibility = ["//visibility:private"],
+)
+
 cc_binary(
     name = "planet-game",
-    deps = [":planet-engine"],
+    deps = [":planet-engine", ":d3d-renderer"],
     srcs = [
-        "Src/Planet-Game/WinMain.cpp",
+        "Src/Planet-Game/Main.cpp",
     ],
     linkopts = ["-SUBSYSTEM:WINDOWS"]
 )

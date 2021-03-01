@@ -25,7 +25,7 @@ class Component
 
     inline Entity* GetParent() const { return parent; }
 
-    Transform GetWorldTransform();
+    Transform GetWorldTransform() const;
 
     virtual void OnSpawned();
     virtual void OnDestroyed();

@@ -2,12 +2,12 @@
 
 #include <string>
 
-#include "Mesh.h"
-#include "../D3D11/D3DRenderer.h"
-#include "../D3D11/D3DShader.h"
-#include "../D3D11/D3DTexture.h"
-#include "../Material/Material.h"
-#include "../Texture/Texture2D.h"
+#include "D3DRenderer.h"
+#include "D3DShader.h"
+#include "D3DTexture.h"
+#include "Mesh/Mesh.h"
+#include "Material/Material.h"
+#include "Texture/Texture2D.h"
 
 GPUResourceManager::GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device) :
     mDevice(device)

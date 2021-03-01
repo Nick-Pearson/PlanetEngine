@@ -1,12 +1,12 @@
 #include "MeshComponent.h"
 
-#include "../Renderer/Renderer.h"
 #include "PlanetEngine.h"
-#include "GPUResourceManager.h"
+#include "Render/RenderSystem.h"
+#include "Render/Renderer.h"
+#include "Render/ResourceManager.h"
 #include "Mesh.h"
-#include "../Entity/Entity.h"
-#include "../Renderer/RenderManager.h"
-#include "../Material/Material.h"
+#include "Entity/Entity.h"
+#include "Material/Material.h"
 
 MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material) :
     mMesh(mesh), mMaterial(material)
@@ -17,7 +17,7 @@ void MeshComponent::SetVisibility(bool newVisibility)
 {
     if (mVisible == newVisibility) return;
 
-    Renderer* renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
+    Renderer* renderer = PlanetEngine::Get()->GetRenderSystem()->GetRenderer();
 
     mVisible = newVisibility;
     if (mVisible)
@@ -52,10 +52,10 @@ void MeshComponent::OnSpawned()
 {
     Component::OnSpawned();
 
-    Renderer* renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
+    RenderSystem* renderSystem = PlanetEngine::Get()->GetRenderSystem();
 
-    renderState.mesh = renderer->GetResourceManager()->LoadMesh(mMesh);
-    renderState.material = renderer->GetResourceManager()->LoadMaterial(mMaterial);
+    renderState.mesh = renderSystem->GetResourceManager()->LoadMesh(mMesh);
+    renderState.material = renderSystem->GetResourceManager()->LoadMaterial(mMaterial);
     renderState.model = GetWorldTransform();
 
     SetVisibility(true);

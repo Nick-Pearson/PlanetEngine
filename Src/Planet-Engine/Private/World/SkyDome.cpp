@@ -2,8 +2,9 @@
 #include "PlanetEngine.h"
 #include "../Mesh/MeshComponent.h"
 #include "../Mesh/Primitives.h"
-#include "../Renderer/RenderManager.h"
 #include "../Material/Material.h"
+#include "Render/RenderSystem.h"
+#include "Render/Renderer.h"
 
 #include "imgui.h"
 
@@ -32,7 +33,7 @@ void SkyDome::OnUpdate(float deltaSeconds)
 
     Quaternion sunRotation{ Vector(mCurrentTimeOfDay * 360.0f, 0.0f, 0.0f) };
 
-    auto renderer = PlanetEngine::Get()->GetRenderManager()->GetRenderer();
+    auto renderer = PlanetEngine::Get()->GetRenderSystem()->GetRenderer();
     renderer->UpdateWorldBuffer(WorldBufferData(sunRotation * Vector{0.0f, 1.0f, 0.0f}, mSunSkyStrength, mSunColour));
 
     ImGui::Begin("Sky Dome");

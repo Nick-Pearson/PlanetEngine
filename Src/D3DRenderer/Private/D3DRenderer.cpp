@@ -8,15 +8,15 @@
 #include "Platform/Window.h"
 #include "D3DShader.h"
 #include "D3DTexture.h"
-#include "../Mesh/GPUResourceManager.h"
-#include "../Mesh/Mesh.h"
-#include "../World/CameraComponent.h"
+#include "GPUResourceManager.h"
+#include "Mesh/Mesh.h"
+#include "World/CameraComponent.h"
 #include "Math/Transform.h"
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxguid.lib")
 
-D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3D11Device> device,
+D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> device,
     Microsoft::WRL::ComPtr <IDXGISwapChain> swapChain, Microsoft::WRL::ComPtr <ID3D11DeviceContext> context) :
     mDevice(device), mSwapChain(swapChain), mContext(context)
 {
@@ -36,11 +36,14 @@ D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3
     // bind depth state
     mContext->OMSetDepthStencilState(DSState.Get(), 1u);
 
+    DXGI_SWAP_CHAIN_DESC swapChainDesc;
+    d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
+
     // create depth stencil texture
     Microsoft::WRL::ComPtr <ID3D11Texture2D> DepthStencil = nullptr;
     D3D11_TEXTURE2D_DESC descDepth = {};
-    descDepth.Width = (UINT)targetWindow.GetSizeX();
-    descDepth.Height = (UINT)targetWindow.GetSizeY();
+    descDepth.Width = (UINT)swapChainDesc.BufferDesc.Width;
+    descDepth.Height = (UINT)swapChainDesc.BufferDesc.Height;
     descDepth.MipLevels = 1u;
     descDepth.ArraySize = 1u;
     descDepth.Format = DXGI_FORMAT_D32_FLOAT;
@@ -60,8 +63,8 @@ D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3
     mContext->OMSetRenderTargets(1u, mTarget.GetAddressOf(), mDepthStencilView.Get());
 
     D3D11_VIEWPORT vp;
-    vp.Width = static_cast<float>(targetWindow.GetSizeX());
-    vp.Height = static_cast<float>(targetWindow.GetSizeY());
+    vp.Width = static_cast<float>(swapChainDesc.BufferDesc.Width);
+    vp.Height = static_cast<float>(swapChainDesc.BufferDesc.Height);
     vp.MinDepth = 0;
     vp.MaxDepth = 1;
     vp.TopLeftX = 0;
@@ -132,8 +135,6 @@ D3DRenderer::D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr <ID3
     const auto DxgiGetDebugInterface = reinterpret_cast<DXGIGetDebugInterface>(GetProcAddress(hModDxgiDebug, "DXGIGetDebugInterface"));
 
     DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
-
-    mResourceManager = std::make_shared<GPUResourceManager>(mDevice);
 }
 
 D3DRenderer::~D3DRenderer()
@@ -149,15 +150,13 @@ void D3DRenderer::SwapBuffers()
     mContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
 }
 
-void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
+void D3DRenderer::Render(const CameraComponent& camera)
 {
-    if (!camera) return;
-
     // setup projection matrix
     // TODO: Maybe not do this every frame?
     // TODO: Collect stats on how often these buffers are updated
-    mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspectRatio, camera->NearClip, camera->FarClip));
-    Transform cameraTransform = camera->GetWorldTransform();
+    mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspectRatio, camera.NearClip, camera.FarClip));
+    Transform cameraTransform = camera.GetWorldTransform();
     cameraTransform.location = Vector{};
     cameraTransform.scale = Vector{1.0f, 1.0f, 1.0f};
     DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
@@ -178,7 +177,7 @@ void D3DRenderer::Render(std::shared_ptr<CameraComponent> camera)
     // draw each state
     for (const RenderState& state : sortedStates)
     {
-        Draw(camera.get(), state);
+        Draw(camera, state);
     }
 }
 
@@ -198,7 +197,7 @@ void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
     UpdateBuffer(mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
 }
 
-void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
+void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)
 {
     if (!state.IsValid()) return;
 
@@ -219,7 +218,7 @@ void D3DRenderer::Draw(CameraComponent* component, const RenderState& state)
 
     if (currentRenderState.UseWorldMatrix != state.UseWorldMatrix)
     {
-        Transform cameraTransform = state.UseWorldMatrix ? component->GetWorldTransform() : Transform();
+        Transform cameraTransform = state.UseWorldMatrix ? camera.GetWorldTransform() : Transform();
         DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
         mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
 

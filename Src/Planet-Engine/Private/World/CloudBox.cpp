@@ -2,7 +2,6 @@
 #include "PlanetEngine.h"
 #include "../Mesh/MeshComponent.h"
 #include "../Mesh/Primitives.h"
-#include "../Renderer/RenderManager.h"
 #include "../Material/Material.h"
 
 CloudBox::CloudBox()

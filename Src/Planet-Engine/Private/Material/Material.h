@@ -4,8 +4,6 @@
 #include <memory>
 #include <vector>
 
-#include "../Mesh/GPUResourceManager.h"
-
 class Texture2D;
 
 class Material

@@ -8,8 +8,8 @@
 #include <unordered_map>
 
 #include "Platform/PlanetWindows.h"
-
 #include "Container/LinkedList.h"
+#include "Render/ResourceManager.h"
 
 class Mesh;
 class Material;
@@ -37,17 +37,17 @@ struct GPUMaterialHandle
     bool alpha;
 };
 
-class GPUResourceManager
+class GPUResourceManager : public ResourceManager
 {
  public:
     explicit GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device);
     ~GPUResourceManager();
 
-    GPUMeshHandle* LoadMesh(std::shared_ptr<Mesh> mesh);
-    void UnloadMesh(std::shared_ptr<Mesh> mesh);
+    GPUMeshHandle* LoadMesh(std::shared_ptr<Mesh> mesh) override;
+    void UnloadMesh(std::shared_ptr<Mesh> mesh) override;
 
-    std::shared_ptr<GPUMaterialHandle> LoadMaterial(std::shared_ptr<Material> material);
-    void ReloadAllShaders();
+    std::shared_ptr<GPUMaterialHandle> LoadMaterial(std::shared_ptr<Material> material) override;
+    void ReloadAllShaders() override;
 
  private:
     std::shared_ptr<D3DShader> LoadShader(const std::string& ShaderFile, bool force);

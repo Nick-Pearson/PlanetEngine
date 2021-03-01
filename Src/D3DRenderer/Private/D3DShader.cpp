@@ -7,7 +7,7 @@
 #include <iostream>
 
 #include "D3DRenderer.h"
-#include "../PlanetLogging.h"
+#include "PlanetLogging.h"
 
 D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice) :
     shaderType(type), mDevice(inDevice)

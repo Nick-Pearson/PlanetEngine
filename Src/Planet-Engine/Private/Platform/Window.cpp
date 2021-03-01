@@ -1,14 +1,10 @@
 #include "Window.h"
 
 #include "PlanetEngine.h"
-#include "imgui.h"
-#include "planet_imgui.h"
 
 Window::Window(int sizeX, int sizeY) :
     width(sizeX), height(sizeY)
 {
-    enginePtr = PlanetEngine::Get();
-
 #if PLATFORM_WIN
     const auto ClassName = "PlanetEngWindowClass";
 
@@ -31,7 +27,8 @@ Window::Window(int sizeX, int sizeY) :
     RegisterClassEx(&wc);
 
     const DWORD WindowStyles = WS_CAPTION | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU;
-    mWindowHandle = CreateWindowEx(0, ClassName, "", WindowStyles, 200, 200, sizeX, sizeY, nullptr, nullptr, hInstance, (LPVOID)this);
+    mWindowHandle = CreateWindowEx(0, ClassName, TEXT(""), WindowStyles, 200, 200, sizeX, sizeY, nullptr, nullptr, hInstance, (LPVOID)this);
+    assert(mWindowHandle != nullptr);
     ShowWindow(mWindowHandle, SW_SHOW);
 #else
     #error "Window construction not implemented on this platform"
@@ -76,12 +73,10 @@ LRESULT CALLBACK Window::sProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wPara
 
 LRESULT CALLBACK Window::ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    // do some window stuff
-    if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
+    if (auto eng = PlanetEngine::Get())
     {
-        return true;
+        return eng->ProcessWindowMessage(hWnd, msg, wParam, lParam);
     }
-
-    return enginePtr->ProcessWindowMessage(hWnd, msg, wParam, lParam);
+    return true;
 }
 #endif

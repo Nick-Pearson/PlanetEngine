@@ -9,8 +9,10 @@
 #include "Platform/PlanetWindows.h"
 #include <DirectXMath.h>
 #include "Container/LinkedList.h"
-#include "../renderer/RenderState.h"
-#include "../PlanetLogging.h"
+#include "Render/RenderState.h"
+#include "Render/Renderer.h"
+#include "Render/WorldBufferData.h"
+#include "PlanetLogging.h"
 #include "Math/Vector.h"
 
 #define d3dAssert( E ) { HRESULT r = (E); if (r != S_OK) { P_ERROR(TEXT("Err")) } }
@@ -32,32 +34,17 @@
 
 class D3DShader;
 class Window;
-class GPUResourceManager;
 class ShaderManager;
 class Mesh;
 class CameraComponent;
 
-struct WorldBufferData
-{
-    WorldBufferData() {}
-    WorldBufferData(const Vector& inDir, float inStrength, const Vector& inCol) :
-        sunDir(inDir), sunSkyStrength(inStrength), sunCol(inCol)
-    {}
-
-    Vector sunDir = Vector{ 0.0f, 1.0f, 0.0f };
-    float sunSkyStrength = 20.0f;
-
-    Vector sunCol = Vector{ 1.0f, 1.0f, 1.0f };
-    char padding[4];
-};
-
 __declspec(align(16))
-class D3DRenderer
+class D3DRenderer : public Renderer
 {
     friend class D3DShader;
 
  public:
-    D3DRenderer(const Window& targetWindow, Microsoft::WRL::ComPtr<ID3D11Device> mDevice,
+    D3DRenderer(HWND window, Microsoft::WRL::ComPtr<ID3D11Device> mDevice,
         Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain, Microsoft::WRL::ComPtr<ID3D11DeviceContext> mContext);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
@@ -78,9 +65,7 @@ class D3DRenderer
     void SwapBuffers();
 
     // renders a particular camera
-    void Render(std::shared_ptr<CameraComponent> camera);
-
-    inline GPUResourceManager* GetResourceManager() const { return mResourceManager.get(); }
+    void Render(const CameraComponent& camera);
 
     RenderState* AddRenderState(const RenderState& state);
     void RemoveRenderState(const RenderState* state);
@@ -88,7 +73,7 @@ class D3DRenderer
     void UpdateWorldBuffer(const WorldBufferData& data);
 
  protected:
-    void Draw(CameraComponent* component, const RenderState& state);
+    void Draw(const CameraComponent& camera, const RenderState& state);
 
     void UpdateBuffer(Microsoft::WRL::ComPtr <ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
@@ -147,8 +132,6 @@ class D3DRenderer
     LinkedList<RenderState> renderStates;
 
     RenderState currentRenderState;
-
-    std::shared_ptr<GPUResourceManager> mResourceManager;
 
     float aspectRatio;
 };

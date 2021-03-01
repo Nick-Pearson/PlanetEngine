@@ -1,61 +1,54 @@
-#include "RenderManager.h"
+#include "D3DRenderSystem.h"
 
 #include <chrono>
 
-#include "D3D11/D3DRenderer.h"
-#include "Mesh/GPUResourceManager.h"
-#include "UIRenderer.h"
-
+#include "D3DRenderer.h"
+#include "ImGUI/ImGUIRenderer.h"
 #include "imgui.h"
 
 namespace chr = std::chrono;
 
-RenderManager::RenderManager(const Window* window) :
-    mWindow(window)
+D3DRenderSystem::D3DRenderSystem(HWND window)
 {
     InitD3D11Device(window);
-    mRenderer = new D3DRenderer{ *window, mDevice, mSwapChain, mContext };
-    mUIRenderer = new UIRenderer{ window, mDevice, mContext };
+    mRenderer = new D3DRenderer{ window, mDevice, mSwapChain, mContext };
+    mUIRenderer = new ImGUIRenderer{ window, mDevice, mContext };
+    mResourceManager = new GPUResourceManager{ mDevice };
 }
 
-RenderManager::~RenderManager()
+D3DRenderSystem::~D3DRenderSystem()
 {
     delete mRenderer;
     delete mUIRenderer;
 }
 
-void RenderManager::RenderFrame()
+void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 {
     chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
-    mRenderer->Render(mCamera);
+    mRenderer->Render(camera);
     RenderDebugUI();
     mUIRenderer->Render();
     mRenderer->SwapBuffers();
     mUIRenderer->NewFrame();
     auto time = chr::high_resolution_clock::now() - start;
-    lastFrameMS = time/chr::milliseconds(1);
+    mLastFrameMs = time/chr::milliseconds(1);
 }
 
-void RenderManager::RenderDebugUI()
+void D3DRenderSystem::RenderDebugUI()
 {
     ImGui::Begin("Rendering");
-    auto fps = lastFrameMS > 0 ? 1000 / lastFrameMS : 0;
-    ImGui::Text("%d FPS (%d ms)", fps, lastFrameMS);
+    auto fps = mLastFrameMs > 0 ? 1000 / mLastFrameMs : 0;
+    ImGui::Text("%d FPS (%d ms)", fps, mLastFrameMs);
     if (ImGui::Button("Reload all shaders"))
     {
-        mRenderer->GetResourceManager()->ReloadAllShaders();
+        mResourceManager->ReloadAllShaders();
     }
     ImGui::End();
 }
 
-
-void RenderManager::SetCamera(std::shared_ptr<CameraComponent> camera)
+void D3DRenderSystem::InitD3D11Device(HWND window)
 {
-    mCamera = camera;
-}
 
-void RenderManager::InitD3D11Device(const Window* targetWindow)
-{
     DXGI_SWAP_CHAIN_DESC sd = {};
     sd.BufferDesc.Width = 0;
     sd.BufferDesc.Height = 0;
@@ -68,7 +61,7 @@ void RenderManager::InitD3D11Device(const Window* targetWindow)
     sd.SampleDesc.Quality = 0;
     sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     sd.BufferCount = 1;
-    sd.OutputWindow = targetWindow->GetWindowHandle();
+    sd.OutputWindow = window;
     sd.Windowed = TRUE;
     sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     sd.Flags = 0;

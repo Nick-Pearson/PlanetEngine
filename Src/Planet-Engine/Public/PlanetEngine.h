@@ -3,24 +3,24 @@
 #include <vector>
 
 #include "Platform/Platform.h"
+#include "Render/RenderSystem.h"
 
 class InputManager;
 class RenderManager;
 
 class PlanetEngine
 {
- protected:
-    PlanetEngine();
-    ~PlanetEngine();
-
  public:
     static PlanetEngine* Get();
+
+    explicit PlanetEngine(RenderSystem* renderSystem);
+    ~PlanetEngine();
 
     void Run();
 
     inline int GetExitCode() const { return ExitCode; }
-
-    inline RenderManager* GetRenderManager() const { return mRenderManager; }
+    
+    inline RenderSystem* GetRenderSystem() const { return mRenderSystem; }
     inline InputManager* GetInputManager() const { return inputManager; }
 
 #if PLATFORM_WIN
@@ -37,6 +37,6 @@ class PlanetEngine
  private:
     int ExitCode;
 
-    RenderManager* mRenderManager;
+    RenderSystem* mRenderSystem;
     InputManager* inputManager;
 };

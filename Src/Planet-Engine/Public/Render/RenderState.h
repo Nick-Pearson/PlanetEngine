@@ -4,7 +4,6 @@
 
 #include "Math/Transform.h"
 
-class D3DShader;
 struct GPUMeshHandle;
 struct GPUMaterialHandle;
 
