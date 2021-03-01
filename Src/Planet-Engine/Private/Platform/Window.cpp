@@ -77,6 +77,9 @@ LRESULT CALLBACK Window::ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM wParam
     {
         return eng->ProcessWindowMessage(hWnd, msg, wParam, lParam);
     }
-    return true;
+    else
+    {
+        return DefWindowProc(hWnd, msg, wParam, lParam);
+    }
 }
 #endif
