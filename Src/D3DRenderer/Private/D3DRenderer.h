@@ -72,6 +72,8 @@ class D3DRenderer : public Renderer
 
     void UpdateWorldBuffer(const WorldBufferData& data);
 
+    void UpdateWindowSize(bool resize);
+
  protected:
     void Draw(const CameraComponent& camera, const RenderState& state);
 

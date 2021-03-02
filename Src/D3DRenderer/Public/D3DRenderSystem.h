@@ -6,6 +6,7 @@
 #include "D3DRenderer.h"
 #include "ImGUI/ImGUIRenderer.h"
 #include "GPUResourceManager.h"
+#include "D3DWindowEvents.h"
 
 #include "Platform/PlanetWindows.h"
 #include "Render/RenderSystem.h"
@@ -15,6 +16,9 @@ class D3DRenderSystem : public RenderSystem
  public:
     explicit D3DRenderSystem(HWND window);
     ~D3DRenderSystem();
+
+    void Load(class PlanetEngine* engine) override;
+    void UnLoad(class PlanetEngine* engine) override;
 
     inline Renderer* GetRenderer() override
     {
@@ -39,6 +43,7 @@ class D3DRenderSystem : public RenderSystem
     D3DRenderer* mRenderer;
     ImGUIRenderer* mUIRenderer;
     GPUResourceManager* mResourceManager;
+    D3DWindowEvents* mWindowEvents;
 
     uint64_t mLastFrameMs;
 };

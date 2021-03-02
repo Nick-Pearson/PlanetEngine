@@ -3,6 +3,7 @@
 #include <chrono>
 
 #include "D3DRenderer.h"
+#include "PlanetEngine.h"
 #include "ImGUI/ImGUIRenderer.h"
 #include "imgui.h"
 
@@ -14,12 +15,25 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     mRenderer = new D3DRenderer{ window, mDevice, mSwapChain, mContext };
     mUIRenderer = new ImGUIRenderer{ window, mDevice, mContext };
     mResourceManager = new GPUResourceManager{ mDevice };
+    mWindowEvents = new D3DWindowEvents{ mRenderer };
 }
 
 D3DRenderSystem::~D3DRenderSystem()
 {
     delete mRenderer;
     delete mUIRenderer;
+    delete mResourceManager;
+    delete mWindowEvents;
+}
+
+void D3DRenderSystem::Load(class PlanetEngine* engine)
+{
+    engine->RegisterMessageHandler(mWindowEvents);
+}
+
+void D3DRenderSystem::UnLoad(class PlanetEngine* engine)
+{
+    engine->UnregisterMessageHandler(mWindowEvents);
 }
 
 void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
@@ -37,6 +51,15 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 void D3DRenderSystem::RenderDebugUI()
 {
     ImGui::Begin("Rendering");
+    DXGI_SWAP_CHAIN_DESC swapChainDesc;
+    BOOL fullscreen;
+    d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
+    d3dAssert(mSwapChain->GetFullscreenState(&fullscreen, nullptr));
+
+    ImGui::Text("%d x %d %s",
+        swapChainDesc.BufferDesc.Width,
+        swapChainDesc.BufferDesc.Height,
+        fullscreen ? "(fullscreen)" : "");
     auto fps = mLastFrameMs > 0 ? 1000 / mLastFrameMs : 0;
     ImGui::Text("%d FPS (%d ms)", fps, mLastFrameMs);
     if (ImGui::Button("Reload all shaders"))
@@ -48,7 +71,6 @@ void D3DRenderSystem::RenderDebugUI()
 
 void D3DRenderSystem::InitD3D11Device(HWND window)
 {
-
     DXGI_SWAP_CHAIN_DESC sd = {};
     sd.BufferDesc.Width = 0;
     sd.BufferDesc.Height = 0;

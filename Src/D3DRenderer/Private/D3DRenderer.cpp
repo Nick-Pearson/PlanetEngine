@@ -20,11 +20,6 @@ D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> devi
     Microsoft::WRL::ComPtr <IDXGISwapChain> swapChain, Microsoft::WRL::ComPtr <ID3D11DeviceContext> context) :
     mDevice(device), mSwapChain(swapChain), mContext(context)
 {
-    // setup viewport and buffers
-    Microsoft::WRL::ComPtr <ID3D11Resource> BackBuffer;
-    d3dAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), reinterpret_cast<void**>(BackBuffer.GetAddressOf())));
-    d3dAssert(mDevice->CreateRenderTargetView(BackBuffer.Get(), nullptr, mTarget.GetAddressOf()));
-
     // create depth stencil state
     D3D11_DEPTH_STENCIL_DESC dsDesc = {};
     dsDesc.DepthEnable = TRUE;
@@ -36,44 +31,7 @@ D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> devi
     // bind depth state
     mContext->OMSetDepthStencilState(DSState.Get(), 1u);
 
-    DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
-
-    // create depth stencil texture
-    Microsoft::WRL::ComPtr <ID3D11Texture2D> DepthStencil = nullptr;
-    D3D11_TEXTURE2D_DESC descDepth = {};
-    descDepth.Width = (UINT)swapChainDesc.BufferDesc.Width;
-    descDepth.Height = (UINT)swapChainDesc.BufferDesc.Height;
-    descDepth.MipLevels = 1u;
-    descDepth.ArraySize = 1u;
-    descDepth.Format = DXGI_FORMAT_D32_FLOAT;
-    descDepth.SampleDesc.Count = 1u;
-    descDepth.SampleDesc.Quality = 0u;
-    descDepth.Usage = D3D11_USAGE_DEFAULT;
-    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    d3dAssert(mDevice->CreateTexture2D(&descDepth, nullptr, DepthStencil.GetAddressOf()));
-
-    // create view of depth stencil texture
-    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-    descDSV.Format = DXGI_FORMAT_D32_FLOAT;
-    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    descDSV.Texture2D.MipSlice = 0u;
-    d3dAssert(mDevice->CreateDepthStencilView(DepthStencil.Get(), &descDSV, mDepthStencilView.GetAddressOf()));
-
-    mContext->OMSetRenderTargets(1u, mTarget.GetAddressOf(), mDepthStencilView.Get());
-
-    D3D11_VIEWPORT vp;
-    vp.Width = static_cast<float>(swapChainDesc.BufferDesc.Width);
-    vp.Height = static_cast<float>(swapChainDesc.BufferDesc.Height);
-    vp.MinDepth = 0;
-    vp.MaxDepth = 1;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-    mContext->RSSetViewports(1u, &vp);
-
-    aspectRatio = vp.Height / vp.Width;
-
-    // TODO: Bind to event on window changed size
+    UpdateWindowSize(false);
 
     // Compile Shaders
     vertexShader = std::make_shared<D3DShader>(L"VertexShader.hlsl", ShaderType::Vertex, mDevice);
@@ -195,6 +153,66 @@ void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
 {
     mWorldPixelBufferData = data;
     UpdateBuffer(mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
+}
+
+void D3DRenderer::UpdateWindowSize(bool resize)
+{
+    mContext->OMSetRenderTargets(0, 0, 0);
+
+    // Release all outstanding references to the swap chain's buffers.
+    mTarget.Reset();
+
+    if (resize)
+    {
+        // Preserve the existing buffer count and format.
+        // Automatically choose the width and height to match the client rect for HWNDs.
+        d3dAssert(mSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
+    }
+
+    // Get buffer and create a render-target-view.
+    ID3D11Texture2D* pBuffer;
+    d3dAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBuffer)));
+    d3dAssert(mDevice->CreateRenderTargetView(pBuffer, NULL, mTarget.GetAddressOf()));
+    pBuffer->Release();
+
+
+    DXGI_SWAP_CHAIN_DESC swapChainDesc;
+    d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
+
+    // create depth stencil texture
+    Microsoft::WRL::ComPtr <ID3D11Texture2D> DepthStencil = nullptr;
+    D3D11_TEXTURE2D_DESC descDepth = {};
+    descDepth.Width = (UINT)swapChainDesc.BufferDesc.Width;
+    descDepth.Height = (UINT)swapChainDesc.BufferDesc.Height;
+    descDepth.MipLevels = 1u;
+    descDepth.ArraySize = 1u;
+    descDepth.Format = DXGI_FORMAT_D32_FLOAT;
+    descDepth.SampleDesc.Count = 1u;
+    descDepth.SampleDesc.Quality = 0u;
+    descDepth.Usage = D3D11_USAGE_DEFAULT;
+    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    d3dAssert(mDevice->CreateTexture2D(&descDepth, nullptr, DepthStencil.GetAddressOf()));
+
+    // create view of depth stencil texture
+    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
+    descDSV.Format = DXGI_FORMAT_D32_FLOAT;
+    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    descDSV.Texture2D.MipSlice = 0u;
+    d3dAssert(mDevice->CreateDepthStencilView(DepthStencil.Get(), &descDSV, mDepthStencilView.GetAddressOf()));
+
+    D3D11_VIEWPORT vp;
+    vp.Width = static_cast<float>(swapChainDesc.BufferDesc.Width);
+    vp.Height = static_cast<float>(swapChainDesc.BufferDesc.Height);
+    vp.MinDepth = 0;
+    vp.MaxDepth = 1;
+    vp.TopLeftX = 0;
+    vp.TopLeftY = 0;
+    mContext->RSSetViewports(1u, &vp);
+
+    aspectRatio = vp.Height / vp.Width;
+
+    mContext->OMSetRenderTargets(1u, mTarget.GetAddressOf(), mDepthStencilView.Get());
+    P_LOG("Set render size to %dx%d", swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height);
 }
 
 void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)

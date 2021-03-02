@@ -56,6 +56,7 @@ void PlanetEngine::Run()
     RegisterMessageHandler(inputManager);
     ImGuiInput* imguiInput = new ImGuiInput{};
     RegisterMessageHandler(imguiInput);
+    mRenderSystem->Load(this);
 
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
 
@@ -108,6 +109,7 @@ void PlanetEngine::Run()
         begin = end;
     }
 
+    mRenderSystem->UnLoad(this);
     UnregisterMessageHandler(inputManager);
     delete imguiInput;
     delete inputManager;
