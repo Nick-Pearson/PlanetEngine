@@ -91,6 +91,9 @@ class D3DRenderer : public Renderer
     Microsoft::WRL::ComPtr<ID3D11BlendState> mAlphaBlendState;
     Microsoft::WRL::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
 
+    ID3D11RasterizerState* WireFrame;
+    ID3D11RasterizerState* Solid;
+
     // standard vertex shader, later will be specified based on which vertex attributes a mesh has
     std::shared_ptr<D3DShader> vertexShader;
 

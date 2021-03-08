@@ -11,6 +11,5 @@ cc_library(
         "src/*.h"
     ]),
     copts = ["-Iexternal/gtest/include"],
-    linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
 )

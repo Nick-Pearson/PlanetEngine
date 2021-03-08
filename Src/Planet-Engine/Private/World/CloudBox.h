@@ -12,5 +12,4 @@ class CloudBox: public Entity
     CloudBox();
 
  private:
-    std::shared_ptr<MeshComponent> mCloudMesh;
 };

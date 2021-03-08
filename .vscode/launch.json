@@ -15,6 +15,18 @@
             "environment": [],
             "console": "internalConsole",
             "preLaunchTask": "${defaultBuildTask}"
+        },
+        {
+            "name": "Test",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bazel-bin/Test/planet-test",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "internalConsole",
+            "preLaunchTask": "test-build"
         }
     ]
 }

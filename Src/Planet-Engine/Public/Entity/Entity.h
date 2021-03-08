@@ -16,6 +16,7 @@ class Entity
  public:
     float rotateSpeed = 0.0f;
     Entity();
+    ~Entity();
 
     // alignment for Direct X structures
     void* operator new(size_t i)
@@ -29,7 +30,7 @@ class Entity
     }
 
     template<class T, typename... Args>
-    std::shared_ptr<T> AddComponent(Args... args);
+    T* AddComponent(Args... args);
 
     virtual void OnSpawned();
     virtual void OnDestroyed();
@@ -48,7 +49,7 @@ class Entity
  public:
     Transform transform;
 
-    std::vector<std::shared_ptr<Component>> components;
+    std::vector<Component*> components;
 
  private:
     void OnTransformChanged();
@@ -58,13 +59,12 @@ class Entity
 };
 
 template<class T, typename... Args>
-std::shared_ptr<T> Entity::AddComponent(Args... args)
+T* Entity::AddComponent(Args... args)
 {
     T* ptr = new T(args...);
-    std::shared_ptr<T> newcomp = std::shared_ptr<T>(ptr);
-    components.push_back(newcomp);
+    components.push_back(ptr);
 
-    newcomp->parent = this;
-    newcomp->OnSpawned();
-    return newcomp;
+    ptr->parent = this;
+    ptr->OnSpawned();
+    return ptr;
 }

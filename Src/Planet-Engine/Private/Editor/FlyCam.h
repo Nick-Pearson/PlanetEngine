@@ -11,12 +11,12 @@ class FlyCam : public Entity
  public:
     FlyCam();
 
-    inline std::shared_ptr<CameraComponent> GetCamera() const { return camera; }
+    inline const CameraComponent& GetCamera() const { return *camera; }
 
     void OnUpdate(float deltaSeconds) override;
 
  private:
-    std::shared_ptr<CameraComponent> camera;
+    CameraComponent* camera;
 
     float mMoveSpeed = 10.0f;
     float mTurnSpeed = 30.0f;

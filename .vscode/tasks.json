@@ -18,13 +18,9 @@
             }
         },
         {
-            "label": "test",
+            "label": "test-build",
             "type": "shell",
-            "command": "bazel build //Test:planet-test && ${workspaceFolder}/bazel-bin/Test/planet-test",
-            "group": {
-                "kind": "test",
-                "isDefault": true
-            },
+            "command": "bazel build //Test:planet-test -c dbg",
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",

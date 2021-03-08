@@ -1,9 +1,9 @@
 #include "PlanetEngine.h"
 
+#include <assert.h>
 #include <memory>
 #include <chrono>
 #include <thread>
-#include <assert.h>
 
 #include "Platform/Window.h"
 #include "Mesh/Mesh.h"
@@ -70,13 +70,12 @@ void PlanetEngine::Run()
     texturedMaterial->AddTexture(texture);
 
     std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
-    std::shared_ptr<CameraComponent> cameraComp = cameraEntity->GetCamera();
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
     cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
 
     std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
     bunnyEntity->AddComponent<MeshComponent>(bunny, standardMaterial);
-    bunnyEntity->Translate(Vector{ 0.0f, 0.6f, 0.0f });
+    bunnyEntity->Translate(Vector{ 0.0f, 0.6f, 5.0f });
 
     std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
     floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
@@ -93,6 +92,8 @@ void PlanetEngine::Run()
     float deltaTime = 0.01f;
     auto begin = std::chrono::high_resolution_clock::now();
 
+    const CameraComponent& cameraComp = cameraEntity->GetCamera();
+
     ExitCode = -1;
     while (ExitCode == -1)
     {
@@ -102,7 +103,7 @@ void PlanetEngine::Run()
         // ProcessInput();
 
         scene->Update(deltaTime);
-        mRenderSystem->RenderFrame(*cameraComp.get());
+        mRenderSystem->RenderFrame(cameraComp);
 
         auto end = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(end - begin).count();

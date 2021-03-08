@@ -17,20 +17,20 @@ class D3DRenderSystem : public RenderSystem
     explicit D3DRenderSystem(HWND window);
     ~D3DRenderSystem();
 
-    void Load(class PlanetEngine* engine) override;
-    void UnLoad(class PlanetEngine* engine) override;
+    void Load(class PlanetEngine* engine) final;
+    void UnLoad(class PlanetEngine* engine) final;
 
-    inline Renderer* GetRenderer() override
+    inline Renderer* GetRenderer() final
     {
         return mRenderer;
     }
 
-    inline ResourceManager* GetResourceManager() override
+    inline ResourceManager* GetResourceManager() final
     {
         return mResourceManager;
     }
 
-    void RenderFrame(const CameraComponent& camera);
+    void RenderFrame(const CameraComponent& camera) final;
 
  private:
     void RenderDebugUI();

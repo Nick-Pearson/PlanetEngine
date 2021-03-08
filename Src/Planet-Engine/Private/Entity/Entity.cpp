@@ -4,6 +4,15 @@ Entity::Entity()
 {
 }
 
+Entity::~Entity()
+{
+    for (Component* component : components)
+    {
+        delete component;
+    }
+    components.clear();
+}
+
 void Entity::OnSpawned()
 {
 }
@@ -33,7 +42,7 @@ void Entity::Rotate(Vector rotation)
 
 void Entity::OnTransformChanged()
 {
-    for (std::shared_ptr<Component> component : components)
+    for (Component* component : components)
     {
         component->OnEntityTransformChanged();
     }

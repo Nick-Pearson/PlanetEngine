@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#define PI 3.141592f
+#define PI 3.14159265359f
 
 class Math
 {
@@ -27,10 +27,20 @@ class Math
         return std::cos(angleRad);
     }
 
+    static inline float ASin(float value)
+    {
+        return std::asin(value);
+    }
+
+    static inline float ACos(float value)
+    {
+        return std::acos(value);
+    }
+
     static inline void SinAndCos(float angleRad, float* outSin, float* outCos)
     {
-        *outSin = Math::Sin(angleRad);
-        *outCos = Math::Cos(angleRad);
+        *outSin = std::sin(angleRad);
+        *outCos = std::cos(angleRad);
     }
 
     static inline float Sqrt(float value)
