@@ -25,10 +25,7 @@ class D3DRenderSystem : public RenderSystem
         return mRenderer;
     }
 
-    inline ResourceManager* GetResourceManager() final
-    {
-        return mResourceManager;
-    }
+    void ApplyQueue(const class RenderQueueItems& items) final;
 
     void RenderFrame(const CameraComponent& camera) final;
 

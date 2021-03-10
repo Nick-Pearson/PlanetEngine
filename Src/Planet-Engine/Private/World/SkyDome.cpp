@@ -3,7 +3,6 @@
 #include "../Mesh/MeshComponent.h"
 #include "../Mesh/Primitives.h"
 #include "../Material/Material.h"
-#include "Render/RenderSystem.h"
 #include "Render/Renderer.h"
 
 SkyDome::SkyDome()
@@ -13,8 +12,8 @@ SkyDome::SkyDome()
     auto skyMaterial = std::make_shared<Material>("SkySphere.hlsl");
 
     auto domeMesh = AddComponent<MeshComponent>(mesh, skyMaterial);
-    domeMesh->SetUseDepthBuffer(false);
-    domeMesh->SetUseWorldMatrix(false);
+    domeMesh->render_config_.use_depth_buffer = false;
+    domeMesh->render_config_.use_world_matrix = false;
 
     mTimeOfDay = new TimeOfDay{};
 }
@@ -27,6 +26,6 @@ void SkyDome::OnUpdate(float deltaSeconds)
 
     Vector sunDirection = mTimeOfDay->CalculateSunDirection();
 
-    auto renderer = PlanetEngine::Get()->GetRenderSystem()->GetRenderer();
+    auto renderer = PlanetEngine::Get()->GetRenderer();
     renderer->UpdateWorldBuffer(WorldBufferData(sunDirection, mSunSkyStrength, mSunColour));
 }

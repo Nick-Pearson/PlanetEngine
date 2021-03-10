@@ -17,7 +17,7 @@ class Material
     inline std::shared_ptr<Texture2D> GetTextureAt(int slot) const { return mTextures[slot]; }
     inline int GetNumTextures() const { return mTextures.size(); }
     inline void EnableAlphaBlending() { mAlpha = true; }
-    inline bool IsAlphaBlendingEnabled() { return mAlpha; }
+    inline bool IsAlphaBlendingEnabled() const { return mAlpha; }
 
  private:
     bool mAlpha = false;

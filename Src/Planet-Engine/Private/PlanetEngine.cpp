@@ -103,6 +103,9 @@ void PlanetEngine::Run()
         // ProcessInput();
 
         scene->Update(deltaTime);
+
+        mRenderSystem->ApplyQueue(render_queue_.GetItems());
+        render_queue_.ClearQueue();
         mRenderSystem->RenderFrame(cameraComp);
 
         auto end = std::chrono::high_resolution_clock::now();

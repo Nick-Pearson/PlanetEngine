@@ -18,12 +18,11 @@ GPUResourceManager::~GPUResourceManager()
 {
 }
 
-GPUMeshHandle* GPUResourceManager::LoadMesh(std::shared_ptr<Mesh> mesh)
+GPUMeshHandle* GPUResourceManager::LoadMesh(const Mesh* mesh)
 {
     if (!mesh) return nullptr;
 
     GPUMeshHandle entry;
-    entry.mesh = mesh;
     entry.numTriangles = mesh->mTriangles.size();
 
     // load the buffers
@@ -41,11 +40,7 @@ GPUMeshHandle* GPUResourceManager::LoadMesh(std::shared_ptr<Mesh> mesh)
     return mLoadedMeshes.Add(entry);
 }
 
-void GPUResourceManager::UnloadMesh(std::shared_ptr<Mesh> mesh)
-{
-}
-
-std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(std::shared_ptr<Material> material)
+std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Material* material)
 {
     auto existing = mLoadedMaterials.find(material->GetShaderPath());
     if (existing != mLoadedMaterials.end())
@@ -57,7 +52,6 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(std::shared_
     std::shared_ptr <D3DShader> compiledShader = LoadShader(material->GetShaderPath(), false);
 
     std::shared_ptr<GPUMaterialHandle> entry = std::make_shared<GPUMaterialHandle>();
-    entry->material = material;
     entry->shader = compiledShader;
     entry->alpha = material->IsAlphaBlendingEnabled();
 

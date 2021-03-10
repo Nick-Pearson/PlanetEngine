@@ -5,6 +5,10 @@
 #include "D3DRenderer.h"
 #include "PlanetEngine.h"
 #include "ImGUI/ImGUIRenderer.h"
+#include "Render/RenderQueue.h"
+#include "Entity/Entity.h"
+#include "Mesh/MeshComponent.h"
+#include "RenderState.h"
 #include "imgui.h"
 
 namespace chr = std::chrono;
@@ -34,6 +38,22 @@ void D3DRenderSystem::Load(class PlanetEngine* engine)
 void D3DRenderSystem::UnLoad(class PlanetEngine* engine)
 {
     engine->UnregisterMessageHandler(mWindowEvents);
+}
+
+void D3DRenderSystem::ApplyQueue(const class RenderQueueItems& items)
+{
+    for (auto mesh : items.new_meshes)
+    {
+        RenderState renderState;
+        renderState.debugName = mesh->GetParent()->GetName();
+        renderState.UseDepthBuffer = mesh->render_config_.use_depth_buffer;
+        renderState.UseWorldMatrix = mesh->render_config_.use_world_matrix;
+        renderState.mesh = mResourceManager->LoadMesh(mesh->GetMesh());
+        renderState.material = mResourceManager->LoadMaterial(mesh->GetMaterial());
+        renderState.model = mesh->GetWorldTransform();
+
+        mRenderer->AddRenderState(renderState);
+    }
 }
 
 void D3DRenderSystem::RenderFrame(const CameraComponent& camera)

@@ -9,7 +9,7 @@
 #include "Platform/PlanetWindows.h"
 #include <DirectXMath.h>
 #include "Container/LinkedList.h"
-#include "Render/RenderState.h"
+#include "RenderState.h"
 #include "Render/Renderer.h"
 #include "Render/WorldBufferData.h"
 #include "PlanetLogging.h"

@@ -11,7 +11,7 @@ CloudBox::CloudBox()
     auto cloudMaterial = std::make_shared<Material>("CloudsShader.hlsl");
     cloudMaterial->EnableAlphaBlending();
     auto cloudMesh = AddComponent<MeshComponent>(mesh, cloudMaterial);
-    cloudMesh->SetUseDepthBuffer(false);
-    cloudMesh->SetUseWorldMatrix(false);
+    cloudMesh->render_config_.use_depth_buffer = false;
+    cloudMesh->render_config_.use_world_matrix = false;
     Translate(Vector{0.0f, -4.0f, 0.0f});
 }

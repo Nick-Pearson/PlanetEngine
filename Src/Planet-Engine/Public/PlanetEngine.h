@@ -4,6 +4,7 @@
 
 #include "Platform/Platform.h"
 #include "Render/RenderSystem.h"
+#include "Render/RenderQueue.h"
 
 class InputManager;
 class RenderManager;
@@ -19,8 +20,9 @@ class PlanetEngine
     void Run();
 
     inline int GetExitCode() const { return ExitCode; }
-    
-    inline RenderSystem* GetRenderSystem() const { return mRenderSystem; }
+
+    inline RenderQueue* GetRenderQueue() { return &render_queue_; }
+    inline Renderer* GetRenderer() { return mRenderSystem->GetRenderer(); }
     inline InputManager* GetInputManager() const { return inputManager; }
 
 #if PLATFORM_WIN
@@ -37,6 +39,7 @@ class PlanetEngine
  private:
     int ExitCode;
 
+    RenderQueue render_queue_;
     RenderSystem* mRenderSystem;
     InputManager* inputManager;
 };
