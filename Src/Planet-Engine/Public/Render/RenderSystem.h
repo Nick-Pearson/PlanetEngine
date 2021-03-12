@@ -9,9 +9,9 @@ class RenderSystem
     virtual void Load(class PlanetEngine* engine) = 0;
     virtual void UnLoad(class PlanetEngine* engine) = 0;
 
-    virtual void ApplyQueue(const class RenderQueueItems& items) = 0;
+    virtual void ApplyQueue(const struct RenderQueueItems& items) = 0;
 
     virtual void RenderFrame(const CameraComponent& camera) = 0;
 
-    virtual Renderer* GetRenderer() = 0;
+    virtual Renderer* GetRenderer() const = 0;
 };

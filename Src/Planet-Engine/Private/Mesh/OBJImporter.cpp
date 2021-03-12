@@ -1,5 +1,5 @@
 #include "OBJImporter.h"
-#include "Mesh.h"
+#include "Mesh/Mesh.h"
 
 #include <fstream>
 #include <string>

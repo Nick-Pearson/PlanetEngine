@@ -6,21 +6,11 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "bazel build :planet-engine :planet-game -c dbg",
+            "command": "cmake --build ./Build --config Debug",
             "group": {
                 "kind": "build",
                 "isDefault": true
             },
-            "presentation": {
-                "reveal": "always",
-                "panel": "dedicated",
-                "clear": true
-            }
-        },
-        {
-            "label": "test-build",
-            "type": "shell",
-            "command": "bazel build //Test:planet-test -c dbg",
             "presentation": {
                 "reveal": "always",
                 "panel": "dedicated",

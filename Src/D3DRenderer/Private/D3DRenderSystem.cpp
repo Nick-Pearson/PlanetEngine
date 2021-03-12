@@ -9,6 +9,9 @@
 #include "Entity/Entity.h"
 #include "Mesh/MeshComponent.h"
 #include "RenderState.h"
+#include "D3DRenderer.h"
+#include "GPUResourceManager.h"
+#include "D3DWindowEvents.h"
 #include "imgui.h"
 
 namespace chr = std::chrono;
@@ -40,7 +43,12 @@ void D3DRenderSystem::UnLoad(class PlanetEngine* engine)
     engine->UnregisterMessageHandler(mWindowEvents);
 }
 
-void D3DRenderSystem::ApplyQueue(const class RenderQueueItems& items)
+Renderer* D3DRenderSystem::GetRenderer() const
+{
+    return mRenderer;
+}
+
+void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
 {
     for (auto mesh : items.new_meshes)
     {

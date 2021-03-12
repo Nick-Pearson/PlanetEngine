@@ -3,11 +3,6 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
-#include "D3DRenderer.h"
-#include "ImGUI/ImGUIRenderer.h"
-#include "GPUResourceManager.h"
-#include "D3DWindowEvents.h"
-
 #include "Platform/PlanetWindows.h"
 #include "Render/RenderSystem.h"
 
@@ -20,12 +15,9 @@ class D3DRenderSystem : public RenderSystem
     void Load(class PlanetEngine* engine) final;
     void UnLoad(class PlanetEngine* engine) final;
 
-    inline Renderer* GetRenderer() final
-    {
-        return mRenderer;
-    }
+    Renderer* GetRenderer() const final;
 
-    void ApplyQueue(const class RenderQueueItems& items) final;
+    void ApplyQueue(const struct RenderQueueItems& items) final;
 
     void RenderFrame(const CameraComponent& camera) final;
 
@@ -37,10 +29,10 @@ class D3DRenderSystem : public RenderSystem
     Microsoft::WRL::ComPtr <IDXGISwapChain> mSwapChain;
     Microsoft::WRL::ComPtr <ID3D11DeviceContext> mContext;
 
-    D3DRenderer* mRenderer;
-    ImGUIRenderer* mUIRenderer;
-    GPUResourceManager* mResourceManager;
-    D3DWindowEvents* mWindowEvents;
+    class D3DRenderer* mRenderer;
+    class ImGUIRenderer* mUIRenderer;
+    class GPUResourceManager* mResourceManager;
+    class D3DWindowEvents* mWindowEvents;
 
     uint64_t mLastFrameMs;
 };

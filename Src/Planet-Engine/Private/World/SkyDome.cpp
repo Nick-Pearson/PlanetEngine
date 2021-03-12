@@ -1,8 +1,8 @@
 #include "SkyDome.h"
 #include "PlanetEngine.h"
-#include "../Mesh/MeshComponent.h"
+#include "Mesh/MeshComponent.h"
+#include "Material/Material.h"
 #include "../Mesh/Primitives.h"
-#include "../Material/Material.h"
 #include "Render/Renderer.h"
 
 SkyDome::SkyDome()

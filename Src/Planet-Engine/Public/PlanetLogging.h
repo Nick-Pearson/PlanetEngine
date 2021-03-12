@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <iostream>
+#include "spdlog/spdlog.h"
 
 #include "Platform/Platform.h"
 #include "Container/String.h"

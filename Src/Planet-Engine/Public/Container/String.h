@@ -2,7 +2,7 @@
 
 #include <cstdarg>
 
-#include "../Platform/Platform.h"
+#include "Platform/Platform.h"
 
 // TODO: Rewrite this in terms of some array class
 class String

@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Math/Elipsoid.h"
-#include "Mesh.h"
+#include "Mesh/Mesh.h"
 
 class Primitives
 {

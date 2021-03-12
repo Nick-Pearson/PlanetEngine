@@ -8,7 +8,7 @@
             "name": "Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bazel-bin/planet-game",
+            "program": "${workspaceFolder}/Build/bin/planet-game",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -20,13 +20,13 @@
             "name": "Test",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/bazel-bin/Test/planet-test",
+            "program": "${workspaceFolder}/Build/bin/planet-test",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "internalConsole",
-            "preLaunchTask": "test-build"
+            "preLaunchTask": "${defaultBuildTask}"
         }
     ]
 }

@@ -1,8 +1,8 @@
-#include "MeshComponent.h"
+#include "Mesh/MeshComponent.h"
 
 #include "PlanetEngine.h"
 #include "Render/RenderQueue.h"
-#include "Mesh.h"
+#include "Mesh/Mesh.h"
 #include "Entity/Entity.h"
 #include "Material/Material.h"
 

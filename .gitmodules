@@ -1,6 +1,0 @@
-[submodule "Lib/imgui"]
-	path = Lib/imgui
-	url = https://github.com/ocornut/imgui
-[submodule "Lib/stb"]
-	path = Lib/stb
-	url = https://github.com/nothings/stb

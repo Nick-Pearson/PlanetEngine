@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Platform/Platform.h"
+#include "Platform/Platform.h"
 #include "Input/KeyCode.h"
 
 class InputManager

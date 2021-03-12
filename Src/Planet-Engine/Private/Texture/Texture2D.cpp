@@ -1,4 +1,4 @@
-#include "Texture2D.h"
+#include "Texture/Texture2D.h"
 
 Texture2D::Texture2D(unsigned int width, unsigned int height) :
     mWidth(width), mHeight(height)
