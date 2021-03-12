@@ -70,6 +70,14 @@
         "deque": "cpp",
         "hash_map": "cpp",
         "hash_set": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "codecvt": "cpp",
+        "array": "cpp",
+        "clocale": "cpp",
+        "condition_variable": "cpp",
+        "mutex": "cpp",
+        "random": "cpp",
+        "stack": "cpp",
+        "variant": "cpp"
     }
 }

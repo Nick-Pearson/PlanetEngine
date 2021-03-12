@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <D3Dcompiler.h>
 #include <wrl/client.h>
+#include <string>
 
 enum class ShaderType
 {
@@ -13,7 +14,7 @@ enum class ShaderType
 class D3DShader
 {
  public:
-    D3DShader(const wchar_t* filepath, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice);
+    D3DShader(const std::string& filepath, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice);
     ~D3DShader();
 
     void Use(ID3D11DeviceContext* context);

@@ -45,7 +45,7 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Materi
     auto existing = mLoadedMaterials.find(material->GetShaderPath());
     if (existing != mLoadedMaterials.end())
     {
-        P_LOG("Reusing existing loaded material for %s", material->GetShaderPath().c_str());
+        P_LOG("Reusing existing loaded material for {}", material->GetShaderPath());
         return existing->second;
     }
 
@@ -87,17 +87,8 @@ std::shared_ptr<D3DShader> GPUResourceManager::LoadShader(const std::string& sha
         }
     }
 
-    P_LOG("Loading shader file %s", shaderFile.c_str());
-
-    wchar_t* unicodeStr = new wchar_t[shaderFile.size() + 1];
-    unicodeStr[shaderFile.size()] = 0;
-    for (unsigned int i = 0; i < shaderFile.size(); ++i)
-    {
-        unicodeStr[i] = shaderFile[i];
-    }
-
-    std::shared_ptr<D3DShader> shader = std::make_shared<D3DShader>(unicodeStr, ShaderType::Pixel, mDevice);
-    delete unicodeStr;
+    P_LOG("Loading shader file {}", shaderFile);
+    std::shared_ptr<D3DShader> shader = std::make_shared<D3DShader>(shaderFile, ShaderType::Pixel, mDevice);
 
     loadedShaders.emplace(shaderFile, shader);
 

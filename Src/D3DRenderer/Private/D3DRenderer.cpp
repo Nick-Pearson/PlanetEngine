@@ -34,7 +34,7 @@ D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> devi
     UpdateWindowSize(false);
 
     // Compile Shaders
-    vertexShader = std::make_shared<D3DShader>(L"VertexShader.hlsl", ShaderType::Vertex, mDevice);
+    vertexShader = std::make_shared<D3DShader>("VertexShader.hlsl", ShaderType::Vertex, mDevice);
 
     Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
     const D3D11_INPUT_ELEMENT_DESC ied[] =
@@ -212,7 +212,7 @@ void D3DRenderer::UpdateWindowSize(bool resize)
     aspectRatio = vp.Height / vp.Width;
 
     mContext->OMSetRenderTargets(1u, mTarget.GetAddressOf(), mDepthStencilView.Get());
-    P_LOG("Set render size to %dx%d", swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height);
+    P_LOG("Set render size to {}x{}", swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height);
 }
 
 void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)

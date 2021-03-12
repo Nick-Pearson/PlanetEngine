@@ -6,13 +6,16 @@
 #include <fstream>
 #include <iostream>
 
+#include <codecvt>
+#include <locale>
+
 #include "D3DRenderer.h"
 #include "PlanetLogging.h"
 
-D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice) :
+D3DShader::D3DShader(const std::string& filename, ShaderType type, Microsoft::WRL::ComPtr <ID3D11Device> inDevice) :
     shaderType(type), mDevice(inDevice)
 {
-    std::wstring fullpath = filename;
+    std::wstring fullpath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(filename);
     fullpath.insert(0, L"./Shader/");
 
     const char* shaderTarget = (type == ShaderType::Pixel ? "ps_5_0" : "vs_5_0");
@@ -23,11 +26,11 @@ D3DShader::D3DShader(const wchar_t* filename, ShaderType type, Microsoft::WRL::C
 
     if (ErrorBlob || mShaderBlob == nullptr)
     {
-        P_ERROR(TEXT("Error compiling shader file: %S"), filename);
+        // P_ERROR("Error compiling shader file: {}", filename);
         if (ErrorBlob)
         {
             const char* message = (const char*)ErrorBlob->GetBufferPointer();
-            P_LOG(TEXT("%s"), message);
+            P_ERROR("{}", message);
         }
         return;
     }

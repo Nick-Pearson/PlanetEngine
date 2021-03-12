@@ -1,24 +1,11 @@
 #pragma once
 
-#include <ctime>
-#include <iostream>
 #include "spdlog/spdlog.h"
 
-#include "Platform/Platform.h"
-#include "Container/String.h"
+#define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_INFO
 
-#define P_LOG(Format, ...) \
-    { \
-    String msg =  String::Printf(Format, ##__VA_ARGS__); \
-    time_t * rawtime = new time_t; \
-    struct tm * timeinfo; \
-    time(rawtime); \
-    timeinfo = localtime(rawtime); \
-    char buf[80]; \
-    strftime(buf, sizeof(buf), "%X", timeinfo); \
-    String LogMsg = String::Printf(TEXT("%s [%s] %s\n"), buf, typeid(*this).name(), *msg); \
-    OutputDebugString(*LogMsg); \
-    }
-
-
-#define P_ERROR(Format, ...) P_LOG(Format, ##__VA_ARGS__)
+#define P_TRACE(...) SPDLOG_TRACE(##__VA_ARGS__);
+#define P_EDITOR(...) SPDLOG_DEBUG(##__VA_ARGS__);
+#define P_LOG(...) SPDLOG_INFO(##__VA_ARGS__);
+#define P_WARN(...) SPDLOG_WARN(##__VA_ARGS__);
+#define P_ERROR(...) SPDLOG_ERROR(##__VA_ARGS__);
