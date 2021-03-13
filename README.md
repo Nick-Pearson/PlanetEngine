@@ -1,5 +1,5 @@
 # Planet Engine
-
+[![MSBuild](https://github.com/Nick-Pearson/PlanetEngine/actions/workflows/build.yml/badge.svg)](https://github.com/Nick-Pearson/PlanetEngine/actions/workflows/build.yml)
 ## Compiling
 
 Run these commands in the project root
