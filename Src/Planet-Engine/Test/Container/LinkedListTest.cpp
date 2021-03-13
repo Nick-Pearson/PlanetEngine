@@ -2,7 +2,7 @@
 
 #include "Container/LinkedList.h"
 
-TEST(LinkedListTest, list_starts_empty) 
+TEST(LinkedListTest, list_starts_empty)
 {
   LinkedList<int> list{};
 
@@ -12,13 +12,13 @@ TEST(LinkedListTest, list_starts_empty)
 TEST(LinkedListTest, list_after_add_is_not_empty)
 {
   LinkedList<int> list{};
-  
+
   list.Add(1);
 
   EXPECT_EQ(1, list.Length());
 }
 
-TEST(LinkedListTest, non_empty_list_after_add_is_not_empty) 
+TEST(LinkedListTest, non_empty_list_after_add_is_not_empty)
 {
   LinkedList<int> list{};
   list.Add(1);
@@ -28,7 +28,7 @@ TEST(LinkedListTest, non_empty_list_after_add_is_not_empty)
   EXPECT_EQ(2, list.Length());
 }
 
-TEST(LinkedListTest, empty_list_remove_does_nothing) 
+TEST(LinkedListTest, empty_list_remove_does_nothing)
 {
   LinkedList<int> list{};
 
@@ -38,7 +38,7 @@ TEST(LinkedListTest, empty_list_remove_does_nothing)
   EXPECT_EQ(0, list.Length());
 }
 
-TEST(LinkedListTest, remove_non_existant_item_does_nothing) 
+TEST(LinkedListTest, remove_non_existant_item_does_nothing)
 {
   LinkedList<int> list{};
   list.Add(1);
@@ -49,7 +49,7 @@ TEST(LinkedListTest, remove_non_existant_item_does_nothing)
   EXPECT_EQ(1, list.Length());
 }
 
-TEST(LinkedListTest, remove_singleton_item_empties_list) 
+TEST(LinkedListTest, remove_singleton_item_empties_list)
 {
   LinkedList<int> list{};
   list.Add(1);
@@ -60,7 +60,7 @@ TEST(LinkedListTest, remove_singleton_item_empties_list)
   EXPECT_EQ(0, list.Length());
 }
 
-TEST(LinkedListTest, remove_item_calls_destructor_on_it) 
+TEST(LinkedListTest, remove_item_calls_destructor_on_it)
 {
   static int called;
   called = 0;
@@ -85,7 +85,7 @@ TEST(LinkedListTest, remove_item_calls_destructor_on_it)
   EXPECT_EQ(3, called);
 }
 
-TEST(LinkedListTest, remove_nullptr_does_nothing) 
+TEST(LinkedListTest, remove_nullptr_does_nothing)
 {
   LinkedList<int> list{};
   list.Add(1);
@@ -96,7 +96,7 @@ TEST(LinkedListTest, remove_nullptr_does_nothing)
   EXPECT_EQ(1, list.Length());
 }
 
-TEST(LinkedListTest, empty_list_remove_ptr_does_nothing) 
+TEST(LinkedListTest, empty_list_remove_ptr_does_nothing)
 {
   LinkedList<int> list{};
   int val = 2;
@@ -107,7 +107,7 @@ TEST(LinkedListTest, empty_list_remove_ptr_does_nothing)
   EXPECT_EQ(0, list.Length());
 }
 
-TEST(LinkedListTest, remove_ptr_non_existant_item_does_nothing) 
+TEST(LinkedListTest, remove_ptr_non_existant_item_does_nothing)
 {
   LinkedList<int> list{};
   int val = 2;
@@ -119,7 +119,7 @@ TEST(LinkedListTest, remove_ptr_non_existant_item_does_nothing)
   EXPECT_EQ(1, list.Length());
 }
 
-TEST(LinkedListTest, remove_ptr_singleton_item_empties_list) 
+TEST(LinkedListTest, remove_ptr_singleton_item_empties_list)
 {
   LinkedList<int> list{};
   int val = 1;
@@ -131,7 +131,7 @@ TEST(LinkedListTest, remove_ptr_singleton_item_empties_list)
   EXPECT_EQ(0, list.Length());
 }
 
-TEST(LinkedListTest, remove_ptr_item_calls_destructor_on_it) 
+TEST(LinkedListTest, remove_ptr_item_calls_destructor_on_it)
 {
   static int called;
   called = 0;

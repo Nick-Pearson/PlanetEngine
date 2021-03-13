@@ -1,5 +1,4 @@
 #include "OBJImporter.h"
-#include "Mesh/Mesh.h"
 
 #include <fstream>
 #include <string>
@@ -7,6 +6,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "Mesh/Mesh.h"
 namespace
 {
     std::vector<std::string> split(const std::string& str, const char delim)

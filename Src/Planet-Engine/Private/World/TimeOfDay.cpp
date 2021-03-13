@@ -41,7 +41,7 @@ namespace
     static const int DAY = HOUR * 24;
     static const float SECONDS_IN_HOUR = HOUR;
     static const float SECONDS_IN_DAY = DAY;
-}
+}  // namespace
 
 void TimeOfDay::Update(float deltaSeconds)
 {
