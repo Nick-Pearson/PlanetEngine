@@ -34,18 +34,11 @@ TEST(SolarUtilsTest, declination_winter_solstice)
   EXPECT_NEAR(-23.45f, angle, epsilon);
 }
 
-TEST(SolarUtilsTest, hour_angle_sydney_summer_soltice)
-{
-  float angle = SolarUtils::CalculateHourAngle(172, 2.0f, 150.0f);
-
-  EXPECT_NEAR(187.14f, angle, epsilon);
-}
-
 TEST(SolarUtilsTest, hour_angle_midday_sydney_summer_soltice)
 {
   float angle = SolarUtils::CalculateHourAngle(172, 2.0f, 150.0f);
 
-  EXPECT_NEAR(179.64f, angle, epsilon);
+  EXPECT_NEAR(-0.36f, angle, 1e-1);
 }
 
 TEST(SolarUtilsTest, sun_angles_midday_london_summer_soltice)
