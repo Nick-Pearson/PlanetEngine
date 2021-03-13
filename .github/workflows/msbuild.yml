@@ -46,7 +46,7 @@ jobs:
     - name: Install cpplint
       run: |
            pwd
-           export PATH=$PATH:/home/runner/.local/bin
+           echo "$HOME/.local/bin" >> $GITHUB_PATH
            pip3 install cpplint
            cpplint --version
            ls
