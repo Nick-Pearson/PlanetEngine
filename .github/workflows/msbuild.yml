@@ -46,6 +46,7 @@ jobs:
     - name: Install cpplint
       run: |
            pwd
+           pip3 install wheel setuptools
            pip3 install cpplint
            cpplint --version
            ls
