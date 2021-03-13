@@ -34,3 +34,6 @@ jobs:
       
     - name: Conan build
       run: conan build . --build-folder build
+      
+    - name: Run unit tests
+      run: ./build/bin/planet-test.exe
