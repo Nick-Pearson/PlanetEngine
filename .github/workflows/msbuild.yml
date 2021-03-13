@@ -37,3 +37,18 @@ jobs:
       
     - name: Run unit tests
       run: ./build/bin/planet-test.exe
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install cpplint
+      run: |
+           pwd
+           pip3 install cpplint
+           cpplint --version
+           ls
+
+    - name: Run cpplint
+      run: cpplint --quiet --recursive Src
