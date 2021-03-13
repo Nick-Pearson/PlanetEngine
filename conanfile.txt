@@ -1,7 +1,0 @@
-[requires]
-spdlog/1.8.2
-stb/20200203
-imgui/1.74
-
-[generators]
-cmake

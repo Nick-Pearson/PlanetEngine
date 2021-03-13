@@ -1,11 +1,9 @@
 # Planet Engine
 
-## Setup
+## Compiling
 
+Run these commands in the project root
 ```bash
-mkdir build
-cd build
-conan install .. --config Debug
-cmake ..
-cmake --build . --config Debug
+conan install . --install-folder build
+conan build . --build-folder build
 ```
