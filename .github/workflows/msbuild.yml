@@ -12,31 +12,31 @@ env:
   BUILD_CONFIGURATION: Release
 
 jobs:
-  # build:
-  #   runs-on: windows-latest
+  build:
+    runs-on: windows-latest
 
-  #   steps:
-  #   - uses: actions/checkout@v2
+    steps:
+    - uses: actions/checkout@v2
 
-  #   - name: Add MSBuild to PATH
-  #     uses: microsoft/setup-msbuild@v1
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1
       
-  #   - name: Download Conan package manager
-  #     run: |
-  #          pwd
-  #          pip3 install wheel setuptools
-  #          pip3 install conan
-  #          conan --version
-  #          ls
+    - name: Download Conan package manager
+      run: |
+           pwd
+           pip3 install wheel setuptools
+           pip3 install conan
+           conan --version
+           ls
 
-  #   - name: Conan install
-  #     run: conan install . --install-folder build
+    - name: Conan install
+      run: conan install . --install-folder build
       
-  #   - name: Conan build
-  #     run: conan build . --build-folder build
+    - name: Conan build
+      run: conan build . --build-folder build
       
-  #   - name: Run unit tests
-  #     run: ./build/bin/planet-test.exe
+    - name: Run unit tests
+      run: ./build/bin/planet-test.exe
   lint:
     runs-on: ubuntu-latest
 
