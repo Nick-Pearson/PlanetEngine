@@ -21,10 +21,16 @@ jobs:
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1
       
-    - name: Download Conan package manager.
+    - name: Download Conan package manager
       run: |
            pwd
            pip3 install wheel setuptools
            pip3 install conan
            conan --version
            ls
+
+    - name: Conan install
+      run: conan install . --install-folder build
+      
+    - name: Conan build
+      run: conan build . --build-folder build
