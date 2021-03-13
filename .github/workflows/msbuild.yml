@@ -26,7 +26,5 @@ jobs:
            pwd
            pip3 install wheel setuptools
            pip3 install conan
-           export PATH=$PATH:/home/runner/.local/bin
-           echo $PATH
            conan --version
            ls
