@@ -78,6 +78,7 @@
         "mutex": "cpp",
         "random": "cpp",
         "stack": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "*.rh": "cpp"
     }
 }

@@ -35,3 +35,4 @@ add_test(NAME planet-test
 add_executable(planet-game WIN32 "Src/Planet-Game/Main.cpp")
 target_link_libraries(planet-game d3d-renderer)
 target_link_libraries(planet-game planet-engine)
+target_link_libraries(planet-game shcore.lib)
