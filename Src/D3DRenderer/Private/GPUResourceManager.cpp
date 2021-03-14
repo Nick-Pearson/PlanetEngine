@@ -3,19 +3,22 @@
 #include <string>
 
 #include "D3DRenderer.h"
-#include "D3DShader.h"
-#include "D3DTexture.h"
+#include "Texture/D3DTexture.h"
 #include "Mesh/Mesh.h"
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
 
-GPUResourceManager::GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device) :
+GPUResourceManager::GPUResourceManager(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context) :
     mDevice(device)
 {
+    shader_loader_ = new D3DShaderLoader{device};
+    texture_loader_ = new D3DTextureLoader{device, context, shader_loader_};
 }
 
 GPUResourceManager::~GPUResourceManager()
 {
+    delete texture_loader_;
+    delete shader_loader_;
 }
 
 GPUMeshHandle* GPUResourceManager::LoadMesh(const Mesh* mesh)
@@ -49,17 +52,26 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Materi
         return existing->second;
     }
 
-    std::shared_ptr <D3DShader> compiledShader = LoadShader(material->GetShaderPath(), false);
+    auto loaded_shader = LoadShader(material->GetShaderPath(), false);
 
     std::shared_ptr<GPUMaterialHandle> entry = std::make_shared<GPUMaterialHandle>();
-    entry->shader = compiledShader;
+    entry->shader = loaded_shader;
     entry->alpha = material->IsAlphaBlendingEnabled();
 
     int numTextures = material->GetNumTextures();
     for (int i = 0; i < numTextures; ++i)
     {
-        std::shared_ptr<Texture2D> texture = material->GetTextureAt(i);
-        entry->textures.push_back(std::make_shared<D3DTexture>(texture.get(), mDevice));
+        const Texture* texture = material->GetTextureAt(i);
+        auto loaded_texture = texture_loader_->Load(texture);
+        if (loaded_texture)
+        {
+            entry->textures.push_back(loaded_texture);
+            loaded_textures_.push_back(texture);
+        }
+        else
+        {
+            P_FATAL("failed to load texture {}", (void*) texture)
+        }
     }
 
     mLoadedMaterials.emplace(material->GetShaderPath(), entry);
@@ -71,12 +83,20 @@ void GPUResourceManager::ReloadAllShaders()
     P_LOG("Reloading all shaders");
     for (auto i : mLoadedMaterials)
     {
-        std::shared_ptr <D3DShader> compiledShader = LoadShader(i.first, true);
-        i.second->shader = compiledShader;
+        i.second->shader = LoadShader(i.first, true);
     }
 }
 
-std::shared_ptr<D3DShader> GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)
+void GPUResourceManager::ReloadAllTextures()
+{
+    P_LOG("Reloading all textures");
+    for (auto i : loaded_textures_)
+    {
+        auto loaded_texture = texture_loader_->Load(i);
+    }
+}
+
+std::shared_ptr<D3DPixelShader> GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)
 {
     if (!force)
     {
@@ -87,19 +107,21 @@ std::shared_ptr<D3DShader> GPUResourceManager::LoadShader(const std::string& sha
         }
     }
 
-    P_LOG("Loading shader file {}", shaderFile);
-    std::shared_ptr<D3DShader> shader = std::make_shared<D3DShader>(shaderFile, ShaderType::Pixel, mDevice);
+    auto loaded_shader = shader_loader_->LoadPixel(shaderFile.c_str());
+    if (!loaded_shader)
+    {
+        P_FATAL("failed to load shader {}", shaderFile);
+    }
+    loadedShaders.emplace(shaderFile, loaded_shader);
 
-    loadedShaders.emplace(shaderFile, shader);
-
-    return shader;
+    return loaded_shader;
 }
 
 void GPUResourceManager::CreateBuffer(const void* data,
     size_t length,
     size_t stride,
     unsigned int flags,
-    Microsoft::WRL::ComPtr<ID3D11Buffer>* outBuffer)
+    wrl::ComPtr<ID3D11Buffer>* outBuffer)
 {
     D3D11_BUFFER_DESC bufferDesc = {};
     bufferDesc.BindFlags = flags;

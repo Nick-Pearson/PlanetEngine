@@ -1,7 +1,10 @@
 #include "Texture/Texture2D.h"
+#include "Texture/Texture.h"
 
 Texture2D::Texture2D(unsigned int width, unsigned int height) :
-    mWidth(width), mHeight(height)
+    mWidth(width),
+    mHeight(height),
+    Texture(TextureDimensions::_2D, TextureDataType::STATIC)
 {
     mData = std::make_unique<Colour[]>(width * height);
 }

@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "Texture.h"
+
 struct Colour
 {
  public:
@@ -19,7 +21,7 @@ struct Colour
     unsigned char a;
 };
 
-class Texture2D
+class Texture2D : public Texture
 {
  public:
     Texture2D(unsigned int width, unsigned int height);

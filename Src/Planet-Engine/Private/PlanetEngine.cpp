@@ -21,6 +21,7 @@
 #include "Editor/FlyCam.h"
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
+#include "Texture/ComputeTexture2D.h"
 #include "Texture/TextureFactory.h"
 
 // #include "imgui.h"
@@ -66,8 +67,9 @@ void PlanetEngine::Run()
     std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
 
     std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
+    std::shared_ptr<ComputeTexture2D> worley_texture = std::make_shared<ComputeTexture2D>(1024, 1024, "Worley.hlsl");
 
-    texturedMaterial->AddTexture(texture);
+    texturedMaterial->AddTexture(worley_texture);
 
     std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });

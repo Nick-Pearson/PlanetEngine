@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-class Texture2D;
+class Texture;
 
 class Material
 {
@@ -13,8 +13,8 @@ class Material
 
     inline std::string GetShaderPath() const { return mShaderPath;  }
 
-    void AddTexture(std::shared_ptr<Texture2D> texture);
-    inline std::shared_ptr<Texture2D> GetTextureAt(int slot) const { return mTextures[slot]; }
+    void AddTexture(std::shared_ptr<Texture> texture);
+    inline const Texture* GetTextureAt(int slot) const { return mTextures[slot].get(); }
     inline int GetNumTextures() const { return mTextures.size(); }
     inline void EnableAlphaBlending() { mAlpha = true; }
     inline bool IsAlphaBlendingEnabled() const { return mAlpha; }
@@ -22,5 +22,5 @@ class Material
  private:
     bool mAlpha = false;
     std::string mShaderPath;
-    std::vector<std::shared_ptr<Texture2D>> mTextures;
+    std::vector<std::shared_ptr<Texture>> mTextures;
 };

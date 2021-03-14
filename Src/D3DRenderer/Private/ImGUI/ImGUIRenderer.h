@@ -6,7 +6,7 @@
 class ImGUIRenderer
 {
  public:
-    ImGUIRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> device, Microsoft::WRL::ComPtr <ID3D11DeviceContext> context);
+    ImGUIRenderer(HWND window, Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
     ~ImGUIRenderer();
 
     void Render();

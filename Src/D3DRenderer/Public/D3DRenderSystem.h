@@ -1,6 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
+#include <dxgidebug.h>
 #include <wrl/client.h>
 
 #include "Platform/PlanetWindows.h"
@@ -24,10 +25,12 @@ class D3DRenderSystem : public RenderSystem
  private:
     void RenderDebugUI();
     void InitD3D11Device(HWND window);
+    void FlushDebugMessages();
 
-    Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
-    Microsoft::WRL::ComPtr <IDXGISwapChain> mSwapChain;
-    Microsoft::WRL::ComPtr <ID3D11DeviceContext> mContext;
+    Microsoft::WRL::ComPtr<ID3D11Device> mDevice;
+    Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext> mContext;
+    Microsoft::WRL::ComPtr<IDXGIInfoQueue> mDxgiInfoQueue;
 
     class D3DRenderer* mRenderer;
     class ImGUIRenderer* mUIRenderer;

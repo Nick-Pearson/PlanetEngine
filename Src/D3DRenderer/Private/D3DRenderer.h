@@ -1,42 +1,24 @@
 #pragma once
 
 #include <d3d11.h>
-#include <dxgidebug.h>
 #include <wrl/client.h>
 #include <iostream>
 #include <memory>
+#include <DirectXMath.h>
 
 #include "Platform/PlanetWindows.h"
-#include <DirectXMath.h>
 #include "Container/LinkedList.h"
-#include "RenderState.h"
 #include "Render/Renderer.h"
 #include "Render/WorldBufferData.h"
 #include "PlanetLogging.h"
 #include "Math/Vector.h"
+#include "World/CameraComponent.h"
 
-#define d3dAssert(E) { HRESULT r = (E); if (r != S_OK) { P_ERROR("!! D3D ASSERT FAILED   {}", #E); } }
+#include "Shader/D3DShaderLoader.h"
+#include "RenderState.h"
+#include "D3DAssert.h"
 
-#define d3dFlushDebugMessages() \
-    { \
-        const auto len = mDxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_D3D11); \
-        for (auto i = 0; i < len; ++i) \
-        { \
-            SIZE_T msg_len; \
-            mDxgiInfoQueue->GetMessage(DXGI_DEBUG_D3D11, i, nullptr, &msg_len); \
-            char* rawmsg = new char[msg_len]; \
-            auto msg = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(rawmsg); \
-            mDxgiInfoQueue->GetMessage(DXGI_DEBUG_D3D11, i, msg, &msg_len); \
-            P_ERROR("D3D11 Error: {}", msg->pDescription); \
-            delete rawmsg; \
-        } \
-    }
-
-class D3DShader;
-class Window;
-class ShaderManager;
-class Mesh;
-class CameraComponent;
+namespace wrl = Microsoft::WRL;
 
 __declspec(align(16))
 class D3DRenderer : public Renderer
@@ -44,8 +26,10 @@ class D3DRenderer : public Renderer
     friend class D3DShader;
 
  public:
-    D3DRenderer(HWND window, Microsoft::WRL::ComPtr<ID3D11Device> mDevice,
-        Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain, Microsoft::WRL::ComPtr<ID3D11DeviceContext> mContext);
+    D3DRenderer(HWND window,
+        wrl::ComPtr<ID3D11Device> mDevice,
+        wrl::ComPtr<IDXGISwapChain> mSwapChain,
+        wrl::ComPtr<ID3D11DeviceContext> mContext);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -77,31 +61,27 @@ class D3DRenderer : public Renderer
  protected:
     void Draw(const CameraComponent& camera, const RenderState& state);
 
-    void UpdateBuffer(Microsoft::WRL::ComPtr <ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
+    void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
     // D3D11 Ptrs
-    Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
-    Microsoft::WRL::ComPtr <IDXGISwapChain> mSwapChain;
-    Microsoft::WRL::ComPtr <ID3D11DeviceContext> mContext;
-    Microsoft::WRL::ComPtr <ID3D11RenderTargetView> mTarget;
-    Microsoft::WRL::ComPtr <ID3D11DepthStencilView> mDepthStencilView;
-    Microsoft::WRL::ComPtr <IDXGIInfoQueue> mDxgiInfoQueue;
+    wrl::ComPtr<ID3D11Device> mDevice;
+    wrl::ComPtr<IDXGISwapChain> mSwapChain;
+    wrl::ComPtr<ID3D11DeviceContext> mContext;
+    wrl::ComPtr<ID3D11RenderTargetView> mTarget;
+    wrl::ComPtr<ID3D11DepthStencilView> mDepthStencilView;
 
-    Microsoft::WRL::ComPtr<ID3D11BlendState> mAlphaBlendState;
-    Microsoft::WRL::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
+    wrl::ComPtr<ID3D11BlendState> mAlphaBlendState;
+    wrl::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
 
     ID3D11RasterizerState* WireFrame;
     ID3D11RasterizerState* Solid;
 
     // standard vertex shader, later will be specified based on which vertex attributes a mesh has
-    std::shared_ptr<D3DShader> vertexShader;
-
-    // pixel shader used when the specified shader is invalid, displays object in bright pink
-    std::shared_ptr <D3DShader> invalidShader;
+    std::shared_ptr<D3DVertexShader> vertexShader;
 
     // Constant Buffers
-    Microsoft::WRL::ComPtr <ID3D11Buffer> mSlowConstantBuffer;
+    wrl::ComPtr<ID3D11Buffer> mSlowConstantBuffer;
     struct SlowConstantBuffer
     {
         SlowConstantBuffer()
@@ -115,7 +95,7 @@ class D3DRenderer : public Renderer
     };
     SlowConstantBuffer mSlowConstantBufferData;
 
-    Microsoft::WRL::ComPtr <ID3D11Buffer> mFastConstantBuffer;
+    wrl::ComPtr<ID3D11Buffer> mFastConstantBuffer;
     struct FastConstantBuffer
     {
         FastConstantBuffer()
@@ -126,7 +106,7 @@ class D3DRenderer : public Renderer
     };
     FastConstantBuffer mFastConstantBufferData;
 
-    Microsoft::WRL::ComPtr <ID3D11Buffer> mWorldPixelBuffer;
+    wrl::ComPtr<ID3D11Buffer> mWorldPixelBuffer;
     WorldBufferData mWorldPixelBufferData;
 
     void CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize);

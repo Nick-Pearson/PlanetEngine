@@ -12,16 +12,47 @@
 #include "D3DRenderer.h"
 #include "GPUResourceManager.h"
 #include "D3DWindowEvents.h"
+#include "D3DAssert.h"
 #include "imgui.h"
+
+namespace
+{
+    static const char* D3D_SEVERITY[] = {
+            "CORRUPTION",
+            "ERROR",
+            "WARNING",
+            "INFO",
+            "MESSAGE"
+    };
+    static const char* D3D_CATEGORY[] = {
+            "UNKNOWN",
+            "MISCELLANEOUS",
+            "INITIALIZATION",
+            "CLEANUP",
+            "COMPILATION",
+            "STATE_CREATION",
+            "STATE_SETTING",
+            "STATE_GETTING",
+            "RESOURCE_MANIPULATION",
+            "EXECUTION",
+            "SHADER"
+    };
+}  // namespace
 
 namespace chr = std::chrono;
 
 D3DRenderSystem::D3DRenderSystem(HWND window)
 {
+    const auto hModDxgiDebug = LoadLibraryEx("dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    // get address of DXGIGetDebugInterface in dll
+    typedef HRESULT (WINAPI* DXGIGetDebugInterface)(REFIID, IDXGIInfoQueue **);
+    const auto DxgiGetDebugInterface = reinterpret_cast<DXGIGetDebugInterface>(GetProcAddress(hModDxgiDebug, "DXGIGetDebugInterface"));
+    DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
+
     InitD3D11Device(window);
     mRenderer = new D3DRenderer{ window, mDevice, mSwapChain, mContext };
     mUIRenderer = new ImGUIRenderer{ window, mDevice, mContext };
-    mResourceManager = new GPUResourceManager{ mDevice };
+    mResourceManager = new GPUResourceManager{ mDevice, mContext };
     mWindowEvents = new D3DWindowEvents{ mRenderer };
 }
 
@@ -64,6 +95,27 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
     }
 }
 
+void D3DRenderSystem::FlushDebugMessages()
+{
+    const auto len = mDxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_D3D11); \
+    for (auto i = 0; i < len; ++i)
+    {
+        SIZE_T msg_len;
+        mDxgiInfoQueue->GetMessage(DXGI_DEBUG_D3D11, i, nullptr, &msg_len);
+        char* rawmsg = new char[msg_len];
+        auto msg = reinterpret_cast<DXGI_INFO_QUEUE_MESSAGE*>(rawmsg);
+        mDxgiInfoQueue->GetMessage(DXGI_DEBUG_D3D11, i, msg, &msg_len);
+        if (msg->Severity < DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO)
+        {
+            P_LOG("D3D11DEBUG [{}] [{}] {}",
+                D3D_SEVERITY[msg->Severity],
+                D3D_CATEGORY[msg->Category],
+                msg->pDescription);
+        }
+        delete rawmsg;
+    }
+}
+
 void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 {
     chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
@@ -74,6 +126,7 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
     mUIRenderer->NewFrame();
     auto time = chr::high_resolution_clock::now() - start;
     mLastFrameMs = time/chr::milliseconds(1);
+    FlushDebugMessages();
 }
 
 void D3DRenderSystem::RenderDebugUI()
@@ -93,6 +146,10 @@ void D3DRenderSystem::RenderDebugUI()
     if (ImGui::Button("Reload all shaders"))
     {
         mResourceManager->ReloadAllShaders();
+    }
+    if (ImGui::Button("Reload all textures"))
+    {
+        mResourceManager->ReloadAllTextures();
     }
     ImGui::End();
 }

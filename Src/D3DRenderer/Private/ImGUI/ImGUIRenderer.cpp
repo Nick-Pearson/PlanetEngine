@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui_impl_dx11.h"
 
-ImGUIRenderer::ImGUIRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> device, Microsoft::WRL::ComPtr <ID3D11DeviceContext> context)
+ImGUIRenderer::ImGUIRenderer(HWND window, Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
 {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

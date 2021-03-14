@@ -6,18 +6,18 @@
 #include <vector>
 
 #include "Platform/Window.h"
-#include "D3DShader.h"
-#include "D3DTexture.h"
+#include "Shader/D3DShader.h"
+#include "Shader/D3DShaderLoader.h"
+#include "Texture/D3DTexture.h"
 #include "GPUResourceManager.h"
 #include "Mesh/Mesh.h"
 #include "World/CameraComponent.h"
 #include "Math/Transform.h"
 
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dxguid.lib")
-
-D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> device,
-    Microsoft::WRL::ComPtr <IDXGISwapChain> swapChain, Microsoft::WRL::ComPtr <ID3D11DeviceContext> context) :
+D3DRenderer::D3DRenderer(HWND window,
+    wrl::ComPtr<ID3D11Device> device,
+    wrl::ComPtr<IDXGISwapChain> swapChain,
+    wrl::ComPtr<ID3D11DeviceContext> context) :
     mDevice(device), mSwapChain(swapChain), mContext(context)
 {
     // create depth stencil state
@@ -25,7 +25,7 @@ D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> devi
     dsDesc.DepthEnable = TRUE;
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    Microsoft::WRL::ComPtr <ID3D11DepthStencilState> DSState;
+    wrl::ComPtr<ID3D11DepthStencilState> DSState;
     d3dAssert(mDevice->CreateDepthStencilState(&dsDesc, DSState.GetAddressOf()));
 
     // bind depth state
@@ -34,23 +34,11 @@ D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> devi
     UpdateWindowSize(false);
 
     // Compile Shaders
-    vertexShader = std::make_shared<D3DShader>("VertexShader.hlsl", ShaderType::Vertex, mDevice);
-
-    Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
-    const D3D11_INPUT_ELEMENT_DESC ied[] =
-    {
-        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12u, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24u, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    };
-    d3dAssert(mDevice->CreateInputLayout(
-        ied, (UINT)std::size(ied),
-        vertexShader->mShaderBlob->GetBufferPointer(),
-        vertexShader->mShaderBlob->GetBufferSize(),
-        &InputLayout));
+    auto shader_loader = new D3DShaderLoader{ device };
+    vertexShader = shader_loader->LoadVertex("VertexShader.hlsl");
+    delete shader_loader;
 
     // bind vertex layout
-    mContext->IASetInputLayout(InputLayout.Get());
     mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     vertexShader->Use(mContext.Get());
 
@@ -86,13 +74,6 @@ D3DRenderer::D3DRenderer(HWND window, Microsoft::WRL::ComPtr <ID3D11Device> devi
         d3dAssert(mDevice->CreateBlendState(&blendDesc, &mNoAlphaBlendState));
     }
     mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
-
-    const auto hModDxgiDebug = LoadLibraryEx("dxgidebug.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
-    // get address of DXGIGetDebugInterface in dll
-    typedef HRESULT (WINAPI* DXGIGetDebugInterface)(REFIID, IDXGIInfoQueue **);
-    const auto DxgiGetDebugInterface = reinterpret_cast<DXGIGetDebugInterface>(GetProcAddress(hModDxgiDebug, "DXGIGetDebugInterface"));
-
-    DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
 }
 
 D3DRenderer::~D3DRenderer()
@@ -180,7 +161,7 @@ void D3DRenderer::UpdateWindowSize(bool resize)
     d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
 
     // create depth stencil texture
-    Microsoft::WRL::ComPtr <ID3D11Texture2D> DepthStencil = nullptr;
+    wrl::ComPtr<ID3D11Texture2D> DepthStencil = nullptr;
     D3D11_TEXTURE2D_DESC descDepth = {};
     descDepth.Width = (UINT)swapChainDesc.BufferDesc.Width;
     descDepth.Height = (UINT)swapChainDesc.BufferDesc.Height;
@@ -227,7 +208,7 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)
         dsDesc.DepthEnable = TRUE;
         dsDesc.DepthWriteMask = state.UseDepthBuffer ? D3D11_DEPTH_WRITE_MASK_ALL : D3D11_DEPTH_WRITE_MASK_ZERO;
         dsDesc.DepthFunc = state.UseDepthBuffer ? D3D11_COMPARISON_LESS : D3D11_COMPARISON_ALWAYS;
-        Microsoft::WRL::ComPtr <ID3D11DepthStencilState> DSState;
+        wrl::ComPtr<ID3D11DepthStencilState> DSState;
         d3dAssert(mDevice->CreateDepthStencilState(&dsDesc, DSState.GetAddressOf()));
 
         // bind depth state
@@ -276,10 +257,9 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)
     currentRenderState = state;
 
     mContext->DrawIndexed(state.mesh->numTriangles, 0u, 0u);
-    d3dFlushDebugMessages();
 }
 
-void D3DRenderer::UpdateBuffer(Microsoft::WRL::ComPtr <ID3D11Buffer> buffer, void* bufferData, size_t bufferSize)
+void D3DRenderer::UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize)
 {
     D3D11_MAPPED_SUBRESOURCE mappedResource;
     mContext->Map(buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

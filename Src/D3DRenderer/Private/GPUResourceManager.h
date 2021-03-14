@@ -9,22 +9,26 @@
 
 #include "Platform/PlanetWindows.h"
 #include "Container/LinkedList.h"
+#include "Texture/D3DTextureLoader.h"
+#include "Shader/D3DShaderLoader.h"
+
+namespace wrl = Microsoft::WRL;
 
 class Mesh;
 class Material;
-class D3DShader;
+class D3DPixelShader;
 class D3DTexture;
 
 struct GPUMeshHandle
 {
-    Microsoft::WRL::ComPtr<ID3D11Buffer> vertexBuffer;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> triangleBuffer;
+    wrl::ComPtr<ID3D11Buffer> vertexBuffer;
+    wrl::ComPtr<ID3D11Buffer> triangleBuffer;
     unsigned int numTriangles;
 };
 
 struct GPUMaterialHandle
 {
-    std::shared_ptr<D3DShader> shader;
+    std::shared_ptr<D3DPixelShader> shader;
     std::vector<std::shared_ptr<D3DTexture>> textures;
     bool alpha;
 };
@@ -32,23 +36,28 @@ struct GPUMaterialHandle
 class GPUResourceManager
 {
  public:
-    explicit GPUResourceManager(Microsoft::WRL::ComPtr <ID3D11Device> device);
+    explicit GPUResourceManager(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context);
     ~GPUResourceManager();
 
     GPUMeshHandle* LoadMesh(const Mesh* mesh);
 
     std::shared_ptr<GPUMaterialHandle> LoadMaterial(const Material* material);
     void ReloadAllShaders();
+    void ReloadAllTextures();
 
  private:
-    std::shared_ptr<D3DShader> LoadShader(const std::string& ShaderFile, bool force);
+    std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
 
-    void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, Microsoft::WRL::ComPtr<ID3D11Buffer>* outBuffer);
+    void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, wrl::ComPtr<ID3D11Buffer>* outBuffer);
 
     LinkedList <GPUMeshHandle> mLoadedMeshes;
     std::unordered_map<std::string, std::shared_ptr<GPUMaterialHandle>> mLoadedMaterials;
 
-    std::unordered_map<std::string, std::shared_ptr<D3DShader>> loadedShaders;
+    std::unordered_map<std::string, std::shared_ptr<D3DPixelShader>> loadedShaders;
+    std::vector<const Texture*> loaded_textures_;
 
-    Microsoft::WRL::ComPtr <ID3D11Device> mDevice;
+    wrl::ComPtr<ID3D11Device> mDevice;
+
+    D3DShaderLoader* shader_loader_;
+    D3DTextureLoader* texture_loader_;
 };

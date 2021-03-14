@@ -20,6 +20,7 @@ target_include_directories(d3d-renderer PRIVATE "Src/D3DRenderer/Private")
 include_directories("Src/D3DRenderer/Public")
 target_link_libraries(d3d-renderer ${CONAN_LIBS})
 target_link_libraries(d3d-renderer planet-engine)
+target_link_libraries(d3d-renderer D3DCompiler.lib d3d11.lib dxguid.lib)
 
 # # Setup testing.
 file(GLOB_RECURSE TEST_SOURCES "Src/Planet-Engine/Test/*.cpp")

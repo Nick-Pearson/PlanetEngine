@@ -9,3 +9,8 @@
 #define P_LOG(...) SPDLOG_INFO(##__VA_ARGS__);
 #define P_WARN(...) SPDLOG_WARN(##__VA_ARGS__);
 #define P_ERROR(...) SPDLOG_ERROR(##__VA_ARGS__);
+#define P_FATAL(...) \
+    { \
+        SPDLOG_ERROR(##__VA_ARGS__); \
+        exit(1); \
+    }
