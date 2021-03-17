@@ -22,6 +22,8 @@ class D3DRenderSystem : public RenderSystem
 
     void RenderFrame(const CameraComponent& camera) final;
 
+    void InvokeCompute(const ComputeShader& shader) final;
+
  private:
     void RenderDebugUI();
     void InitD3D11Device(HWND window);

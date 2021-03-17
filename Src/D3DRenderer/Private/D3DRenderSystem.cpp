@@ -12,6 +12,7 @@
 #include "D3DRenderer.h"
 #include "GPUResourceManager.h"
 #include "D3DWindowEvents.h"
+#include "Compute/ComputeShader.h"
 #include "D3DAssert.h"
 #include "imgui.h"
 
@@ -95,6 +96,12 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
     }
 }
 
+void D3DRenderSystem::InvokeCompute(const ComputeShader& shader)
+{
+    std::shared_ptr<D3DComputeShader> loaded_shader = mResourceManager->LoadCompute(shader);
+    loaded_shader->Invoke(mContext.Get());
+}
+
 void D3DRenderSystem::FlushDebugMessages()
 {
     const auto len = mDxgiInfoQueue->GetNumStoredMessages(DXGI_DEBUG_D3D11); \
@@ -146,10 +153,6 @@ void D3DRenderSystem::RenderDebugUI()
     if (ImGui::Button("Reload all shaders"))
     {
         mResourceManager->ReloadAllShaders();
-    }
-    if (ImGui::Button("Reload all textures"))
-    {
-        mResourceManager->ReloadAllTextures();
     }
     ImGui::End();
 }

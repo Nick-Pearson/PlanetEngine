@@ -17,7 +17,7 @@ class SkyDome: public Entity
  private:
     TimeOfDay* mTimeOfDay;
     Vector mSunColour = Vector{ 1.0f, 1.0f, 1.0f };
-    float mSunSkyStrength = 12.0f;
+    float mSunSkyStrength = 20.0f;
 
     // static std::unique_ptr<Texture3D> sScatteringTexture;
     // static std::unique_ptr<Texture2D> sTransmitanceTexture;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <d3d11.h>
-#include <string>
+#include <vector>
 
 class D3DVertexShader
 {
@@ -36,10 +36,13 @@ class D3DComputeShader
     D3DComputeShader(ID3DBlob* blob, ID3D11ComputeShader* handle);
     ~D3DComputeShader();
 
-    void Use(ID3D11DeviceContext* context);
     void Invoke(ID3D11DeviceContext* context);
+
+    void AddUAV(ID3D11UnorderedAccessView* uav);
 
  private:
     ID3DBlob* blob_;
     ID3D11ComputeShader* handle_;
+    std::vector<ID3D11UnorderedAccessView*> uavs_;
+    std::vector<ID3D11Buffer*> buffers_;
 };

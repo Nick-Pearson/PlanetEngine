@@ -1,19 +1,17 @@
 #pragma once
 
-#include <wrl.h>
-
-class Texture2D;
-
-namespace wrl = Microsoft::WRL;
+#include <d3d11.h>
 
 class D3DTexture
 {
  public:
-    explicit D3DTexture(wrl::ComPtr<struct ID3D11ShaderResourceView> texture_view, wrl::ComPtr<struct ID3D11SamplerState> sampler_state);
+    explicit D3DTexture(ID3D11Resource* texture_resource, ID3D11ShaderResourceView* texture_view, ID3D11SamplerState* sampler_state);
+    ~D3DTexture();
 
     void Use(struct ID3D11DeviceContext* context, int slot);
 
  private:
-    wrl::ComPtr<struct ID3D11SamplerState> sampler_state_;
-    wrl::ComPtr<struct ID3D11ShaderResourceView> texture_view_;
+    ID3D11Resource* texture_resource_;
+    ID3D11SamplerState* sampler_state_;
+    ID3D11ShaderResourceView* texture_view_;
 };

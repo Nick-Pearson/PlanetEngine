@@ -7,6 +7,7 @@
 #include "Mesh/Mesh.h"
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
+#include "Compute/ComputeShader.h"
 
 GPUResourceManager::GPUResourceManager(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context) :
     mDevice(device)
@@ -66,7 +67,6 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Materi
         if (loaded_texture)
         {
             entry->textures.push_back(loaded_texture);
-            loaded_textures_.push_back(texture);
         }
         else
         {
@@ -87,13 +87,16 @@ void GPUResourceManager::ReloadAllShaders()
     }
 }
 
-void GPUResourceManager::ReloadAllTextures()
+std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeShader& shader)
 {
-    P_LOG("Reloading all textures");
-    for (auto i : loaded_textures_)
+    std::shared_ptr<D3DComputeShader> program = shader_loader_->LoadCompute(shader.GetShaderName().c_str());
+    for (int slot = 0; slot < shader.GetNumTextureOutputs(); ++slot)
     {
-        auto loaded_texture = texture_loader_->Load(i);
+        const Texture* tex = shader.GetTextureOutput(slot);
+        ID3D11UnorderedAccessView* uav = texture_loader_->LoadForCompute(tex);
+        program->AddUAV(uav);
     }
+    return program;
 }
 
 std::shared_ptr<D3DPixelShader> GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)

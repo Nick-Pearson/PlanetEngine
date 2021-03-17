@@ -43,7 +43,8 @@ class GPUResourceManager
 
     std::shared_ptr<GPUMaterialHandle> LoadMaterial(const Material* material);
     void ReloadAllShaders();
-    void ReloadAllTextures();
+
+    std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
 
  private:
     std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
@@ -54,7 +55,6 @@ class GPUResourceManager
     std::unordered_map<std::string, std::shared_ptr<GPUMaterialHandle>> mLoadedMaterials;
 
     std::unordered_map<std::string, std::shared_ptr<D3DPixelShader>> loadedShaders;
-    std::vector<const Texture*> loaded_textures_;
 
     wrl::ComPtr<ID3D11Device> mDevice;
 

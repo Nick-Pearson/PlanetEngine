@@ -79,6 +79,8 @@
         "random": "cpp",
         "stack": "cpp",
         "variant": "cpp",
-        "*.rh": "cpp"
+        "*.rh": "cpp",
+        "bit": "cpp",
+        "stop_token": "cpp"
     }
 }

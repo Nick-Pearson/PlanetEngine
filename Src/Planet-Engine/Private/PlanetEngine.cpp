@@ -23,6 +23,7 @@
 #include "Texture/Texture2D.h"
 #include "Texture/ComputeTexture2D.h"
 #include "Texture/TextureFactory.h"
+#include "Compute/ComputeShader.h"
 
 // #include "imgui.h"
 
@@ -67,7 +68,13 @@ void PlanetEngine::Run()
     std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
 
     std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
-    std::shared_ptr<ComputeTexture2D> worley_texture = std::make_shared<ComputeTexture2D>(1024, 1024, "Worley.hlsl");
+
+    std::shared_ptr<ComputeTexture2D> worley_texture = std::make_shared<ComputeTexture2D>(1024, 1024);
+    ComputeShader* worley_compute = new ComputeShader{"Worley.hlsl", NumThreads{32, 32, 1}};
+    worley_compute->AddTextureOutput(worley_texture);
+    // worley_compute->AddParamData(...);
+    mRenderSystem->InvokeCompute(*worley_compute);
+    delete worley_compute;
 
     texturedMaterial->AddTexture(worley_texture);
 
