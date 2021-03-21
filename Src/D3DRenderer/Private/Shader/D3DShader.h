@@ -39,10 +39,11 @@ class D3DComputeShader
     void Invoke(ID3D11DeviceContext* context);
 
     void AddUAV(ID3D11UnorderedAccessView* uav);
+    void AddResource(ID3D11ShaderResourceView* res);
 
  private:
     ID3DBlob* blob_;
     ID3D11ComputeShader* handle_;
     std::vector<ID3D11UnorderedAccessView*> uavs_;
-    std::vector<ID3D11Buffer*> buffers_;
+    std::vector<ID3D11ShaderResourceView*> resources_;
 };

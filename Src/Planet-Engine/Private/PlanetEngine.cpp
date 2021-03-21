@@ -16,6 +16,7 @@
 #include "World/CameraComponent.h"
 #include "World/SkyDome.h"
 #include "World/CloudBox.h"
+#include "World/Worley.h"
 #include "Input/InputManager.h"
 #include "Input/ImGuiInput.h"
 #include "Editor/FlyCam.h"
@@ -70,13 +71,9 @@ void PlanetEngine::Run()
     std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
 
     std::shared_ptr<ComputeTexture2D> worley_texture = std::make_shared<ComputeTexture2D>(1024, 1024);
-    ComputeShader* worley_compute = new ComputeShader{"Worley.hlsl", NumThreads{32, 32, 1}};
-    worley_compute->AddTextureOutput(worley_texture);
-    // worley_compute->AddParamData(...);
-    mRenderSystem->InvokeCompute(*worley_compute);
-    delete worley_compute;
-
     texturedMaterial->AddTexture(worley_texture);
+
+    std::shared_ptr<Worley> worley = scene->SpawnEntity<Worley>("camera", worley_texture);
 
     std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });

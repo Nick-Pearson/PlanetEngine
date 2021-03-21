@@ -99,7 +99,10 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
 void D3DRenderSystem::InvokeCompute(const ComputeShader& shader)
 {
     std::shared_ptr<D3DComputeShader> loaded_shader = mResourceManager->LoadCompute(shader);
-    loaded_shader->Invoke(mContext.Get());
+    if (loaded_shader)
+    {
+        loaded_shader->Invoke(mContext.Get());
+    }
 }
 
 void D3DRenderSystem::FlushDebugMessages()

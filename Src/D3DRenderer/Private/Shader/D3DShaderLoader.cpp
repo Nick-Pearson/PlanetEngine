@@ -14,7 +14,8 @@ D3DShaderLoader::D3DShaderLoader(wrl::ComPtr<struct ID3D11Device> device) :
 std::shared_ptr<D3DVertexShader> D3DShaderLoader::LoadVertex(const char* filepath)
 {
     P_LOG("Loading vertex shader {}", filepath);
-    ID3DBlob* blob = CompileShaderBlob(filepath, "vs_5_0");
+    std::unordered_map<std::string, std::string> defines;
+    ID3DBlob* blob = CompileShaderBlob(filepath, "vs_5_0", defines);
     if (!blob)
     {
         return nullptr;
@@ -37,7 +38,8 @@ std::shared_ptr<D3DVertexShader> D3DShaderLoader::LoadVertex(const char* filepat
 std::shared_ptr<D3DPixelShader> D3DShaderLoader::LoadPixel(const char* filepath)
 {
     P_LOG("Loading pixel shader {}", filepath);
-    ID3DBlob* blob = CompileShaderBlob(filepath, "ps_5_0");
+    std::unordered_map<std::string, std::string> defines;
+    ID3DBlob* blob = CompileShaderBlob(filepath, "ps_5_0", defines);
     if (!blob)
     {
         return nullptr;
@@ -47,10 +49,10 @@ std::shared_ptr<D3DPixelShader> D3DShaderLoader::LoadPixel(const char* filepath)
     return std::make_shared<D3DPixelShader>(blob, handle);
 }
 
-std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const char* filepath)
+std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const char* filepath, const std::unordered_map<std::string, std::string>& defines)
 {
     P_LOG("Loading compute shader {}", filepath);
-    ID3DBlob* blob = CompileShaderBlob(filepath, "cs_5_0");
+    ID3DBlob* blob = CompileShaderBlob(filepath, "cs_5_0", defines);
     if (!blob)
     {
         return nullptr;
@@ -60,16 +62,29 @@ std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const char* filep
     return std::make_shared<D3DComputeShader>(blob, handle);
 }
 
-ID3DBlob* D3DShaderLoader::CompileShaderBlob(const char* filepath, const char* target)
+ID3DBlob* D3DShaderLoader::CompileShaderBlob(const char* filepath, const char* target, const std::unordered_map<std::string, std::string>& defines)
 {
     std::wstring fullpath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(filepath);
     fullpath.insert(0, L"./Shader/");
 
     const unsigned int compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL1;
 
+    D3D_SHADER_MACRO* macros = new D3D_SHADER_MACRO[defines.size() + 1]{};
+    int i = 0;
+    for (auto const& x : defines)
+    {
+        macros[i].Name = x.first.c_str();
+        macros[i].Definition = x.second.c_str();
+        ++i;
+    }
+    macros[i].Name = nullptr;
+    macros[i].Definition = nullptr;
+
     ID3DBlob* shaderBlob = nullptr;
     Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
-    d3dAssert(D3DCompileFromFile(fullpath.c_str(), nullptr, nullptr, "main", target, compileFlags, 0u, &shaderBlob, &errorBlob));
+    d3dAssert(D3DCompileFromFile(fullpath.c_str(), &macros[0], nullptr, "main", target, compileFlags, 0u, &shaderBlob, &errorBlob));
+
+    delete[] macros;
 
     if (errorBlob)
     {

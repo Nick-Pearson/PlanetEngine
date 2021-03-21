@@ -23,6 +23,7 @@ class PlanetEngine
 
     inline RenderQueue* GetRenderQueue() { return &render_queue_; }
     inline Renderer* GetRenderer() { return mRenderSystem->GetRenderer(); }
+    inline RenderSystem* GetRenderSystem() { return mRenderSystem; }
     inline InputManager* GetInputManager() const { return inputManager; }
 
 #if PLATFORM_WIN
