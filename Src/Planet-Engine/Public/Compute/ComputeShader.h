@@ -5,26 +5,22 @@
 #include <unordered_map>
 #include <memory>
 
+#include "NumThreads.h"
 #include "Texture/ComputeTexture2D.h"
+#include "Texture/ComputeTexture3D.h"
+#include "PlanetLogging.h"
 
 struct DataBuffer
 {
     DataBuffer(void* data, size_t struct_size, size_t count) :
-        data_(data), length_(struct_size * count), stride_(struct_size)
-    {}
+        data_(data), count_(count), stride_(struct_size)
+    {
+        P_ASSERT(struct_size % 16 == 0, "data buffers must be 16 byte aligned");
+    }
 
     void* data_;
-    size_t length_;
+    size_t count_;
     size_t stride_;
-};
-
-struct NumThreads
-{
-    NumThreads(int x, int y, int z) :
-        x_(x), y_(y), z_(z)
-    {}
-
-    int x_, y_, z_;
 };
 
 class ComputeShader
@@ -37,7 +33,9 @@ class ComputeShader
 
     inline int GetNumTextureOutputs() const { return texture_outputs_.size(); }
     inline const Texture* GetTextureOutput(int slot) const { return texture_outputs_[slot].get(); }
+
     void AddTextureOutput(const std::shared_ptr<ComputeTexture2D>& texture);
+    void AddTextureOutput(const std::shared_ptr<ComputeTexture3D>& texture);
 
     inline int GetNumDataInputs() const { return data_outputs_.size(); }
     inline const DataBuffer* GetDataInput(int slot) const { return data_outputs_[slot].get(); }

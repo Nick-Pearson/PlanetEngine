@@ -4,33 +4,36 @@
 #include <vector>
 
 #include "Entity/Entity.h"
-#include "Texture/ComputeTexture2D.h"
+#include "Texture/ComputeTexture3D.h"
 
 struct WorleyPoint
 {
-    float x_, y_;
+    float x_, y_, z_;
+    float padding;
 };
 
-class Worley : public Entity
+struct WorleyParams
 {
- public:
-    explicit Worley(const std::shared_ptr<ComputeTexture2D>& worley_texture);
-
-    void OnUpdate(float deltaSeconds) override;
-
- private:
-    void Run();
-
     int num_cells_ = 8;
-
     int seed_ = 0;
-
     int octaves_ = 4;
     float lacunarity_ = 2.0f;
     float gain_ = 0.6f;
+    bool include_simplex_ = false;
 
-    uint64_t gen_time_ms_ = 0;
+    WorleyParams& operator=(const WorleyParams& other) = default;
+};
 
-    std::shared_ptr<ComputeTexture2D> worley_texture_;
+class Worley
+{
+ public:
+    explicit Worley(const std::shared_ptr<ComputeTexture3D>& worley_texture);
+
+    void SetParams(const WorleyParams& params);
+    void RegenerateTexture();
+
+ private:
+    WorleyParams params_;
+    std::shared_ptr<ComputeTexture3D> worley_texture_;
     std::vector<WorleyPoint> points_;
 };

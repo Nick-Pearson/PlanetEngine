@@ -17,7 +17,7 @@ class D3DShaderLoader
 
     std::shared_ptr<D3DVertexShader> LoadVertex(const char* filepath);
     std::shared_ptr<D3DPixelShader> LoadPixel(const char* filepath);
-    std::shared_ptr<D3DComputeShader> LoadCompute(const char* filepath, const std::unordered_map<std::string, std::string>& defines);
+    std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
 
  private:
     ID3DBlob* CompileShaderBlob(const char* filepath, const char* target, const std::unordered_map<std::string, std::string>& defines);

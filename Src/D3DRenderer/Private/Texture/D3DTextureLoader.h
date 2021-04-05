@@ -37,6 +37,7 @@ class D3DTextureLoader
     LoadedTexture LoadTexture(const Texture* texture);
     LoadedTexture LoadTexture2D(const class Texture2D* texture);
     LoadedTexture LoadComputeTexture2D(const class ComputeTexture2D* texture);
+    LoadedTexture LoadComputeTexture3D(const class ComputeTexture3D* texture);
 
     wrl::ComPtr<ID3D11Device> device_;
     wrl::ComPtr<ID3D11DeviceContext> context_;

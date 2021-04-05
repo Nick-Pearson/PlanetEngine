@@ -4,6 +4,8 @@
 #include <codecvt>
 #include <locale>
 
+#include "Compute/ComputeShader.h"
+
 #include "D3DAssert.h"
 
 D3DShaderLoader::D3DShaderLoader(wrl::ComPtr<struct ID3D11Device> device) :
@@ -49,17 +51,17 @@ std::shared_ptr<D3DPixelShader> D3DShaderLoader::LoadPixel(const char* filepath)
     return std::make_shared<D3DPixelShader>(blob, handle);
 }
 
-std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const char* filepath, const std::unordered_map<std::string, std::string>& defines)
+std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const ComputeShader& shader)
 {
-    P_LOG("Loading compute shader {}", filepath);
-    ID3DBlob* blob = CompileShaderBlob(filepath, "cs_5_0", defines);
+    P_LOG("Loading compute shader {}", shader.GetShaderName());
+    ID3DBlob* blob = CompileShaderBlob(shader.GetShaderName().c_str(), "cs_5_0", shader.GetDefines());
     if (!blob)
     {
         return nullptr;
     }
     ID3D11ComputeShader* handle;
     d3dAssert(device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
-    return std::make_shared<D3DComputeShader>(blob, handle);
+    return std::make_shared<D3DComputeShader>(blob, handle, shader.GetNumThreads());
 }
 
 ID3DBlob* D3DShaderLoader::CompileShaderBlob(const char* filepath, const char* target, const std::unordered_map<std::string, std::string>& defines)

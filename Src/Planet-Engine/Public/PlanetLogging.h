@@ -14,3 +14,8 @@
         SPDLOG_ERROR(##__VA_ARGS__); \
         exit(1); \
     }
+#define P_ASSERT(condition, ...) \
+    if (!(condition)) \
+    { \
+        P_FATAL(##__VA_ARGS__); \
+    }

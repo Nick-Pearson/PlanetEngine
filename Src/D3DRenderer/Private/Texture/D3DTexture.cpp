@@ -15,5 +15,5 @@ D3DTexture::~D3DTexture()
 void D3DTexture::Use(ID3D11DeviceContext* context, int slot)
 {
     context->PSSetShaderResources(slot, 1u, &texture_view_);
-    context->PSSetSamplers(slot, 1, &sampler_state_);
+    context->PSSetSamplers(slot, 1u, &sampler_state_);
 }

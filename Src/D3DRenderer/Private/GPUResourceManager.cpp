@@ -91,7 +91,7 @@ void GPUResourceManager::ReloadAllShaders()
 
 std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeShader& shader)
 {
-    std::shared_ptr<D3DComputeShader> program = shader_loader_->LoadCompute(shader.GetShaderName().c_str(), shader.GetDefines());
+    std::shared_ptr<D3DComputeShader> program = shader_loader_->LoadCompute(shader);
     if (!program)
     {
         return nullptr;
@@ -110,7 +110,7 @@ std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeS
 
         ID3D11Buffer* buff = nullptr;
         CreateBuffer(data->data_,
-            data->length_,
+            data->count_,
             data->stride_,
             D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE,
             D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
@@ -120,9 +120,10 @@ std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeS
         desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
         desc.BufferEx.FirstElement = 0;
         desc.Format = DXGI_FORMAT_UNKNOWN;
-        desc.BufferEx.NumElements = data->length_;
+        desc.BufferEx.NumElements = data->count_;
         ID3D11ShaderResourceView* res;
         d3dAssert(mDevice->CreateShaderResourceView(buff, &desc, &res));
+        buff->Release();
 
         program->AddResource(res);
     }

@@ -3,6 +3,8 @@
 #include <d3d11.h>
 #include <vector>
 
+#include "Compute/NumThreads.h"
+
 class D3DVertexShader
 {
  public:
@@ -33,7 +35,7 @@ class D3DPixelShader
 class D3DComputeShader
 {
  public:
-    D3DComputeShader(ID3DBlob* blob, ID3D11ComputeShader* handle);
+    D3DComputeShader(ID3DBlob* blob, ID3D11ComputeShader* handle, const NumThreads& num_threads);
     ~D3DComputeShader();
 
     void Invoke(ID3D11DeviceContext* context);
@@ -44,6 +46,7 @@ class D3DComputeShader
  private:
     ID3DBlob* blob_;
     ID3D11ComputeShader* handle_;
+    NumThreads num_threads_;
     std::vector<ID3D11UnorderedAccessView*> uavs_;
     std::vector<ID3D11ShaderResourceView*> resources_;
 };

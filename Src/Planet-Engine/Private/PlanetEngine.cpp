@@ -16,13 +16,11 @@
 #include "World/CameraComponent.h"
 #include "World/SkyDome.h"
 #include "World/CloudBox.h"
-#include "World/Worley.h"
 #include "Input/InputManager.h"
 #include "Input/ImGuiInput.h"
 #include "Editor/FlyCam.h"
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
-#include "Texture/ComputeTexture2D.h"
 #include "Texture/TextureFactory.h"
 #include "Compute/ComputeShader.h"
 
@@ -69,15 +67,11 @@ void PlanetEngine::Run()
     std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
 
     std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
-
-    std::shared_ptr<ComputeTexture2D> worley_texture = std::make_shared<ComputeTexture2D>(1024, 1024);
-    texturedMaterial->AddTexture(worley_texture);
-
-    std::shared_ptr<Worley> worley = scene->SpawnEntity<Worley>("camera", worley_texture);
+    texturedMaterial->AddTexture(texture);
 
     std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
-    cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
+    cameraEntity->Rotate(Vector{ 270.0f, 180.0f, 0.0f });
 
     std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
     bunnyEntity->AddComponent<MeshComponent>(bunny, standardMaterial);
@@ -85,7 +79,7 @@ void PlanetEngine::Run()
 
     std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
     floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
-    floorEntity->AddComponent<MeshComponent>(Primitives::Plane(10.0f), standardMaterial);
+    floorEntity->AddComponent<MeshComponent>(Primitives::Plane(100000.0f), standardMaterial);
 
     std::shared_ptr<Entity> planeEntity = scene->SpawnEntity("wall");
     planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
@@ -93,7 +87,7 @@ void PlanetEngine::Run()
     planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
 
     scene->SpawnEntity<SkyDome>("sky");
-    // scene->SpawnEntity<CloudBox>("clouds");
+    scene->SpawnEntity<CloudBox>("clouds");
 
     float deltaTime = 0.01f;
     auto begin = std::chrono::high_resolution_clock::now();

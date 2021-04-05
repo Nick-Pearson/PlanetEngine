@@ -3,6 +3,7 @@
 #include "PlanetLogging.h"
 #include "Texture/Texture2D.h"
 #include "Texture/ComputeTexture2D.h"
+#include "Texture/ComputeTexture3D.h"
 #include "D3DAssert.h"
 
 D3DTextureLoader::D3DTextureLoader(wrl::ComPtr<ID3D11Device> device,
@@ -28,9 +29,27 @@ std::shared_ptr<D3DTexture> D3DTextureLoader::Load(const Texture* texture)
     // create the resource view on the texture
     D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
     srvDesc.Format = texture_resource.format_;
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = 1;
+
+    auto dimensions = texture->GetDimensions();
+    if (dimensions == TextureDimensions::_1D)
+    {
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+        srvDesc.Texture1D.MostDetailedMip = 0;
+        srvDesc.Texture1D.MipLevels = 1;
+    }
+    else if (dimensions == TextureDimensions::_2D)
+    {
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.MipLevels = 1;
+    }
+    else if (dimensions == TextureDimensions::_3D)
+    {
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+        srvDesc.Texture3D.MostDetailedMip = 0;
+        srvDesc.Texture3D.MipLevels = 1;
+    }
+
     ID3D11ShaderResourceView* texture_view;
     d3dAssert(device_->CreateShaderResourceView(texture_resource.resource_, &srvDesc, &texture_view));
 
@@ -44,8 +63,24 @@ ID3D11UnorderedAccessView* D3DTextureLoader::LoadForCompute(const Texture* textu
 
     D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
     uavDesc.Format = texture_resource.format_;
-    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-    uavDesc.Texture2D.MipSlice = 0;
+
+    auto dimensions = texture->GetDimensions();
+    if (dimensions == TextureDimensions::_1D)
+    {
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1D;
+    }
+    else if (dimensions == TextureDimensions::_2D)
+    {
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+    }
+    else if (dimensions == TextureDimensions::_3D)
+    {
+        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+        uavDesc.Texture3D.MipSlice = 0;
+        uavDesc.Texture3D.FirstWSlice = 0;
+        uavDesc.Texture3D.WSize = -1;
+    }
+
     ID3D11UnorderedAccessView* uav_view = nullptr;
     d3dAssert(device_->CreateUnorderedAccessView(texture_resource.resource_, &uavDesc, &uav_view));
     return uav_view;
@@ -77,6 +112,10 @@ LoadedTexture D3DTextureLoader::LoadTexture(const Texture* texture)
     else if (data_type == TextureDataType::COMPUTE && dimensions == TextureDimensions::_2D)
     {
         return LoadComputeTexture2D(static_cast<const ComputeTexture2D*>(texture));
+    }
+    else if (data_type == TextureDataType::COMPUTE && dimensions == TextureDimensions::_3D)
+    {
+        return LoadComputeTexture3D(static_cast<const ComputeTexture3D*>(texture));
     }
 
     P_FATAL("unsupported texture data type {} {}", data_type, dimensions);
@@ -126,29 +165,20 @@ LoadedTexture D3DTextureLoader::LoadComputeTexture2D(const ComputeTexture2D* tex
     return LoadedTexture{d3d11Texture, DXGI_FORMAT_R32G32B32A32_FLOAT};
 }
 
-// invoke the compute shader to populate the texture
-// auto shader = shader_loader_->LoadCompute(texture->GetShaderName().c_str());
-// if (shader)
-// {
-//     shader->Use(context_.Get());
-//     context_->CSSetUnorderedAccessViews(0u, 1u, &uav_view, nullptr);
-
-//     D3D11_BUFFER_DESC bufferDesc = {};
-//     bufferDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-//     bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-//     bufferDesc.CPUAccessFlags = 0u;
-//     bufferDesc.MiscFlags = 0u;
-//     bufferDesc.StructureByteStride = sizeof();
-//     bufferDesc.ByteWidth =  * bufferDesc.StructureByteStride;
-
-//     D3D11_SUBRESOURCE_DATA resourceData = {};
-//     resourceData.pSysMem = data;
-
-//     d3dAssert(mDevice->CreateBuffer(&bufferDesc, &resourceData, outBuffer->GetAddressOf()));
-//     d3dAssert(device->CreateBuffer(&bufferDesc, initData != NULL ? &subresourceData : NULL, &Buffer));
-//     // context_->CSSetShaderResources()
-//     shader->Invoke(context_.Get());
-//     uav_view->Release();
-//     ID3D11UnorderedAccessView* null_uav = nullptr;
-//     context_->CSSetUnorderedAccessViews(0u, 1u, &null_uav, nullptr);
-// }
+LoadedTexture D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* texture)
+{
+    // create texture resource
+    D3D11_TEXTURE3D_DESC textureDesc = {};
+    textureDesc.Width = texture->GetWidth();
+    textureDesc.Height = texture->GetHeight();
+    textureDesc.Depth = texture->GetDepth();
+    textureDesc.MipLevels = 1;
+    textureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    textureDesc.Usage = D3D11_USAGE_DEFAULT;
+    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+    textureDesc.CPUAccessFlags = 0;
+    textureDesc.MiscFlags = 0;
+    ID3D11Texture3D* d3d11Texture;
+    d3dAssert(device_->CreateTexture3D(&textureDesc, NULL, &d3d11Texture));
+    return LoadedTexture{d3d11Texture, DXGI_FORMAT_B8G8R8A8_UNORM };
+}

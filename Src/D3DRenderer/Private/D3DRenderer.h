@@ -61,6 +61,8 @@ class D3DRenderer : public Renderer
  protected:
     void Draw(const CameraComponent& camera, const RenderState& state);
 
+    void PostRender();
+
     void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
@@ -73,6 +75,9 @@ class D3DRenderer : public Renderer
 
     wrl::ComPtr<ID3D11BlendState> mAlphaBlendState;
     wrl::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
+
+    wrl::ComPtr<ID3D11DepthStencilState> use_depth_stencil_state_;
+    wrl::ComPtr<ID3D11DepthStencilState> no_depth_stencil_state_;
 
     ID3D11RasterizerState* WireFrame;
     ID3D11RasterizerState* Solid;
@@ -117,6 +122,7 @@ class D3DRenderer : public Renderer
     LinkedList<RenderState> renderStates;
 
     RenderState currentRenderState;
+    unsigned int used_texture_slots_ = 0;
 
-    float aspectRatio;
+    float aspectRatio = 1.0f;
 };
