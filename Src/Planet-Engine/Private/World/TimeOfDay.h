@@ -2,6 +2,7 @@
 
 #include "Math/Vector.h"
 #include "Math/Math.h"
+#include "SolarUtils.h"
 
 struct FormattedTimeOfDay
 {
@@ -25,17 +26,20 @@ class TimeOfDay
  private:
     void AddTime(float seconds);
 
+    bool override_sun_position_ = false;
+    SunAngles sun_angles_;
+
     // London
-    const float mLatitude = 51.5f;
-    const float mLongtitude = -0.1278f;
+    const float latitude_ = 51.5f;
+    const float longtitude_ = -0.1278f;
     // Reykjavik
     // const float mLatitude = 64.1f;
     // const float mLongtitude = -21.9426f;
 
-    int mYear = 2021;
-    int mOrdinalDate = 172;
+    int year_ = 2021;
+    int ordinal_date_ = 172;
 
-    bool mPauseTime = false;
-    float mCurrentTimeOfDay = 10.0f * 60.0f * 60.0f;
-    int mTimeMultiplier = 100;
+    bool pause_time_ = false;
+    float current_time_of_day_ = 10.0f * 60.0f * 60.0f;
+    int time_multiplier_ = 100;
 };

@@ -62,6 +62,13 @@ void Mesh::FlipFaces()
     }
 }
 
+void Mesh::Scale(const float& scaleFactor)
+{
+    for (Vertex& v : mVerticies)
+    {
+        v.positon *= scaleFactor;
+    }
+}
 
 void Mesh::Scale(const Vector& scaleFactor)
 {

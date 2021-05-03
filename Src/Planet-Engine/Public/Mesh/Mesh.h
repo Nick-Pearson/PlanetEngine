@@ -27,6 +27,7 @@ class Mesh
     void RecalculateNormals();
     void FlipFaces();
 
+    void Scale(const float& scaleFactor);
     void Scale(const Vector& scaleFactor);
 
  private:

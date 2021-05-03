@@ -104,7 +104,6 @@ void D3DRenderer::Render(const CameraComponent& camera)
     mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
 
     UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-
     currentRenderState.UseWorldMatrix = false;
 
     // sort render states
@@ -230,7 +229,12 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)
 
     if (currentRenderState.UseWorldMatrix != state.UseWorldMatrix)
     {
-        Transform cameraTransform = state.UseWorldMatrix ? camera.GetWorldTransform() : Transform();
+        Transform cameraTransform = camera.GetWorldTransform();
+        if (!state.UseWorldMatrix)
+        {
+            cameraTransform.location = Vector{};
+            cameraTransform.scale = Vector{1.0f, 1.0f, 1.0f};
+        }
         DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
         mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
 

@@ -15,7 +15,6 @@
 #include "Mesh/MeshComponent.h"
 #include "World/CameraComponent.h"
 #include "World/SkyDome.h"
-#include "World/CloudBox.h"
 #include "Input/InputManager.h"
 #include "Input/ImGuiInput.h"
 #include "Editor/FlyCam.h"
@@ -23,8 +22,6 @@
 #include "Texture/Texture2D.h"
 #include "Texture/TextureFactory.h"
 #include "Compute/ComputeShader.h"
-
-// #include "imgui.h"
 
 namespace
 {
@@ -71,7 +68,7 @@ void PlanetEngine::Run()
 
     std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
-    cameraEntity->Rotate(Vector{ 270.0f, 180.0f, 0.0f });
+    cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
 
     std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
     bunnyEntity->AddComponent<MeshComponent>(bunny, standardMaterial);
@@ -87,7 +84,6 @@ void PlanetEngine::Run()
     planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
 
     scene->SpawnEntity<SkyDome>("sky");
-    scene->SpawnEntity<CloudBox>("clouds");
 
     float deltaTime = 0.01f;
     auto begin = std::chrono::high_resolution_clock::now();

@@ -2,7 +2,6 @@
 
 #include "Math/Vector.h"
 #include "Math/Quaternion.h"
-#include "SolarUtils.h"
 
 #include "imgui.h"
 
@@ -45,9 +44,14 @@ namespace
 
 void TimeOfDay::Update(float deltaSeconds)
 {
-    if (!mPauseTime)
+    if (!pause_time_)
     {
-        AddTime(deltaSeconds * mTimeMultiplier);
+        AddTime(deltaSeconds * time_multiplier_);
+
+        if (!override_sun_position_)
+        {
+            sun_angles_ = SolarUtils::CalculateSunAngles(ordinal_date_, current_time_of_day_ / SECONDS_IN_HOUR, latitude_, longtitude_);
+        }
     }
 
     ImGui::Begin("Time of Day");
@@ -59,12 +63,12 @@ void TimeOfDay::Update(float deltaSeconds)
         formattedTime.hour,
         formattedTime.minute,
         formattedTime.seconds);
-    ImGui::Checkbox("Pause Time", &mPauseTime);
-    ImGui::InputInt("Day of Year", &mOrdinalDate);
-    ImGui::InputInt("Time Multiplier", &mTimeMultiplier);
-    auto angles = SolarUtils::CalculateSunAngles(mOrdinalDate, mCurrentTimeOfDay / SECONDS_IN_HOUR, mLatitude, mLongtitude);
-    ImGui::SliderAngle("Elevation", &angles.elevation);
-    ImGui::SliderAngle("Azimuth", &angles.azimuth);
+    ImGui::Checkbox("Pause Time", &pause_time_);
+    ImGui::InputInt("Day of Year", &ordinal_date_);
+    ImGui::InputInt("Time Multiplier", &time_multiplier_);
+    ImGui::Checkbox("Override Sun", &override_sun_position_);
+    ImGui::SliderAngle("Elevation", &sun_angles_.elevation);
+    ImGui::SliderAngle("Azimuth", &sun_angles_.azimuth);
     Vector dir = CalculateSunDirection();
     ImGui::Text("Direction: %.2f %.2f %.2f (%.2f)", dir.x, dir.y, dir.z, dir.Length());
     ImGui::End();
@@ -72,13 +76,11 @@ void TimeOfDay::Update(float deltaSeconds)
 
 Vector TimeOfDay::CalculateSunDirection() const
 {
-    auto angles = SolarUtils::CalculateSunAngles(mOrdinalDate, mCurrentTimeOfDay / SECONDS_IN_HOUR, mLatitude, mLongtitude);
-
     // float altitude
     // Quaternion sunRotation{ Vector(Math::RadToDeg(mElevation), 0.0f, Math::RadToDeg(mAzimuth)) };
     float elvSin, elvCos, aziSin, aziCos;
-    Math::SinAndCos(angles.elevation, &elvSin, &elvCos);
-    Math::SinAndCos(angles.azimuth, &aziSin, &aziCos);
+    Math::SinAndCos(sun_angles_.elevation, &elvSin, &elvCos);
+    Math::SinAndCos(sun_angles_.azimuth, &aziSin, &aziCos);
 
     // elevation vector rotated around the y axis by the azimuth
     // elevation vector = [0, sin E, -cos E]
@@ -90,15 +92,15 @@ Vector TimeOfDay::CalculateSunDirection() const
 
 FormattedTimeOfDay TimeOfDay::FormatTimeOfDay() const
 {
-    int wholeSeconds = static_cast<int>(mCurrentTimeOfDay);
+    int wholeSeconds = static_cast<int>(current_time_of_day_);
 
     FormattedTimeOfDay result;
-    result.year = mYear;
+    result.year = year_;
     result.hour = (wholeSeconds / HOUR) % 24;
     result.minute = (wholeSeconds / MINUTE) % 60;
     result.seconds = wholeSeconds % 60;
 
-    int day = mOrdinalDate;
+    int day = ordinal_date_;
     result.month = 0;
     while (day > DAYS_IN_MONTH[result.month])
     {
@@ -111,14 +113,15 @@ FormattedTimeOfDay TimeOfDay::FormatTimeOfDay() const
 
 void TimeOfDay::AddTime(float seconds)
 {
-    mCurrentTimeOfDay += seconds;
-    if (mCurrentTimeOfDay > SECONDS_IN_DAY)
+    current_time_of_day_ += seconds;
+    if (current_time_of_day_ > SECONDS_IN_DAY)
     {
-        mCurrentTimeOfDay -= SECONDS_IN_DAY;
-        mOrdinalDate++;
-        if (mOrdinalDate > 365)
+        current_time_of_day_ -= SECONDS_IN_DAY;
+        ordinal_date_++;
+        if (ordinal_date_ > 365)
         {
-            mOrdinalDate -= 365;
+            ordinal_date_ -= 365;
+            year_++;
         }
     }
 }

@@ -144,10 +144,11 @@ std::shared_ptr<D3DPixelShader> GPUResourceManager::LoadShader(const std::string
     auto loaded_shader = shader_loader_->LoadPixel(shaderFile.c_str());
     if (!loaded_shader)
     {
-        P_FATAL("failed to load shader {}", shaderFile);
+        P_ERROR("failed to load shader {}", shaderFile);
+        loaded_shader = shader_loader_->LoadPixel("FallbackShader.hlsl");
     }
-    loadedShaders.emplace(shaderFile, loaded_shader);
 
+    loadedShaders.emplace(shaderFile, loaded_shader);
     return loaded_shader;
 }
 
