@@ -6,6 +6,7 @@
 
 #include "Platform/PlanetWindows.h"
 #include "Render/RenderSystem.h"
+#include "Container/RingBuffer.h"
 
 class D3DRenderSystem : public RenderSystem
 {
@@ -39,5 +40,5 @@ class D3DRenderSystem : public RenderSystem
     class GPUResourceManager* mResourceManager;
     class D3DWindowEvents* mWindowEvents;
 
-    uint64_t mLastFrameMs;
+    RingBuffer<uint64_t> frame_times_ms_{50};
 };

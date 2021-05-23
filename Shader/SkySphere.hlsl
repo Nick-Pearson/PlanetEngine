@@ -29,19 +29,19 @@ SamplerState low_freq_splr : register(s0);
 Texture3D high_freq_tex : register(t1);
 SamplerState high_freq_splr : register(s1);
 
-static const float CloudScale = 2.0f;
+static const float CloudScale = 1.0f;
 static const float3 CloudOffset = float3(0.0f, 0.0f, 0.0f);
-static const float DensityThreshold = 0.25f;
-static const float DensityMultiplier = 3.0f;
+static const float DensityThreshold = 0.5f;
+static const float DensityMultiplier = 10.0f;
 static const float LightAbsorption = 0.02f;
 static const float LightAbsorptionTowardSun = 0.84f;
 static const float DarknessThreshold = 0.07f;
-static const float G = 0.2f;
-static const float DepthMultiplier = 50.0f;
-static const int MainSteps = 2;
+static const float G = 0.1f;
+static const float DepthMultiplier = 1.0f;
+static const int MainSteps = 64;
 static const int LightSteps = 8;
-static const float CloudHeightKM = 2.0f;
-static const float CloudDepthKM = 3.5f;
+static const float CloudHeightKM = 15.0f;
+static const float CloudDepthKM = 35.0f;
 
 float intersect_atmosphere(float3 orig, float3 dir, out float t0, out float t1)
 {
@@ -196,15 +196,16 @@ float get_cloud_depth(float3 orig, float3 dir)
 
 float sample_cloud_density(float3 position)
 {
-    float3 uvw = (position * CloudScale * 0.01f) + (CloudOffset * 0.01f);
+    float3 uvw = (position * CloudScale * 0.005f) + (CloudOffset * 0.01f);
 	uvw.x += 0.05f;
+	uvw.y *= DepthMultiplier;
 	uvw.z += 0.05f;
     float4 low_freq = low_freq_tex.Sample(low_freq_splr, uvw);
 
     // float4 high_freq = high_freq_tex.Sample(high_freq_splr, userToCloud);
     // float val = low_freq.x;
 
-    return max(0.0f, low_freq.x - DensityThreshold) * DensityMultiplier;
+    return saturate(max(0.0f, low_freq.x - DensityThreshold) * DensityMultiplier);
 }
 
 float henyey_greenstein(float3 userToCloud)
@@ -218,25 +219,26 @@ float henyey_greenstein(float3 userToCloud)
 
 float raymarch_cloud_light(float3 position)
 {
-	const float3 dir = normalize(-sunDir);
+	const float3 dir = -sunDir;
     const float depth = get_cloud_depth(position, dir);
 
     const float step_size = depth / (float)LightSteps;
     const float3 step = dir * step_size;
     position += step * 0.5f;
-    float totalDensity = 0.0f;
+    float total_density = 0.0f;
 
     [loop]
     for (int i = 0; i < LightSteps; i++)
     {
         float density = sample_cloud_density(position);
-        totalDensity += density * step_size;
+        total_density += density * step_size;
         position += step;
     }
 
-    float transmittance = exp(-totalDensity * LightAbsorptionTowardSun);
+    float transmittance = exp(-total_density * LightAbsorptionTowardSun);
 
-    return DarknessThreshold + transmittance * (1.0f-DarknessThreshold);
+    // return DarknessThreshold + transmittance * (1.0f-DarknessThreshold);
+	return transmittance;
 }
 
 float4 cloud_col(float3 dir)
@@ -271,12 +273,12 @@ float4 cloud_col(float3 dir)
     for (int i = 0; i < MainSteps; i++)
     {
         float3 ray_pos = orig + (dir * dist_travelled);
-        float density = sample_cloud_density(ray_pos);
+        float density = sample_cloud_density(ray_pos) * step;
 
         float light_transmittance = raymarch_cloud_light(ray_pos);
-        light_energy += transmittance * step * light_transmittance * hg;
-		transmittance = transmittance * exp(-density * step * LightAbsorption);
-		total_density += density * step;
+        light_energy += density * transmittance * light_transmittance * hg;
+		// transmittance = transmittance * exp(-density * LightAbsorption);
+		total_density += density;
         dist_travelled += step;
     }
 

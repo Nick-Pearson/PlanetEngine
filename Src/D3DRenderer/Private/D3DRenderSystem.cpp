@@ -135,8 +135,19 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
     mRenderer->SwapBuffers();
     mUIRenderer->NewFrame();
     auto time = chr::high_resolution_clock::now() - start;
-    mLastFrameMs = time/chr::milliseconds(1);
+    frame_times_ms_.Add(time/chr::milliseconds(1));
     FlushDebugMessages();
+}
+
+float calc_fps(uint64_t frame_time_ms)
+{
+    return frame_time_ms > 0 ? 1000.0f / static_cast<float>(frame_time_ms) : 0;
+}
+
+float get_fps_time(void* b, int idx)
+{
+    RingBuffer<uint64_t>* buffer = static_cast<RingBuffer<uint64_t>*>(b);
+    return calc_fps((*buffer)[idx]);
 }
 
 void D3DRenderSystem::RenderDebugUI()
@@ -151,8 +162,15 @@ void D3DRenderSystem::RenderDebugUI()
         swapChainDesc.BufferDesc.Width,
         swapChainDesc.BufferDesc.Height,
         fullscreen ? "(fullscreen)" : "");
-    auto fps = mLastFrameMs > 0 ? 1000 / mLastFrameMs : 0;
-    ImGui::Text("%d FPS (%d ms)", fps, mLastFrameMs);
+
+    if (!frame_times_ms_.IsEmpty())
+    {
+        auto last_frame_time = frame_times_ms_.Head();
+        auto fps = calc_fps(last_frame_time);
+        ImGui::Text("%.1f FPS (%d ms)", fps, last_frame_time);
+        ImGui::PlotLines("FPS", &get_fps_time, &frame_times_ms_, frame_times_ms_.Capacity(), 0, nullptr, 0.0f, 120.0f, ImVec2(200, 60));
+    }
+
     if (ImGui::Button("Reload all shaders"))
     {
         mResourceManager->ReloadAllShaders();
