@@ -39,7 +39,7 @@ static const float DarknessThreshold = 0.07f;
 static const float G = 0.1f;
 static const float DepthMultiplier = 1.0f;
 static const int MainSteps = 64;
-static const int LightSteps = 8;
+static const int LightSteps = 6;
 static const float CloudHeightKM = 15.0f;
 static const float CloudDepthKM = 35.0f;
 
@@ -200,12 +200,13 @@ float sample_cloud_density(float3 position)
 	uvw.x += 0.05f;
 	uvw.y *= DepthMultiplier;
 	uvw.z += 0.05f;
-    float4 low_freq = low_freq_tex.Sample(low_freq_splr, uvw);
+    float4 low_freq = low_freq_tex.SampleLevel(low_freq_splr, uvw, 0);
 
     // float4 high_freq = high_freq_tex.Sample(high_freq_splr, userToCloud);
     // float val = low_freq.x;
 
-    return saturate(max(0.0f, low_freq.x - DensityThreshold) * DensityMultiplier);
+	const float altitudeMultiplier = 0.5f;
+    return saturate(max(0.0f, low_freq.x - DensityThreshold) * DensityMultiplier * altitudeMultiplier);
 }
 
 float henyey_greenstein(float3 userToCloud)
@@ -217,9 +218,19 @@ float henyey_greenstein(float3 userToCloud)
     return (1.0f - g2) / v;
 }
 
+/*
+Sample 6 points 
+5 in a cone
+
+1 long distance
+
+cone angle 8
+cone size  N
+*/
+
 float raymarch_cloud_light(float3 position)
 {
-	const float3 dir = -sunDir;
+	const float3 dir = sunDir;
     const float depth = get_cloud_depth(position, dir);
 
     const float step_size = depth / (float)LightSteps;
@@ -235,10 +246,9 @@ float raymarch_cloud_light(float3 position)
         position += step;
     }
 
-    float transmittance = exp(-total_density * LightAbsorptionTowardSun);
-
-    // return DarknessThreshold + transmittance * (1.0f-DarknessThreshold);
-	return transmittance;
+	float powder_sugar_effect = 1.0f - exp(-total_density * 2.0f);
+	float beers_law = exp(-total_density * LightAbsorptionTowardSun);
+	return 2.0 * beers_law * powder_sugar_effect;
 }
 
 float4 cloud_col(float3 dir)
@@ -269,23 +279,24 @@ float4 cloud_col(float3 dir)
 
     const float step = depth / (float)MainSteps;
     float dist_travelled = 0.5f * step;
+	float alpha = 0.0;
     [loop]
-    for (int i = 0; i < MainSteps; i++)
+	while (alpha < 1.0 && dist_travelled < depth)
     {
         float3 ray_pos = orig + (dir * dist_travelled);
         float density = sample_cloud_density(ray_pos) * step;
 
         float light_transmittance = raymarch_cloud_light(ray_pos);
-        light_energy += density * transmittance * light_transmittance * hg;
+        light_energy += light_transmittance * hg * density;
 		// transmittance = transmittance * exp(-density * LightAbsorption);
 		total_density += density;
         dist_travelled += step;
+		alpha = 1.0 - saturate(exp(-total_density * 0.1f));
     }
 
 	float3 colour = light_energy * sunCol;
 	// how much the cloud blocks the light from behind it
-	float cloud_obstruction = saturate(exp(-total_density * 0.1f));
-    return float4(colour, cloud_obstruction);
+    return float4(colour.r, colour.g, colour.b, alpha);
 	// float val = sample_cloud_density(orig);
 	// float val = (depth  / DepthMultiplier) - CloudDepthKM;
 	// return float4(val, val, val, 1.0f);
