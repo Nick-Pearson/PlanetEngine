@@ -22,15 +22,24 @@ struct Quaternion
             Math::DegToRad(eulerAngles.z));
     }
 
- public:
-    void operator+=(const Vector& euler)
+    Quaternion(const float angle, const Vector& axis)
     {
-        *this += Quaternion(euler);
+        value = DirectX::XMQuaternionRotationAxis(
+            axis.ToVectorReg(),
+            angle);
     }
 
-    void operator+=(const Quaternion& other)
+ public:
+    void operator*=(const Quaternion& other)
     {
         value = DirectX::XMQuaternionMultiply(other.value, value);
+    }
+
+    Quaternion operator*(Quaternion other) const
+    {
+        auto q = Quaternion();
+        q.value = DirectX::XMQuaternionMultiply(other.value, value);
+        return q;
     }
 
     Vector operator*(Vector other) const

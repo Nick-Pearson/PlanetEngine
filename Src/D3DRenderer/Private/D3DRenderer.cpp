@@ -14,7 +14,7 @@
 #include "World/CameraComponent.h"
 #include "Math/Transform.h"
 
-D3DRenderer::D3DRenderer(HWND window,
+D3DRenderer::D3DRenderer(
     wrl::ComPtr<ID3D11Device> device,
     wrl::ComPtr<IDXGISwapChain> swapChain,
     wrl::ComPtr<ID3D11DeviceContext> context) :

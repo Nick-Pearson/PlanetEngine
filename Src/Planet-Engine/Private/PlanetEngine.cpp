@@ -103,6 +103,7 @@ void PlanetEngine::Run()
         mRenderSystem->ApplyQueue(render_queue_.GetItems());
         render_queue_.ClearQueue();
         mRenderSystem->RenderFrame(cameraComp);
+        inputManager->EndOfFrame();
 
         auto end = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(end - begin).count();

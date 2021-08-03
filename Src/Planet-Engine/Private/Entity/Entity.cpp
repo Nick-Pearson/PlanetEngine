@@ -36,7 +36,13 @@ void Entity::Rotate(Vector rotation)
 {
     if (rotation.IsZero()) return;
 
-    transform.rotation += rotation;
+    transform.rotation *= Quaternion(rotation);
+    OnTransformChanged();
+}
+
+void Entity::SetRotation(Quaternion rotation)
+{
+    transform.rotation = rotation;
     OnTransformChanged();
 }
 

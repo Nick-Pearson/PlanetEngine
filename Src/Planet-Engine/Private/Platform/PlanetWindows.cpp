@@ -26,10 +26,12 @@ KeyCode Platform::GetKeyCode(unsigned char VirtualKey)
     case VK_RETURN:
         return KeyCode::RETURN;
     case VK_LSHIFT:
+    case VK_SHIFT:
         return KeyCode::LEFT_SHIFT;
     case VK_RSHIFT:
         return KeyCode::RIGHT_SHIFT;
     case VK_LCONTROL:
+    case VK_CONTROL:
         return KeyCode::LEFT_CTRL;
     case VK_RCONTROL:
         return KeyCode::RIGHT_CTRL;

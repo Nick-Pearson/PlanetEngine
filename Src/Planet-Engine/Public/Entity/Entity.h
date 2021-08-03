@@ -46,6 +46,9 @@ class Entity
     void Translate(Vector translation);
     void Rotate(Vector rotation);
 
+    inline Quaternion GetRotation() const { return transform.rotation; }
+    void SetRotation(Quaternion rotation);
+
  public:
     Transform transform;
 

@@ -15,7 +15,9 @@ void FlyCam::OnUpdate(float deltaSeconds)
 
     if (!mgr) return;
 
-    Vector movement, rotation;
+    Vector movement;
+    float rotation_x = 0.0f;
+    float rotation_y = 0.0f;
 
     if (mgr->GetIsKeyDown(KeyCode::W))
     {
@@ -35,26 +37,41 @@ void FlyCam::OnUpdate(float deltaSeconds)
         movement += Vector(-1.0f, 0.0f, 0.0f);
     }
 
+    if (mgr->GetIsKeyDown(KeyCode::LEFT_SHIFT))
+    {
+        movement *= 10.0f;
+    }
+
     if (mgr->GetIsKeyDown(KeyCode::UP_ARROW))
     {
-        rotation += Vector(-1.0f, 0.0f, 0.0f);
+        rotation_y -= 1.0f;
     }
     else if (mgr->GetIsKeyDown(KeyCode::DOWN_ARROW))
     {
-        rotation += Vector(1.0f, 0.0f, 0.0f);
+        rotation_y += 1.0f;
     }
 
     if (mgr->GetIsKeyDown(KeyCode::LEFT_ARROW))
     {
-        rotation += Vector(0.0f, -1.0f, 0.0f);
+        rotation_x -= 1.0f;
     }
     else if (mgr->GetIsKeyDown(KeyCode::RIGHT_ARROW))
     {
-        rotation += Vector(0.0f, 1.0f, 0.0f);
+        rotation_x += 1.0f;
     }
 
-    Rotate(rotation * deltaSeconds * mTurnSpeed);
-    Translate((transform.rotation * movement) * deltaSeconds * mMoveSpeed);
+    if (mgr->GetIsKeyDown(KeyCode::LEFT_CTRL))
+    {
+        iVec2D mouse_delta = mgr->GetMouseDelta();
+        rotation_x += mouse_sensitivity_ * mouse_delta.x_;
+        rotation_y += mouse_sensitivity_ * mouse_delta.y_;
+    }
+
+    Quaternion rotation = transform.rotation;
+    rotation = Quaternion{rotation_x * deltaSeconds * look_speed_, Vector{0.0f, 1.0f, 0.0f}} * rotation;
+    rotation = rotation * Quaternion{rotation_y * deltaSeconds * look_speed_, Vector{1.0f, 0.0f, 0.0f}};
+    SetRotation(rotation);
+    Translate((rotation * movement) * deltaSeconds * move_speed_);
 
     ImGui::Begin("Camera");
     if (ImGui::Button("Reset Camera"))

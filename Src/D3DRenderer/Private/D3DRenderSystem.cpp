@@ -51,7 +51,7 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
 
     InitD3D11Device(window);
-    mRenderer = new D3DRenderer{ window, mDevice, mSwapChain, mContext };
+    mRenderer = new D3DRenderer{ mDevice, mSwapChain, mContext };
     mUIRenderer = new ImGUIRenderer{ window, mDevice, mContext };
     mResourceManager = new GPUResourceManager{ mDevice, mContext };
     mWindowEvents = new D3DWindowEvents{ mRenderer };
@@ -166,8 +166,13 @@ void D3DRenderSystem::RenderDebugUI()
     if (!frame_times_ms_.IsEmpty())
     {
         auto last_frame_time = frame_times_ms_.Head();
-        auto fps = calc_fps(last_frame_time);
-        ImGui::Text("%.1f FPS (%d ms)", fps, last_frame_time);
+        auto average_frame_time = 0;
+        for (int i = 0; i < frame_times_ms_.Capacity(); ++i)
+            average_frame_time += frame_times_ms_[i];
+        average_frame_time /= frame_times_ms_.Capacity();
+
+        ImGui::Text("%.1f FPS (%d ms)", calc_fps(last_frame_time), last_frame_time);
+        ImGui::Text("%.1f Average FPS (over last %d frames)", calc_fps(average_frame_time), frame_times_ms_.Capacity());
         ImGui::PlotLines("FPS", &get_fps_time, &frame_times_ms_, frame_times_ms_.Capacity(), 0, nullptr, 0.0f, 120.0f, ImVec2(200, 60));
     }
 

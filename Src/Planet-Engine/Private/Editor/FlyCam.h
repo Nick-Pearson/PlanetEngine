@@ -18,6 +18,7 @@ class FlyCam : public Entity
  private:
     CameraComponent* camera;
 
-    float mMoveSpeed = 10.0f;
-    float mTurnSpeed = 30.0f;
+    float move_speed_ = 10.0f;
+    float look_speed_ = 0.5f;
+    float mouse_sensitivity_ = 1.0f;
 };

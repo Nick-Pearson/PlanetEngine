@@ -8,6 +8,7 @@
 #define WINVER 0x0500
 
 #include <Windows.h>
+#include <windowsx.h>
 #include "../Input/KeyCode.h"
 
 class IWindowsMessageHandler

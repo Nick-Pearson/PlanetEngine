@@ -26,7 +26,7 @@ class D3DRenderer : public Renderer
     friend class D3DShader;
 
  public:
-    D3DRenderer(HWND window,
+    D3DRenderer(
         wrl::ComPtr<ID3D11Device> mDevice,
         wrl::ComPtr<IDXGISwapChain> mSwapChain,
         wrl::ComPtr<ID3D11DeviceContext> mContext);
