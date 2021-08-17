@@ -54,7 +54,6 @@ bool InputManager::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         {
             mouse_position_delta_.x_ = mouseX - mouse_position_.x_;
             mouse_position_delta_.y_ = mouseY - mouse_position_.y_;
-            P_LOG("Mouse move ({}, {})", mouse_position_delta_.x_, mouse_position_delta_.y_);
         }
 
         mouse_position_.x_ = mouseX;
@@ -62,7 +61,7 @@ bool InputManager::HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
         return true;
     }
     default:
-        P_LOG("Not handling window msg 0x{:x} with params 0x{:x} 0x{:x}", msg, wParam, lParam);
+        P_TRACE("Not handling window msg 0x{:x} with params 0x{:x} 0x{:x}", msg, wParam, lParam);
         return false;
     }
 }

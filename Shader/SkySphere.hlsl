@@ -29,19 +29,16 @@ SamplerState low_freq_splr : register(s0);
 Texture3D high_freq_tex : register(t1);
 SamplerState high_freq_splr : register(s1);
 
-static const float CloudScale = 1.0f;
-static const float3 CloudOffset = float3(0.0f, 0.0f, 0.0f);
+static const float CloudScale = 0.005f;
+static const float2 CloudOffset = float2(0.0f, 0.0f);
+static const float CloudCoverage = 0.7f;
 static const float DensityThreshold = 0.5f;
 static const float DensityMultiplier = 10.0f;
-static const float LightAbsorption = 0.02f;
 static const float LightAbsorptionTowardSun = 0.84f;
-static const float DarknessThreshold = 0.07f;
 static const float G = 0.1f;
-static const float DepthMultiplier = 1.0f;
-static const int MainSteps = 64;
-static const int LightSteps = 6;
 static const float CloudHeightKM = 15.0f;
 static const float CloudDepthKM = 35.0f;
+static const float StepSize = (CloudDepthKM / 8);
 
 float intersect_atmosphere(float3 orig, float3 dir, out float t0, out float t1)
 {
@@ -194,19 +191,40 @@ float get_cloud_depth(float3 orig, float3 dir)
     return outer_dist;
 }
 
+float remap(float orig, float orig_min, float orig_max, float new_min, float new_max)
+{
+	float ratio = (orig - orig_min) / (orig_max - orig_min);
+	return new_min + (ratio * (new_max - new_min));
+}
+
+float get_height_fraction(float3 position)
+{
+	return saturate((position.y - CloudHeightKM) / CloudDepthKM);
+}
+
 float sample_cloud_density(float3 position)
 {
-    float3 uvw = (position * CloudScale * 0.005f) + (CloudOffset * 0.01f);
-	uvw.x += 0.05f;
-	uvw.y *= DepthMultiplier;
-	uvw.z += 0.05f;
+    float3 uvw;
+	uvw.x = (position.x * CloudScale) + (CloudOffset.x * 0.01f);
+	uvw.y = (position.y - CloudHeightKM) / CloudDepthKM;
+	uvw.z = (position.z * CloudScale) + (CloudOffset.y * 0.01f);
+
     float4 low_freq = low_freq_tex.SampleLevel(low_freq_splr, uvw, 0);
+
+	float low_freq_FBM = (low_freq.g * 0.625f) +
+						(low_freq.b * 0.250f) +
+						(low_freq.a * 0.125f);
+
+	float base_cloud = remap(low_freq.r, low_freq_FBM - 1.0f, 1.0, 0.0f, 1.0f);
 
     // float4 high_freq = high_freq_tex.Sample(high_freq_splr, userToCloud);
     // float val = low_freq.x;
 
-	const float altitudeMultiplier = 0.5f;
-    return saturate(max(0.0f, low_freq.x - DensityThreshold) * DensityMultiplier * altitudeMultiplier);
+	float base_cloud_with_coverage = remap(base_cloud, CloudCoverage, 1.0f, 0.0f, 1.0f);
+	base_cloud_with_coverage *= CloudCoverage;
+
+	const float height_fraction = get_height_fraction(position);
+    return saturate(base_cloud_with_coverage * height_fraction);
 }
 
 float henyey_greenstein(float3 userToCloud)
@@ -227,28 +245,38 @@ Sample 6 points
 cone angle 8
 cone size  N
 */
+static float3 noise_kernel [] =
+{
+	float3(-0.8480f, 0.1191f, 0.1354f),
+	float3(0.7645f, 0.9764f, -0.9524f),
+	float3(0.6827f, -0.5479f, -0.3746f),
+	float3(0.8309f, 0.9782f, -0.9803f),
+	float3(-0.0018f, -0.3272f, 0.9561f),
+	float3(0.2966f, -0.6623f, 0.9219f)
+};
 
 float raymarch_cloud_light(float3 position)
 {
-	const float3 dir = sunDir;
+	const float3 dir = -sunDir;
     const float depth = get_cloud_depth(position, dir);
+	const float cone_spread_multiplier = 1.0f;
 
-    const float step_size = depth / (float)LightSteps;
-    const float3 step = dir * step_size;
-    position += step * 0.5f;
-    float total_density = 0.0f;
+	const float near_samples_dist = min(5.0f, depth);
+	float3 p = position + (dir * near_samples_dist);
+	float total_density = 0.0f;
 
-    [loop]
-    for (int i = 0; i < LightSteps; i++)
-    {
-        float density = sample_cloud_density(position);
-        total_density += density * step_size;
-        position += step;
-    }
+	[unroll]
+	for (int i = 0; i < 6; i++)
+	{
+		p += (cone_spread_multiplier * noise_kernel[i] * float(i));
+		total_density += sample_cloud_density(p);
+	}
+	const float far_sample_dist = min(15.0f, depth);
+	total_density += sample_cloud_density(position + (dir * far_sample_dist));
 
 	float powder_sugar_effect = 1.0f - exp(-total_density * 2.0f);
 	float beers_law = exp(-total_density * LightAbsorptionTowardSun);
-	return 2.0 * beers_law * powder_sugar_effect;
+	return 2.0f * beers_law * powder_sugar_effect;
 }
 
 float4 cloud_col(float3 dir)
@@ -277,29 +305,26 @@ float4 cloud_col(float3 dir)
     
     float hg = henyey_greenstein(dir);
 
-    const float step = depth / (float)MainSteps;
-    float dist_travelled = 0.5f * step;
-	float alpha = 0.0;
+    float dist_travelled = 0.5f * StepSize;
     [loop]
-	while (alpha < 1.0 && dist_travelled < depth)
+	while (transmittance > 0.05f && dist_travelled < depth)
     {
         float3 ray_pos = orig + (dir * dist_travelled);
-        float density = sample_cloud_density(ray_pos) * step;
+        float density = sample_cloud_density(ray_pos) * StepSize;
 
-        float light_transmittance = raymarch_cloud_light(ray_pos);
-        light_energy += light_transmittance * hg * density;
-		// transmittance = transmittance * exp(-density * LightAbsorption);
+        float light = raymarch_cloud_light(ray_pos);
+        light_energy += light * hg * transmittance * StepSize * 0.5f;
+
 		total_density += density;
-        dist_travelled += step;
-		alpha = 1.0 - saturate(exp(-total_density * 0.1f));
+		transmittance = exp(-total_density);
+
+        dist_travelled += StepSize;
     }
 
 	float3 colour = light_energy * sunCol;
-	// how much the cloud blocks the light from behind it
-    return float4(colour.r, colour.g, colour.b, alpha);
-	// float val = sample_cloud_density(orig);
-	// float val = (depth  / DepthMultiplier) - CloudDepthKM;
-	// return float4(val, val, val, 1.0f);
+	// float3 colour = float3(1.0f, 1.0f, 1.0f);
+
+    return float4(colour.r, colour.g, colour.b, 1.0f - transmittance);
 }
 
 float4 main(float3 normal : Color0) : SV_Target
@@ -307,6 +332,6 @@ float4 main(float3 normal : Color0) : SV_Target
 	float3 dir = normalize(-normal);
 	float4 clouds = cloud_col(dir);
 	float3 sky = sky_col(dir);
-	float3 blended = (sky * (1.0f - clouds.w)) + (clouds.xyz * clouds.w);
+	float3 blended = (sky * (1.0f - clouds.a)) + (clouds.rgb * clouds.a);
 	return float4(blended, 1.0f);
 }
