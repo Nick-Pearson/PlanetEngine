@@ -1,4 +1,5 @@
 #include "Platform/PlanetWindows.h"
+#include "PlanetLogging.h"
 
 KeyCode Platform::GetKeyCode(unsigned char VirtualKey)
 {
@@ -72,4 +73,11 @@ KeyCode Platform::GetKeyCode(unsigned char VirtualKey)
     }
 
     return KeyCode::INVALID;
+}
+
+void Platform::CreateDirectoryIfNotExists(const char* directory)
+{
+    CreateDirectory(directory, NULL);
+    auto error = GetLastError();
+    P_ASSERT(error == ERROR_ALREADY_EXISTS || error == 0, "Failed to create directory {} due to {}", directory, error);
 }

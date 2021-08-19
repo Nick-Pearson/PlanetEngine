@@ -21,6 +21,7 @@
 #include "Material/Material.h"
 #include "Texture/Texture2D.h"
 #include "Texture/TextureFactory.h"
+#include "Texture/TextureWriter.h"
 #include "Compute/ComputeShader.h"
 
 namespace
@@ -103,6 +104,15 @@ void PlanetEngine::Run()
         mRenderSystem->ApplyQueue(render_queue_.GetItems());
         render_queue_.ClearQueue();
         mRenderSystem->RenderFrame(cameraComp);
+
+        if (inputManager->GetIsKeyDown(KeyCode::P))
+        {
+            Texture2D texture{3840, 2160};
+            mRenderSystem->RenderToTexture(&texture, cameraComp);
+            Platform::CreateDirectoryIfNotExists("screenshots");
+            TextureWriter::writeToFile("screenshots/screenshot.png", texture);
+        }
+
         inputManager->EndOfFrame();
 
         auto end = std::chrono::high_resolution_clock::now();

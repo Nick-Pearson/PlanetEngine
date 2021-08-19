@@ -139,6 +139,103 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
     FlushDebugMessages();
 }
 
+void D3DRenderSystem::RenderToTexture(Texture2D* texture, const CameraComponent& camera)
+{
+    chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
+    D3D11_TEXTURE2D_DESC texture_desc = {};
+    texture_desc.Width = texture->GetWidth();
+    texture_desc.Height = texture->GetHeight();
+    texture_desc.MipLevels = 1;
+    texture_desc.ArraySize = 1;
+    texture_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    texture_desc.SampleDesc.Count = 1;
+    texture_desc.Usage = D3D11_USAGE_DEFAULT;
+    texture_desc.BindFlags = D3D11_BIND_RENDER_TARGET;
+    texture_desc.CPUAccessFlags = 0;
+    texture_desc.MiscFlags = 0;
+    ID3D11Texture2D* render_target_texture = nullptr;
+    d3dAssert(mDevice->CreateTexture2D(&texture_desc, NULL, &render_target_texture))
+
+    D3D11_RENDER_TARGET_VIEW_DESC render_target_view_desc = {};
+    render_target_view_desc.Format = texture_desc.Format;
+    render_target_view_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    render_target_view_desc.Texture2D.MipSlice = 0;
+    ID3D11RenderTargetView* render_target_view = nullptr;
+    d3dAssert(mDevice->CreateRenderTargetView(render_target_texture, &render_target_view_desc, &render_target_view));
+
+    D3D11_TEXTURE2D_DESC stencil_desc = {};
+    stencil_desc.Width = texture_desc.Width;
+    stencil_desc.Height = texture_desc.Height;
+    stencil_desc.MipLevels = 1u;
+    stencil_desc.ArraySize = 1u;
+    stencil_desc.Format = DXGI_FORMAT_D32_FLOAT;
+    stencil_desc.SampleDesc.Count = 1u;
+    stencil_desc.SampleDesc.Quality = 0u;
+    stencil_desc.Usage = D3D11_USAGE_DEFAULT;
+    stencil_desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    ID3D11Texture2D* depth_stencil_texture = nullptr;
+    d3dAssert(mDevice->CreateTexture2D(&stencil_desc, nullptr, &depth_stencil_texture));
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC stencil_view_desc = {};
+    stencil_view_desc.Format = DXGI_FORMAT_D32_FLOAT;
+    stencil_view_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    stencil_view_desc.Texture2D.MipSlice = 0u;
+    ID3D11DepthStencilView* stencil_view = nullptr;
+    d3dAssert(mDevice->CreateDepthStencilView(depth_stencil_texture, &stencil_view_desc, &stencil_view));
+
+    D3D11_TEXTURE2D_DESC staging_desc = {};
+    staging_desc.Width = texture->GetWidth();
+    staging_desc.Height = texture->GetHeight();
+    staging_desc.MipLevels = 1;
+    staging_desc.ArraySize = 1;
+    staging_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    staging_desc.SampleDesc.Count = 1;
+    staging_desc.Usage = D3D11_USAGE_STAGING;
+    staging_desc.BindFlags = 0;
+    staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+    staging_desc.MiscFlags = 0;
+    ID3D11Texture2D* staging_texture = nullptr;
+    d3dAssert(mDevice->CreateTexture2D(&staging_desc, NULL, &staging_texture));
+
+    D3D11_VIEWPORT vp;
+    vp.Width = static_cast<float>(texture->GetWidth());
+    vp.Height = static_cast<float>(texture->GetHeight());
+    vp.MinDepth = 0;
+    vp.MaxDepth = 1;
+    vp.TopLeftX = 0;
+    vp.TopLeftY = 0;
+    mContext->RSSetViewports(1u, &vp);
+
+    mContext->OMSetRenderTargets(1u, &render_target_view, stencil_view);
+    const float colour[4] = { 0.f, 0.f, 0.f, 1.0f };
+    mContext->ClearRenderTargetView(render_target_view, colour);
+    mContext->ClearDepthStencilView(stencil_view, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
+
+    mRenderer->Render(camera);
+    mContext->CopyResource(staging_texture, render_target_texture);
+
+    D3D11_MAPPED_SUBRESOURCE  mapped_subresource = {};
+    mContext->Map(staging_texture, 0u, D3D11_MAP_READ, 0u, &mapped_subresource);
+    P_ASSERT(mapped_subresource.RowPitch == sizeof(Colour) * texture->GetWidth(),
+        "Staging texture has invalid RowPitch {}",
+        mapped_subresource.RowPitch);
+    std::memcpy(texture->GetData(), mapped_subresource.pData, mapped_subresource.DepthPitch);
+    mContext->Unmap(staging_texture, 0u);
+
+    // this will force the render target back to the window
+    mRenderer->UpdateWindowSize(false);
+
+    render_target_texture->Release();
+    render_target_view->Release();
+    depth_stencil_texture->Release();
+    stencil_view->Release();
+    staging_texture->Release();
+    FlushDebugMessages();
+
+    auto time = chr::high_resolution_clock::now() - start;
+    P_LOG("Captured {}x{} screnshot in {}ms", texture->GetWidth(), texture->GetHeight(), time/chr::milliseconds(1));
+}
+
 float calc_fps(uint64_t frame_time_ms)
 {
     return frame_time_ms > 0 ? 1000.0f / static_cast<float>(frame_time_ms) : 0;
@@ -188,7 +285,7 @@ void D3DRenderSystem::InitD3D11Device(HWND window)
     DXGI_SWAP_CHAIN_DESC sd = {};
     sd.BufferDesc.Width = 0;
     sd.BufferDesc.Height = 0;
-    sd.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     sd.BufferDesc.RefreshRate.Numerator = 0;
     sd.BufferDesc.RefreshRate.Denominator = 0;
     sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;

@@ -130,7 +130,7 @@ LoadedTexture D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
     textureDesc.Height = texture->GetHeight();
     textureDesc.MipLevels = 1;
     textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     textureDesc.SampleDesc.Count = 1;
     textureDesc.SampleDesc.Quality = 0;
     textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -142,7 +142,7 @@ LoadedTexture D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
     sd.SysMemPitch = texture->GetWidth() * sizeof(Colour);
     ID3D11Texture2D* d3d11Texture;
     d3dAssert(device_->CreateTexture2D(&textureDesc, &sd, &d3d11Texture));
-    return LoadedTexture{d3d11Texture, DXGI_FORMAT_B8G8R8A8_UNORM};
+    return LoadedTexture{d3d11Texture, DXGI_FORMAT_R8G8B8A8_UNORM};
 }
 
 LoadedTexture D3DTextureLoader::LoadComputeTexture2D(const ComputeTexture2D* texture)
@@ -173,12 +173,12 @@ LoadedTexture D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* tex
     textureDesc.Height = texture->GetHeight();
     textureDesc.Depth = texture->GetDepth();
     textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     textureDesc.Usage = D3D11_USAGE_DEFAULT;
     textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
     textureDesc.CPUAccessFlags = 0;
     textureDesc.MiscFlags = 0;
     ID3D11Texture3D* d3d11Texture;
     d3dAssert(device_->CreateTexture3D(&textureDesc, NULL, &d3d11Texture));
-    return LoadedTexture{d3d11Texture, DXGI_FORMAT_B8G8R8A8_UNORM };
+    return LoadedTexture{d3d11Texture, DXGI_FORMAT_R8G8B8A8_UNORM };
 }

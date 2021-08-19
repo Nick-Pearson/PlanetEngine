@@ -20,4 +20,6 @@ class IWindowsMessageHandler
 namespace Platform
 {
     extern KeyCode GetKeyCode(unsigned char VirtualKey);
+
+    extern void CreateDirectoryIfNotExists(const char* directory);
 }

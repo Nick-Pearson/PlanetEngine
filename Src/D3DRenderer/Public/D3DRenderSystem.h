@@ -22,6 +22,7 @@ class D3DRenderSystem : public RenderSystem
     void ApplyQueue(const struct RenderQueueItems& items) final;
 
     void RenderFrame(const CameraComponent& camera) final;
+    void RenderToTexture(Texture2D* texture, const CameraComponent& camera) final;
 
     void InvokeCompute(const ComputeShader& shader) final;
 
