@@ -33,8 +33,6 @@ D3DRenderer::D3DRenderer(
     // bind depth state
     mContext->OMSetDepthStencilState(use_depth_stencil_state_.Get(), 1u);
 
-    UpdateWindowSize(false);
-
     // Compile Shaders
     auto shader_loader = new D3DShaderLoader{ device };
     vertexShader = shader_loader->LoadVertex("VertexShader.hlsl");
@@ -82,29 +80,35 @@ D3DRenderer::~D3DRenderer()
 {
 }
 
-void D3DRenderer::SwapBuffers()
+void D3DRenderer::BindRenderTarget(const RenderTarget& target)
 {
-    mSwapChain->Present(1u, 0u);
+    if (render_target_view_)
+        render_target_view_->Release();
+    if (depth_stencil_view_)
+        depth_stencil_view_->Release();
 
-    const float colour[4] = { 0.f, 0.f, 0.f, 1.0f };
-    mContext->ClearRenderTargetView(mTarget.Get(), colour);
-    mContext->ClearDepthStencilView(mDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
+    D3D11_VIEWPORT vp;
+    vp.Width = static_cast<float>(target.GetWidth());
+    vp.Height = static_cast<float>(target.GetHeight());
+    vp.MinDepth = 0;
+    vp.MaxDepth = 1;
+    vp.TopLeftX = 0;
+    vp.TopLeftY = 0;
+    mContext->RSSetViewports(1u, &vp);
+
+    aspect_ratio_ = vp.Height / vp.Width;
+
+    render_target_view_ = target.GetRenderTarget();
+    render_target_view_->AddRef();
+    depth_stencil_view_ = target.GetDepthStencil();
+    depth_stencil_view_->AddRef();
+    mContext->OMSetRenderTargets(1u, &render_target_view_, depth_stencil_view_);
+    P_LOG("Set render size to {}x{}", target.GetWidth(), target.GetHeight());
 }
 
 void D3DRenderer::Render(const CameraComponent& camera)
 {
-    // setup projection matrix
-    // TODO: Maybe not do this every frame?
-    // TODO: Collect stats on how often these buffers are updated
-    mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspectRatio, camera.NearClip, camera.FarClip));
-    Transform cameraTransform = camera.GetWorldTransform();
-    cameraTransform.location = Vector{};
-    cameraTransform.scale = Vector{1.0f, 1.0f, 1.0f};
-    DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
-    mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
-
-    UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-    currentRenderState.UseWorldMatrix = false;
+    PreRender(camera);
 
     // sort render states
     // use array sort for better cache performance in the sort and the subsequent loop
@@ -113,13 +117,33 @@ void D3DRenderer::Render(const CameraComponent& camera)
         if (!a.UseDepthBuffer && b.UseDepthBuffer) return true;
         return false;
     }, &sortedStates);
-
     // draw each state
     for (const RenderState& state : sortedStates)
     {
         Draw(camera, state);
     }
+
     PostRender();
+}
+
+void D3DRenderer::PreRender(const CameraComponent& camera)
+{
+    const float colour[4] = { 0.f, 0.f, 0.f, 1.0f };
+    mContext->ClearRenderTargetView(render_target_view_, colour);
+    mContext->ClearDepthStencilView(depth_stencil_view_, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0u);
+
+    // setup projection matrix
+    // TODO: Maybe not do this every frame?
+    // TODO: Collect stats on how often these buffers are updated
+    mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspect_ratio_, camera.NearClip, camera.FarClip));
+    Transform cameraTransform = camera.GetWorldTransform();
+    cameraTransform.location = Vector{};
+    cameraTransform.scale = Vector{1.0f, 1.0f, 1.0f};
+    DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
+    mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
+
+    UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
+    currentRenderState.UseWorldMatrix = false;
 }
 
 void D3DRenderer::PostRender()
@@ -148,66 +172,6 @@ void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
 {
     mWorldPixelBufferData = data;
     UpdateBuffer(mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
-}
-
-void D3DRenderer::UpdateWindowSize(bool resize)
-{
-    mContext->OMSetRenderTargets(0, 0, 0);
-
-    // Release all outstanding references to the swap chain's buffers.
-    mTarget.Reset();
-
-    if (resize)
-    {
-        // Preserve the existing buffer count and format.
-        // Automatically choose the width and height to match the client rect for HWNDs.
-        d3dAssert(mSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
-    }
-
-    // Get buffer and create a render-target-view.
-    ID3D11Texture2D* pBuffer;
-    d3dAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBuffer)));
-    d3dAssert(mDevice->CreateRenderTargetView(pBuffer, NULL, mTarget.GetAddressOf()));
-    pBuffer->Release();
-
-
-    DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
-
-    // create depth stencil texture
-    wrl::ComPtr<ID3D11Texture2D> DepthStencil = nullptr;
-    D3D11_TEXTURE2D_DESC descDepth = {};
-    descDepth.Width = (UINT)swapChainDesc.BufferDesc.Width;
-    descDepth.Height = (UINT)swapChainDesc.BufferDesc.Height;
-    descDepth.MipLevels = 1u;
-    descDepth.ArraySize = 1u;
-    descDepth.Format = DXGI_FORMAT_D32_FLOAT;
-    descDepth.SampleDesc.Count = 1u;
-    descDepth.SampleDesc.Quality = 0u;
-    descDepth.Usage = D3D11_USAGE_DEFAULT;
-    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    d3dAssert(mDevice->CreateTexture2D(&descDepth, nullptr, DepthStencil.GetAddressOf()));
-
-    // create view of depth stencil texture
-    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-    descDSV.Format = DXGI_FORMAT_D32_FLOAT;
-    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    descDSV.Texture2D.MipSlice = 0u;
-    d3dAssert(mDevice->CreateDepthStencilView(DepthStencil.Get(), &descDSV, mDepthStencilView.GetAddressOf()));
-
-    D3D11_VIEWPORT vp;
-    vp.Width = static_cast<float>(swapChainDesc.BufferDesc.Width);
-    vp.Height = static_cast<float>(swapChainDesc.BufferDesc.Height);
-    vp.MinDepth = 0;
-    vp.MaxDepth = 1;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-    mContext->RSSetViewports(1u, &vp);
-
-    aspectRatio = vp.Height / vp.Width;
-
-    mContext->OMSetRenderTargets(1u, mTarget.GetAddressOf(), mDepthStencilView.Get());
-    P_LOG("Set render size to {}x{}", swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height);
 }
 
 void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)

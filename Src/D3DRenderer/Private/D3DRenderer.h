@@ -14,6 +14,7 @@
 #include "Math/Vector.h"
 #include "World/CameraComponent.h"
 
+#include "Target/RenderTarget.h"
 #include "Shader/D3DShaderLoader.h"
 #include "RenderState.h"
 #include "D3DAssert.h"
@@ -45,8 +46,7 @@ class D3DRenderer : public Renderer
         _mm_free(p);
     }
 
-    // Renderer Interface
-    void SwapBuffers();
+    void BindRenderTarget(const RenderTarget& target);
 
     // renders a particular camera
     void Render(const CameraComponent& camera);
@@ -56,11 +56,10 @@ class D3DRenderer : public Renderer
 
     void UpdateWorldBuffer(const WorldBufferData& data);
 
-    void UpdateWindowSize(bool resize);
-
  protected:
     void Draw(const CameraComponent& camera, const RenderState& state);
 
+    void PreRender(const CameraComponent& camera);
     void PostRender();
 
     void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
@@ -70,8 +69,8 @@ class D3DRenderer : public Renderer
     wrl::ComPtr<ID3D11Device> mDevice;
     wrl::ComPtr<IDXGISwapChain> mSwapChain;
     wrl::ComPtr<ID3D11DeviceContext> mContext;
-    wrl::ComPtr<ID3D11RenderTargetView> mTarget;
-    wrl::ComPtr<ID3D11DepthStencilView> mDepthStencilView;
+    ID3D11RenderTargetView* render_target_view_ = nullptr;
+    ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
 
     wrl::ComPtr<ID3D11BlendState> mAlphaBlendState;
     wrl::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
@@ -124,5 +123,5 @@ class D3DRenderer : public Renderer
     RenderState currentRenderState;
     unsigned int used_texture_slots_ = 0;
 
-    float aspectRatio = 1.0f;
+    float aspect_ratio_ = 1.0f;
 };

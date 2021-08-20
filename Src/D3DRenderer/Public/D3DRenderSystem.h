@@ -26,6 +26,8 @@ class D3DRenderSystem : public RenderSystem
 
     void InvokeCompute(const ComputeShader& shader) final;
 
+    void UpdateWindowSize();
+
  private:
     void RenderDebugUI();
     void InitD3D11Device(HWND window);
@@ -40,6 +42,8 @@ class D3DRenderSystem : public RenderSystem
     class ImGUIRenderer* mUIRenderer;
     class GPUResourceManager* mResourceManager;
     class D3DWindowEvents* mWindowEvents;
+
+    class WindowRenderTarget* window_render_target_;
 
     RingBuffer<uint64_t> frame_times_ms_{50};
 };

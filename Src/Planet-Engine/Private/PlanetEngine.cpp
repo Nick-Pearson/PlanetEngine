@@ -48,6 +48,7 @@ PlanetEngine* PlanetEngine::Get()
 }
 
 class CameraComponent;
+namespace chr = std::chrono;
 
 void PlanetEngine::Run()
 {
@@ -107,10 +108,15 @@ void PlanetEngine::Run()
 
         if (inputManager->GetIsKeyDown(KeyCode::P))
         {
+            chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
+
             Texture2D texture{3840, 2160};
             mRenderSystem->RenderToTexture(&texture, cameraComp);
             Platform::CreateDirectoryIfNotExists("screenshots");
             TextureWriter::writeToFile("screenshots/screenshot.png", texture);
+
+            auto time = chr::high_resolution_clock::now() - start;
+            P_LOG("Captured {}x{} screnshot in {}ms", texture.GetWidth(), texture.GetHeight(), time/chr::milliseconds(1));
         }
 
         inputManager->EndOfFrame();

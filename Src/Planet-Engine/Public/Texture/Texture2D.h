@@ -24,19 +24,19 @@ struct Colour
 class Texture2D : public Texture
 {
  public:
-    Texture2D(unsigned int width, unsigned int height);
+    Texture2D(int width, int height);
 
-    inline Colour GetPixel(unsigned int x, unsigned int y) const { return mData[x + (y * mWidth)]; }
-    void SetPixel(unsigned int x, unsigned int y, Colour value);
+    inline Colour GetPixel(int x, int y) const { return mData[x + (y * mWidth)]; }
+    void SetPixel(int x, int y, Colour value);
     void Fill(Colour value);
 
     inline Colour* GetData() const { return mData.get(); }
 
-    inline unsigned int GetWidth() const { return mWidth; }
-    inline unsigned int GetHeight() const { return mHeight; }
+    inline int GetWidth() const { return mWidth; }
+    inline int GetHeight() const { return mHeight; }
 
  private:
-    unsigned int mWidth;
-    unsigned int mHeight;
+    int mWidth;
+    int mHeight;
     std::unique_ptr<Colour[]> mData;
 };
