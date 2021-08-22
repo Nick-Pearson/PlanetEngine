@@ -47,6 +47,7 @@ class D3DRenderer : public Renderer
     }
 
     void BindRenderTarget(const RenderTarget& target);
+    void UnbindRenderTarget();
 
     // renders a particular camera
     void Render(const CameraComponent& camera);

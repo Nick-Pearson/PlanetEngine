@@ -106,6 +106,23 @@ void D3DRenderer::BindRenderTarget(const RenderTarget& target)
     P_LOG("Set render size to {}x{}", target.GetWidth(), target.GetHeight());
 }
 
+void D3DRenderer::UnbindRenderTarget()
+{
+    mContext->OMSetRenderTargets(0u, nullptr, nullptr);
+
+    if (render_target_view_)
+    {
+        render_target_view_->Release();
+        render_target_view_ = nullptr;
+    }
+
+    if (depth_stencil_view_)
+    {
+        depth_stencil_view_->Release();
+        depth_stencil_view_ = nullptr;
+    }
+}
+
 void D3DRenderer::Render(const CameraComponent& camera)
 {
     PreRender(camera);
