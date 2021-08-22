@@ -11,6 +11,8 @@ class Primitives
  public:
     static std::shared_ptr<Mesh> SubdivisionSurfacesElipsoid(const Elipsoid& elipsoid, int steps);
 
+    static std::shared_ptr<Mesh> SubdivisionSurfacesHemisphere(const Elipsoid& elipsoid, int steps);
+
     static std::shared_ptr<Mesh> Cube(float scale);
 
     static std::shared_ptr<Mesh> Plane(float scale);

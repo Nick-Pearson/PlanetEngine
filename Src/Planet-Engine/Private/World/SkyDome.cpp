@@ -14,7 +14,7 @@ namespace chr = std::chrono;
 
 SkyDome::SkyDome()
 {
-    auto mesh = Primitives::SubdivisionSurfacesElipsoid(Elipsoid(1.0f), 3);
+    auto mesh = Primitives::SubdivisionSurfacesHemisphere(Elipsoid(1.0f), 3);
     mesh->FlipFaces();
     mesh->Scale(4900.0f);
     auto skyMaterial = std::make_shared<Material>("SkySphere.hlsl");

@@ -30,6 +30,35 @@ std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& el
     return mesh;
 }
 
+std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesHemisphere(const Elipsoid& elipsoid, int steps)
+{
+    const float rootTwoOverThree = std::sqrt(2.0f) / 3.0f;
+    const float negativeOneThird = -1.0f / 3.0f;
+    const float rootSixOverThree = std::sqrt(6.0f) / 3.0f;
+
+    std::vector<Vertex> verts;
+    std::vector<uint16_t> indicies;
+
+    // initialise 4 verts on the elipsoid
+    verts.push_back(Vertex{ Vector{0.0f, 1.0f, 0.0f} });
+    verts.push_back(Vertex{ Vector{0.0f, 0.0f, 2.0f * rootTwoOverThree} });
+    verts.push_back(Vertex{ Vector{-rootSixOverThree, 0.0f, -rootTwoOverThree} });
+    verts.push_back(Vertex{ Vector{rootSixOverThree, 0.0f, -rootTwoOverThree} });
+
+    SubdivisionStep(&verts, &indicies, 0, 2, 1, steps);
+    SubdivisionStep(&verts, &indicies, 0, 3, 2, steps);
+    SubdivisionStep(&verts, &indicies, 0, 1, 3, steps);
+
+    for (Vertex& vert : verts)
+    {
+        vert.normal = vert.positon;
+        vert.positon *= Vector(elipsoid.sizeX, elipsoid.sizeY, elipsoid.sizeZ);
+    }
+
+    std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(verts, indicies);
+    return mesh;
+}
+
 std::shared_ptr<Mesh> Primitives::Cube(float scale)
 {
     Vertex v[] = {
