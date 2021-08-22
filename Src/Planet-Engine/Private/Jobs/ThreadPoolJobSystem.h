@@ -13,7 +13,7 @@ class ThreadPoolJobSystem : public JobSystem
 {
  public:
     explicit ThreadPoolJobSystem(int num_threads);
-    ~ThreadPoolJobSystem();
+    virtual ~ThreadPoolJobSystem();
 
     bool RunJob(const job_fp& job) final;
 

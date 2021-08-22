@@ -26,7 +26,8 @@ ThreadPoolJobSystem::~ThreadPoolJobSystem()
             pool_[i].join();
         }
     }
-    job_queue_.empty();
+    P_LOG("Shutting down job system, {} jobs did not run", job_queue_.size());
+    pool_.clear();
 }
 
 void ThreadPoolJobSystem::Run(int thread_number)
