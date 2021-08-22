@@ -15,6 +15,7 @@
 #include "GPUResourceManager.h"
 #include "D3DWindowEvents.h"
 #include "Compute/ComputeShader.h"
+#include "Material/Material.h"
 #include "D3DAssert.h"
 #include "imgui.h"
 
@@ -53,10 +54,13 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     DxgiGetDebugInterface(__uuidof(IDXGIInfoQueue), mDxgiInfoQueue.GetAddressOf());
 
     InitD3D11Device(window);
-    mRenderer = new D3DRenderer{ mDevice, mSwapChain, mContext };
     mUIRenderer = new ImGUIRenderer{ window, mDevice, mContext };
     mResourceManager = new GPUResourceManager{ mDevice, mContext };
     mWindowEvents = new D3DWindowEvents{ this };
+
+    Material wireframe_material{"WireframeShader.hlsl"};
+    auto wireframe_shader = mResourceManager->LoadMaterial(&wireframe_material);
+    mRenderer = new D3DRenderer{ mDevice, mSwapChain, mContext, wireframe_shader };
     window_render_target_ = new WindowRenderTarget{ mDevice.Get(), mSwapChain.Get() };
     mRenderer->BindRenderTarget(*window_render_target_);
 }
@@ -202,10 +206,9 @@ void D3DRenderSystem::RenderDebugUI()
         ImGui::PlotLines("FPS", &get_fps_time, &frame_times_ms_, frame_times_ms_.Capacity(), 0, nullptr, 0.0f, 120.0f, ImVec2(200, 60));
     }
 
-    if (ImGui::Button("Reload all shaders"))
-    {
-        mResourceManager->ReloadAllShaders();
-    }
+    mResourceManager->RenderDebugUI();
+    mRenderer->RenderDebugUI();
+
     ImGui::End();
 }
 

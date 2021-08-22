@@ -9,6 +9,8 @@
 #include "Texture/Texture2D.h"
 #include "Compute/ComputeShader.h"
 
+#include "imgui.h"
+
 GPUResourceManager::GPUResourceManager(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context) :
     mDevice(device)
 {
@@ -128,6 +130,14 @@ std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeS
         program->AddResource(res);
     }
     return program;
+}
+
+void GPUResourceManager::RenderDebugUI()
+{
+    if (ImGui::Button("Reload all shaders"))
+    {
+        ReloadAllShaders();
+    }
 }
 
 std::shared_ptr<D3DPixelShader> GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)

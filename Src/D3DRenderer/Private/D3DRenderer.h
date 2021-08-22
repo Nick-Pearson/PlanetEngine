@@ -30,7 +30,8 @@ class D3DRenderer : public Renderer
     D3DRenderer(
         wrl::ComPtr<ID3D11Device> mDevice,
         wrl::ComPtr<IDXGISwapChain> mSwapChain,
-        wrl::ComPtr<ID3D11DeviceContext> mContext);
+        wrl::ComPtr<ID3D11DeviceContext> mContext,
+        std::shared_ptr<GPUMaterialHandle> wireframe_shader);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -57,8 +58,10 @@ class D3DRenderer : public Renderer
 
     void UpdateWorldBuffer(const WorldBufferData& data);
 
+    void RenderDebugUI();
+
  protected:
-    void Draw(const CameraComponent& camera, const RenderState& state);
+    void Draw(const CameraComponent& camera, const RenderState& state, bool use_materials);
 
     void PreRender(const CameraComponent& camera);
     void PostRender();
@@ -66,6 +69,9 @@ class D3DRenderer : public Renderer
     void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
+    bool render_solid_ = true;
+    bool render_wireframe_ = false;
+
     // D3D11 Ptrs
     wrl::ComPtr<ID3D11Device> mDevice;
     wrl::ComPtr<IDXGISwapChain> mSwapChain;
@@ -79,9 +85,8 @@ class D3DRenderer : public Renderer
     wrl::ComPtr<ID3D11DepthStencilState> use_depth_stencil_state_;
     wrl::ComPtr<ID3D11DepthStencilState> no_depth_stencil_state_;
 
-    ID3D11RasterizerState* WireFrame;
-    ID3D11RasterizerState* Solid;
-
+    ID3D11RasterizerState* solid_state_ = nullptr;
+    ID3D11RasterizerState* wire_frame_state_ = nullptr;
     // standard vertex shader, later will be specified based on which vertex attributes a mesh has
     std::shared_ptr<D3DVertexShader> vertexShader;
 
@@ -125,4 +130,6 @@ class D3DRenderer : public Renderer
     unsigned int used_texture_slots_ = 0;
 
     float aspect_ratio_ = 1.0f;
+
+    std::shared_ptr<GPUMaterialHandle> wireframe_shader_;
 };

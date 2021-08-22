@@ -42,11 +42,14 @@ class GPUResourceManager
     GPUMeshHandle* LoadMesh(const Mesh* mesh);
 
     std::shared_ptr<GPUMaterialHandle> LoadMaterial(const Material* material);
-    void ReloadAllShaders();
 
     std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
 
+    void RenderDebugUI();
+
  private:
+    void ReloadAllShaders();
+    
     std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
 
     void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, unsigned int miscflags, ID3D11Buffer** outBuffer);

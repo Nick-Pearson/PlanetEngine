@@ -13,12 +13,14 @@
 #include "Mesh/Mesh.h"
 #include "World/CameraComponent.h"
 #include "Math/Transform.h"
+#include "imgui.h"
 
 D3DRenderer::D3DRenderer(
     wrl::ComPtr<ID3D11Device> device,
     wrl::ComPtr<IDXGISwapChain> swapChain,
-    wrl::ComPtr<ID3D11DeviceContext> context) :
-    mDevice(device), mSwapChain(swapChain), mContext(context)
+    wrl::ComPtr<ID3D11DeviceContext> context,
+    std::shared_ptr<GPUMaterialHandle> wireframe_shader) :
+    mDevice(device), mSwapChain(swapChain), mContext(context), wireframe_shader_(wireframe_shader)
 {
     // apply depth buffer
     D3D11_DEPTH_STENCIL_DESC dsDesc = {};
@@ -74,6 +76,16 @@ D3DRenderer::D3DRenderer(
         d3dAssert(mDevice->CreateBlendState(&blendDesc, &mNoAlphaBlendState));
     }
     mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
+
+    D3D11_RASTERIZER_DESC state_desc = {};
+    state_desc.FillMode = D3D11_FILL_SOLID;
+    state_desc.CullMode = D3D11_CULL_BACK;
+    state_desc.DepthClipEnable = true;
+    d3dAssert(mDevice->CreateRasterizerState(&state_desc, &solid_state_));
+    state_desc.CullMode = D3D11_CULL_NONE;
+    state_desc.FillMode = D3D11_FILL_WIREFRAME;
+    state_desc.DepthClipEnable = false;
+    d3dAssert(mDevice->CreateRasterizerState(&state_desc, &wire_frame_state_));
 }
 
 D3DRenderer::~D3DRenderer()
@@ -134,10 +146,30 @@ void D3DRenderer::Render(const CameraComponent& camera)
         if (!a.UseDepthBuffer && b.UseDepthBuffer) return true;
         return false;
     }, &sortedStates);
-    // draw each state
-    for (const RenderState& state : sortedStates)
+
+    if (render_solid_)
     {
-        Draw(camera, state);
+        mContext->RSSetState(solid_state_);
+        // draw each state
+        for (const RenderState& state : sortedStates)
+        {
+            Draw(camera, state, true);
+        }
+    }
+
+    if (render_wireframe_)
+    {
+        mContext->RSSetState(wire_frame_state_);
+
+        currentRenderState.material = wireframe_shader_;
+        wireframe_shader_->shader->Use(mContext.Get());
+        mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
+
+        // draw each state
+        for (const RenderState& state : sortedStates)
+        {
+            Draw(camera, state, false);
+        }
     }
 
     PostRender();
@@ -191,7 +223,13 @@ void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
     UpdateBuffer(mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
 }
 
-void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)
+void D3DRenderer::RenderDebugUI()
+{
+    ImGui::Checkbox("Draw Solid", &render_solid_);
+    ImGui::Checkbox("Draw Wireframe", &render_wireframe_);
+}
+
+void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, bool use_materials)
 {
     if (!state.IsValid()) return;
 
@@ -234,7 +272,7 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state)
         mContext->IASetIndexBuffer(state.mesh->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
     }
 
-    if (currentRenderState.material != state.material)
+    if (use_materials && currentRenderState.material != state.material)
     {
         state.material->shader->Use(mContext.Get());
         unsigned int num_textures = state.material->textures.size();
