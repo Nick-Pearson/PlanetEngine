@@ -23,6 +23,7 @@
 #include "Texture/TextureFactory.h"
 #include "Texture/TextureWriter.h"
 #include "Compute/ComputeShader.h"
+#include "Jobs/ThreadPoolJobSystem.h"
 
 namespace
 {
@@ -33,7 +34,8 @@ PlanetEngine::PlanetEngine(RenderSystem* renderSystem)
 {
     assert(sEngine == nullptr);
     sEngine = this;
-    mRenderSystem = renderSystem;
+    PlanetLogging::init_logging();
+    render_system_ = renderSystem;
 }
 
 PlanetEngine::~PlanetEngine()
@@ -52,11 +54,12 @@ namespace chr = std::chrono;
 
 void PlanetEngine::Run()
 {
-    inputManager = new InputManager{};
-    RegisterMessageHandler(inputManager);
+    input_manager_ = new InputManager{};
+    RegisterMessageHandler(input_manager_);
     ImGuiInput* imguiInput = new ImGuiInput{};
     RegisterMessageHandler(imguiInput);
-    mRenderSystem->Load(this);
+    render_system_->Load(this);
+    job_system_ = new ThreadPoolJobSystem{2};
 
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
 
@@ -92,8 +95,8 @@ void PlanetEngine::Run()
 
     const CameraComponent& cameraComp = cameraEntity->GetCamera();
 
-    ExitCode = -1;
-    while (ExitCode == -1)
+    exit_code_ = -1;
+    while (exit_code_ == -1)
     {
 #if PLATFORM_WIN
         PumpWindowsMessages();
@@ -102,34 +105,48 @@ void PlanetEngine::Run()
 
         scene->Update(deltaTime);
 
-        mRenderSystem->ApplyQueue(render_queue_.GetItems());
+        render_system_->ApplyQueue(render_queue_.GetItems());
         render_queue_.ClearQueue();
-        mRenderSystem->RenderFrame(cameraComp);
+        render_system_->RenderFrame(cameraComp);
 
-        if (inputManager->GetIsKeyDown(KeyCode::P))
+        if (input_manager_->GetIsKeyDown(KeyCode::P))
         {
-            chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
-
-            Texture2D texture{3840, 2160};
-            mRenderSystem->RenderToTexture(&texture, cameraComp);
-            Platform::CreateDirectoryIfNotExists("screenshots");
-            TextureWriter::writeToFile("screenshots/screenshot.png", texture);
-
-            auto time = chr::high_resolution_clock::now() - start;
-            P_LOG("Captured {}x{} screnshot in {}ms", texture.GetWidth(), texture.GetHeight(), time/chr::milliseconds(1));
+            SaveScreenshot(cameraComp);
         }
 
-        inputManager->EndOfFrame();
+        input_manager_->EndOfFrame();
 
         auto end = std::chrono::high_resolution_clock::now();
         deltaTime = std::chrono::duration_cast<std::chrono::duration<float>>(end - begin).count();
         begin = end;
     }
 
-    mRenderSystem->UnLoad(this);
-    UnregisterMessageHandler(inputManager);
+    render_system_->UnLoad(this);
+    UnregisterMessageHandler(input_manager_);
     delete imguiInput;
-    delete inputManager;
+    delete input_manager_;
+    delete job_system_;
+}
+
+void PlanetEngine::SaveScreenshot(const CameraComponent& camera)
+{
+    chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
+
+    Texture2D* texture = new Texture2D{3840, 2160};
+    render_system_->RenderToTexture(texture, camera);
+
+    bool added = job_system_->RunJob([=]() {
+        Platform::CreateDirectoryIfNotExists("screenshots");
+        TextureWriter::writeToFile("screenshots/screenshot.png", *texture);
+        auto time = chr::high_resolution_clock::now() - start;
+        P_LOG("Captured {}x{} screnshot in {}ms", texture->GetWidth(), texture->GetHeight(), time/chr::milliseconds(1));
+    });
+
+    if (!added)
+    {
+        delete texture;
+        P_WARN("Failed to add screenshot job to job system");
+    }
 }
 
 #if PLATFORM_WIN
@@ -150,14 +167,14 @@ LRESULT CALLBACK PlanetEngine::ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM 
     switch (msg)
     {
     case WM_CLOSE:
-        ExitCode = 0;
+        exit_code_ = 0;
         return 0;
     case WM_QUIT:
-        ExitCode = wParam;
+        exit_code_ = wParam;
         break;
     }
 
-    for (IWindowsMessageHandler* handler : messageHandlers)
+    for (IWindowsMessageHandler* handler : message_handlers_)
     {
         if (handler->HandleMessage(hWnd, msg, wParam, lParam))
             return true;
@@ -168,19 +185,19 @@ LRESULT CALLBACK PlanetEngine::ProcessWindowMessage(HWND hWnd, UINT msg, WPARAM 
 
 void PlanetEngine::RegisterMessageHandler(IWindowsMessageHandler* Handler)
 {
-    messageHandlers.push_back(Handler);
+    message_handlers_.push_back(Handler);
 }
 
 void PlanetEngine::UnregisterMessageHandler(IWindowsMessageHandler* Handler)
 {
-    auto it = messageHandlers.begin();
-    for (; it != messageHandlers.end(); it++)
+    auto it = message_handlers_.begin();
+    for (; it != message_handlers_.end(); it++)
     {
         if ((*it) == Handler) break;
     }
 
-    if (it != messageHandlers.end())
-        messageHandlers.erase(it);
+    if (it != message_handlers_.end())
+        message_handlers_.erase(it);
 }
 
 #endif

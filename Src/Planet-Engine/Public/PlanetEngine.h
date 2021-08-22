@@ -5,6 +5,7 @@
 #include "Platform/Platform.h"
 #include "Render/RenderSystem.h"
 #include "Render/RenderQueue.h"
+#include "Jobs/JobSystem.h"
 
 class InputManager;
 class RenderManager;
@@ -19,12 +20,13 @@ class PlanetEngine
 
     void Run();
 
-    inline int GetExitCode() const { return ExitCode; }
+    inline int GetExitCode() const { return exit_code_; }
 
     inline RenderQueue* GetRenderQueue() { return &render_queue_; }
-    inline Renderer* GetRenderer() { return mRenderSystem->GetRenderer(); }
-    inline RenderSystem* GetRenderSystem() { return mRenderSystem; }
-    inline InputManager* GetInputManager() const { return inputManager; }
+    inline Renderer* GetRenderer() const { return render_system_->GetRenderer(); }
+    inline RenderSystem* GetRenderSystem() const { return render_system_; }
+    inline InputManager* GetInputManager() const { return input_manager_; }
+    inline JobSystem* GetJobSystem() const { return job_system_; }
 
 #if PLATFORM_WIN
     void PumpWindowsMessages();
@@ -34,13 +36,16 @@ class PlanetEngine
     void RegisterMessageHandler(IWindowsMessageHandler* Handler);
     void UnregisterMessageHandler(IWindowsMessageHandler* Handler);
  private:
-    std::vector<IWindowsMessageHandler*> messageHandlers;
+    std::vector<IWindowsMessageHandler*> message_handlers_;
 #endif
 
  private:
-    int ExitCode;
+    void SaveScreenshot(const CameraComponent& camera);
+
+    int exit_code_;
 
     RenderQueue render_queue_;
-    RenderSystem* mRenderSystem;
-    InputManager* inputManager;
+    RenderSystem* render_system_;
+    InputManager* input_manager_;
+    JobSystem* job_system_;
 };

@@ -81,6 +81,7 @@
         "variant": "cpp",
         "*.rh": "cpp",
         "bit": "cpp",
-        "stop_token": "cpp"
+        "stop_token": "cpp",
+        "queue": "cpp"
     }
 }

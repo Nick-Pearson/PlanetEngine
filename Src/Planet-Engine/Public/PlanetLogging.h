@@ -2,6 +2,11 @@
 
 #include "spdlog/spdlog.h"
 
+namespace PlanetLogging
+{
+    extern void init_logging();
+}
+
 #define SPDLOG_ACTIVE_LEVEL SPDLOG_LEVEL_INFO
 
 #define P_TRACE(...) SPDLOG_TRACE(##__VA_ARGS__);
