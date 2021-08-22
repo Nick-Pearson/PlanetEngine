@@ -49,7 +49,7 @@ class GPUResourceManager
 
  private:
     void ReloadAllShaders();
-    
+
     std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
 
     void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, unsigned int miscflags, ID3D11Buffer** outBuffer);
