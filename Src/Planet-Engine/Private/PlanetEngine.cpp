@@ -9,6 +9,7 @@
 #include "Mesh/Mesh.h"
 
 #include "Mesh/OBJImporter.h"
+#include "Mesh/FBXImporter.h"
 #include "Mesh/Primitives.h"
 #include "Entity/Entity.h"
 #include "World/Scene.h"
@@ -62,6 +63,8 @@ void PlanetEngine::Run()
     job_system_ = new ThreadPoolJobSystem{2};
 
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
+    std::shared_ptr<Mesh> tree = FBXImporter::Import("Assets/Models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
+    tree->RecalculateNormals();
 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
@@ -76,7 +79,7 @@ void PlanetEngine::Run()
     cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
 
     std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
-    bunnyEntity->AddComponent<MeshComponent>(bunny, standardMaterial);
+    bunnyEntity->AddComponent<MeshComponent>(tree, standardMaterial);
     bunnyEntity->Translate(Vector{ 0.0f, 0.6f, 5.0f });
 
     std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
