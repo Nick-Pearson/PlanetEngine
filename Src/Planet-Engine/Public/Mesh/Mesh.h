@@ -18,10 +18,8 @@ struct Vertex
 
 class Mesh
 {
-    friend class GPUResourceManager;
-
  public:
-    Mesh(const Vertex* verticies, size_t vertexCount, const uint16_t* triangles, size_t trangleCount);
+    Mesh(const Vertex* verticies, size_t vertex_count, const uint16_t* triangles, size_t trangle_count);
     Mesh(const std::vector<Vertex>& verticies, const std::vector<uint16_t>& triangles);
 
     void RecalculateNormals();
@@ -30,7 +28,13 @@ class Mesh
     void Scale(const float& scaleFactor);
     void Scale(const Vector& scaleFactor);
 
+    inline const Vertex* GetVertexData() const { return verticies_.data(); }
+    inline size_t GetVertexCount() const { return verticies_.size(); }
+
+    inline const uint16_t* GetTriangleData() const { return triangles_.data(); }
+    inline size_t GetTriangleCount() const { return triangles_.size(); }
+
  private:
-    std::vector<Vertex> mVerticies;
-    std::vector<uint16_t> mTriangles;
+    std::vector<Vertex> verticies_;
+    std::vector<uint16_t> triangles_;
 };

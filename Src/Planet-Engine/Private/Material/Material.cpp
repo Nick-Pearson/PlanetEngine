@@ -2,12 +2,12 @@
 
 #include <memory>
 
-Material::Material(const char* shaderName) :
-    mShaderPath(shaderName)
+Material::Material(const char* shader_name) :
+    shader_path_(shader_name)
 {
 }
 
 void Material::AddTexture(std::shared_ptr<Texture> texture)
 {
-    mTextures.push_back(texture);
+    textures_.push_back(texture);
 }

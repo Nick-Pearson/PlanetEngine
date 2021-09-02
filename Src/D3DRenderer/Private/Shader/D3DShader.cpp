@@ -19,8 +19,8 @@ void D3DVertexShader::Use(ID3D11DeviceContext* context)
 }
 
 
-D3DPixelShader::D3DPixelShader(ID3DBlob* blob, ID3D11PixelShader* handle) :
-    blob_(blob), handle_(handle)
+D3DPixelShader::D3DPixelShader(const char* path, ID3DBlob* blob, ID3D11PixelShader* handle) :
+    path_(path), blob_(blob), handle_(handle)
 {
 }
 

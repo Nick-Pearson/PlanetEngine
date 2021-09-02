@@ -29,17 +29,17 @@ GPUMeshHandle* GPUResourceManager::LoadMesh(const Mesh* mesh)
     if (!mesh) return nullptr;
 
     GPUMeshHandle entry;
-    entry.numTriangles = mesh->mTriangles.size();
+    entry.numTriangles = mesh->GetTriangleCount();
 
     // load the buffers
-    CreateBuffer((const void*)mesh->mVerticies.data(),
-        mesh->mVerticies.size(),
+    CreateBuffer((const void*)mesh->GetVertexData(),
+        mesh->GetVertexCount(),
         sizeof(Vertex),
         D3D11_BIND_VERTEX_BUFFER,
         0u,
         entry.vertexBuffer.GetAddressOf());
-    CreateBuffer((const void*)mesh->mTriangles.data(),
-        mesh->mTriangles.size(),
+    CreateBuffer((const void*)mesh->GetTriangleData(),
+        mesh->GetTriangleCount(),
         sizeof(uint16_t),
         D3D11_BIND_INDEX_BUFFER,
         0u,
@@ -50,13 +50,6 @@ GPUMeshHandle* GPUResourceManager::LoadMesh(const Mesh* mesh)
 
 std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Material* material)
 {
-    auto existing = mLoadedMaterials.find(material->GetShaderPath());
-    if (existing != mLoadedMaterials.end())
-    {
-        P_LOG("Reusing existing loaded material for {}", material->GetShaderPath());
-        return existing->second;
-    }
-
     auto loaded_shader = LoadShader(material->GetShaderPath(), false);
 
     std::shared_ptr<GPUMaterialHandle> entry = std::make_shared<GPUMaterialHandle>();
@@ -78,16 +71,16 @@ std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Materi
         }
     }
 
-    mLoadedMaterials.emplace(material->GetShaderPath(), entry);
+    loaded_materials_.push_back(entry);
     return entry;
 }
 
 void GPUResourceManager::ReloadAllShaders()
 {
     P_LOG("Reloading all shaders");
-    for (auto i : mLoadedMaterials)
+    for (auto& i : loaded_materials_)
     {
-        i.second->shader = LoadShader(i.first, true);
+        i->shader = LoadShader(i->shader->GetPath(), true);
     }
 }
 

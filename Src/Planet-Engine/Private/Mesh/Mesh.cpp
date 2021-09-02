@@ -4,44 +4,44 @@
 
 Mesh::Mesh(const Vertex* verticies, size_t vertexCount, const uint16_t* triangles, size_t trangleCount)
 {
-    mVerticies.assign(verticies, verticies + vertexCount);
-    mTriangles.assign(triangles, triangles + trangleCount);
+    verticies_.assign(verticies, verticies + vertexCount);
+    triangles_.assign(triangles, triangles + trangleCount);
 }
 
 Mesh::Mesh(const std::vector<Vertex>& verticies, const std::vector<uint16_t>& triangles)
 {
-    mVerticies = verticies;
-    mTriangles = triangles;
+    verticies_ = verticies;
+    triangles_ = triangles;
 }
 
 void Mesh::RecalculateNormals()
 {
     // reset all normals
-    for (Vertex& vert : mVerticies)
+    for (Vertex& vert : verticies_)
     {
         vert.normal = Vector{ 0.0f, 0.0f, 0.0f };
     }
 
-    int numTris = mTriangles.size() / 3;
+    int numTris = triangles_.size() / 3;
     for (int i = 0; i < numTris; ++i)
     {
-        const int v1 = mTriangles[i * 3];
-        const int v2 = mTriangles[(i * 3) + 1];
-        const int v3 = mTriangles[(i * 3) + 2];
+        const int v1 = triangles_[i * 3];
+        const int v2 = triangles_[(i * 3) + 1];
+        const int v3 = triangles_[(i * 3) + 2];
 
-        Vector side1 = mVerticies[v2].positon - mVerticies[v1].positon;
-        Vector side2 = mVerticies[v3].positon - mVerticies[v1].positon;
+        Vector side1 = verticies_[v2].positon - verticies_[v1].positon;
+        Vector side2 = verticies_[v3].positon - verticies_[v1].positon;
 
         Vector cross = side2.Cross(side1);
         cross.Normalise();
 
-        mVerticies[v1].normal += cross;
-        mVerticies[v2].normal += cross;
-        mVerticies[v3].normal += cross;
+        verticies_[v1].normal += cross;
+        verticies_[v2].normal += cross;
+        verticies_[v3].normal += cross;
     }
 
     // average all normals
-    for (Vertex& vert : mVerticies)
+    for (Vertex& vert : verticies_)
     {
         vert.normal /= vert.normal.Length();
     }
@@ -49,14 +49,14 @@ void Mesh::RecalculateNormals()
 
 void Mesh::FlipFaces()
 {
-    for (size_t i = 0; i < mTriangles.size(); i += 3)
+    for (size_t i = 0; i < triangles_.size(); i += 3)
     {
-        uint16_t tmp = mTriangles[i];
-        mTriangles[i] = mTriangles[i + 1];
-        mTriangles[i + 1] = tmp;
+        uint16_t tmp = triangles_[i];
+        triangles_[i] = triangles_[i + 1];
+        triangles_[i + 1] = tmp;
     }
 
-    for (Vertex& v : mVerticies)
+    for (Vertex& v : verticies_)
     {
         v.normal *= -1.0f;
     }
@@ -64,7 +64,7 @@ void Mesh::FlipFaces()
 
 void Mesh::Scale(const float& scaleFactor)
 {
-    for (Vertex& v : mVerticies)
+    for (Vertex& v : verticies_)
     {
         v.positon *= scaleFactor;
     }
@@ -72,7 +72,7 @@ void Mesh::Scale(const float& scaleFactor)
 
 void Mesh::Scale(const Vector& scaleFactor)
 {
-    for (Vertex& v : mVerticies)
+    for (Vertex& v : verticies_)
     {
         v.positon *= scaleFactor;
     }

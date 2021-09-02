@@ -55,7 +55,7 @@ class GPUResourceManager
     void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, unsigned int miscflags, ID3D11Buffer** outBuffer);
 
     LinkedList <GPUMeshHandle> mLoadedMeshes;
-    std::unordered_map<std::string, std::shared_ptr<GPUMaterialHandle>> mLoadedMaterials;
+    std::vector<std::shared_ptr<GPUMaterialHandle>> loaded_materials_;
 
     std::unordered_map<std::string, std::shared_ptr<D3DPixelShader>> loadedShaders;
 

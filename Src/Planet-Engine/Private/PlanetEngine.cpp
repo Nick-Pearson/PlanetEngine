@@ -64,23 +64,29 @@ void PlanetEngine::Run()
 
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
     std::shared_ptr<Mesh> tree = FBXImporter::Import("Assets/Models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
-    tree->RecalculateNormals();
 
     std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
     std::shared_ptr<Material> standardMaterial = std::make_shared<Material>("PixelShader.hlsl");
+    std::shared_ptr<Material> treeMaterial = std::make_shared<Material>("TexturedShader.hlsl");
     std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
 
-    std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
+    std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/test_card.png");
     texturedMaterial->AddTexture(texture);
+
+    std::shared_ptr<Texture2D> treeAlbedo = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Albedo.jpg");
+    std::shared_ptr<Texture2D> treeNormal = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Normal_LOD0.jpg");
+    treeMaterial->AddTexture(treeAlbedo);
+    treeMaterial->AddTexture(treeNormal);
 
     std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
     cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
 
-    std::shared_ptr<Entity> bunnyEntity = scene->SpawnEntity("bunny");
-    bunnyEntity->AddComponent<MeshComponent>(tree, standardMaterial);
-    bunnyEntity->Translate(Vector{ 0.0f, 0.6f, 5.0f });
+    std::shared_ptr<Entity> treeEntity = scene->SpawnEntity("tree");
+    treeEntity->AddComponent<MeshComponent>(tree, treeMaterial);
+    treeEntity->Translate(Vector{ 15.0f, 0.0f, 50.0f });
+    treeEntity->Rotate(Vector{ 0.0f, 0.0f, 90.0f });
 
     std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
     floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });

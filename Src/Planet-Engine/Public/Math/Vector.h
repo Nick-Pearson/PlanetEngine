@@ -138,6 +138,11 @@ struct Vector
             z == other.z;
     }
 
+    bool operator!=(const Vector& other) const
+    {
+        return !(*this == other);
+    }
+    
  public:
     DirectX::XMVECTOR ToVectorReg() const
     {

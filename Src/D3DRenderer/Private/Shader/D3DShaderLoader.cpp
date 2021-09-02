@@ -48,7 +48,7 @@ std::shared_ptr<D3DPixelShader> D3DShaderLoader::LoadPixel(const char* filepath)
     }
     ID3D11PixelShader* handle;
     d3dAssert(device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
-    return std::make_shared<D3DPixelShader>(blob, handle);
+    return std::make_shared<D3DPixelShader>(filepath, blob, handle);
 }
 
 std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const ComputeShader& shader)

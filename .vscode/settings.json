@@ -82,6 +82,7 @@
         "*.rh": "cpp",
         "bit": "cpp",
         "stop_token": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "filesystem": "cpp"
     }
 }

@@ -26,11 +26,12 @@ target_link_libraries(d3d-renderer D3DCompiler.lib d3d11.lib dxguid.lib)
 file(GLOB_RECURSE TEST_SOURCES "Src/Planet-Engine/Test/*.cpp")
 add_executable(planet-test ${TEST_SOURCES})
 target_include_directories(planet-test PRIVATE "Src/Planet-Engine/Private")
+target_include_directories(planet-test PRIVATE "Src/Planet-Engine/Test")
 target_link_libraries(planet-test ${CONAN_LIBS})
 target_link_libraries(planet-test planet-engine)
 enable_testing()
 add_test(NAME planet-test
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND planet-test)
 
 add_executable(planet-game WIN32 "Src/Planet-Game/Main.cpp")

@@ -28,7 +28,7 @@ VS_Out main(float3 pos : Position, float3 norm : Normal, float2 texCoord : TexCo
 	float4 translatedPos = mul(float4(pos, 1.0f), model);
 	res.normal = normalize(mul(norm, (float3x3)model));
 	res.worldPos = float3(translatedPos.x, translatedPos.y, translatedPos.z);
-	res.texCoord = texCoord;
+	res.texCoord = float2(texCoord.x, texCoord.y);
 
 	return res;
 }
