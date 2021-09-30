@@ -34,7 +34,15 @@ add_test(NAME planet-test
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMAND planet-test)
 
-add_executable(planet-game WIN32 "Src/Planet-Game/Main.cpp")
+file(GLOB_RECURSE GAME_SOURCES "Src/Planet-Game/Private/*.cpp")
+add_executable(planet-game WIN32 ${GAME_SOURCES})
 target_link_libraries(planet-game d3d-renderer)
 target_link_libraries(planet-game planet-engine)
 target_link_libraries(planet-game shcore.lib)
+
+file(GLOB_RECURSE EDITOR_SOURCES "Src/Planet-Editor/Private/*.cpp")
+add_executable(planet-editor WIN32 ${EDITOR_SOURCES})
+target_link_libraries(planet-editor ${CONAN_LIBS})
+target_link_libraries(planet-editor d3d-renderer)
+target_link_libraries(planet-editor planet-engine)
+target_link_libraries(planet-editor shcore.lib)

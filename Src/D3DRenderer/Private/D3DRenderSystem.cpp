@@ -77,6 +77,7 @@ D3DRenderSystem::~D3DRenderSystem()
 void D3DRenderSystem::Load(class PlanetEngine* engine)
 {
     engine->RegisterMessageHandler(mWindowEvents);
+    mUIRenderer->NewFrame();
 }
 
 void D3DRenderSystem::UnLoad(class PlanetEngine* engine)

@@ -31,12 +31,16 @@ namespace
     PlanetEngine* sEngine;
 }  // namespace
 
-PlanetEngine::PlanetEngine(RenderSystem* renderSystem)
+PlanetEngine::PlanetEngine(RenderSystem* render_system) :
+    scene_(new Scene{}),
+    render_system_(render_system),
+    input_manager_(new InputManager{}),
+    job_system_(new ThreadPoolJobSystem{2})
 {
     assert(sEngine == nullptr);
     sEngine = this;
+
     PlanetLogging::init_logging();
-    render_system_ = renderSystem;
 }
 
 PlanetEngine::~PlanetEngine()
@@ -55,49 +59,45 @@ namespace chr = std::chrono;
 
 void PlanetEngine::Run()
 {
-    input_manager_ = new InputManager{};
     RegisterMessageHandler(input_manager_);
     ImGuiInput* imguiInput = new ImGuiInput{};
     RegisterMessageHandler(imguiInput);
     render_system_->Load(this);
-    job_system_ = new ThreadPoolJobSystem{2};
 
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
     std::shared_ptr<Mesh> tree = FBXImporter::Import("Assets/Models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
-
-    std::shared_ptr<Scene> scene = std::make_shared<Scene>();
 
     std::shared_ptr<Material> standardMaterial = std::make_shared<Material>("PixelShader.hlsl");
     std::shared_ptr<Material> treeMaterial = std::make_shared<Material>("TexturedShader.hlsl");
     std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
 
-    std::shared_ptr<Texture2D> texture = TextureFactory::fromFile("Assets/Textures/test_card.png");
-    texturedMaterial->AddTexture(texture);
+    std::shared_ptr<Texture2D> brickAlbedo = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
+    texturedMaterial->AddTexture(brickAlbedo);
 
-    std::shared_ptr<Texture2D> treeAlbedo = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Albedo.jpg");
-    std::shared_ptr<Texture2D> treeNormal = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Normal_LOD0.jpg");
-    treeMaterial->AddTexture(treeAlbedo);
-    treeMaterial->AddTexture(treeNormal);
+    // std::shared_ptr<Texture2D> treeAlbedo = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Albedo.jpg");
+    // std::shared_ptr<Texture2D> treeNormal = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Normal_LOD0.jpg");
+    // treeMaterial->AddTexture(treeAlbedo);
+    // treeMaterial->AddTexture(treeNormal);
 
-    std::shared_ptr<FlyCam> cameraEntity = scene->SpawnEntity<FlyCam>("camera");
+    std::shared_ptr<FlyCam> cameraEntity = scene_->SpawnEntity<FlyCam>("camera");
     cameraEntity->Translate(Vector{ 0.0f, 4.0f, 10.0f });
     cameraEntity->Rotate(Vector{ 0.0f, 180.0f, 0.0f });
 
-    std::shared_ptr<Entity> treeEntity = scene->SpawnEntity("tree");
-    treeEntity->AddComponent<MeshComponent>(tree, treeMaterial);
-    treeEntity->Translate(Vector{ 15.0f, 0.0f, 50.0f });
-    treeEntity->Rotate(Vector{ 0.0f, 0.0f, 90.0f });
+    // std::shared_ptr<Entity> treeEntity = scene_->SpawnEntity("tree");
+    // treeEntity->AddComponent<MeshComponent>(tree, treeMaterial);
+    // treeEntity->Translate(Vector{ 15.0f, 0.0f, 50.0f });
+    // treeEntity->Rotate(Vector{ 0.0f, 0.0f, 90.0f });
 
-    std::shared_ptr<Entity> floorEntity = scene->SpawnEntity("floor");
+    std::shared_ptr<Entity> floorEntity = scene_->SpawnEntity("floor");
     floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
     floorEntity->AddComponent<MeshComponent>(Primitives::Plane(100000.0f), standardMaterial);
 
-    std::shared_ptr<Entity> planeEntity = scene->SpawnEntity("wall");
+    std::shared_ptr<Entity> planeEntity = scene_->SpawnEntity("wall");
     planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
     planeEntity->Translate(Vector{ -4.0f, -2.0f, -2.0f });
     planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
 
-    scene->SpawnEntity<SkyDome>("sky");
+    scene_->SpawnEntity<SkyDome>("sky");
 
     float deltaTime = 0.01f;
     auto begin = std::chrono::high_resolution_clock::now();
@@ -112,7 +112,8 @@ void PlanetEngine::Run()
 #endif
         // ProcessInput();
 
-        scene->Update(deltaTime);
+        scene_->Update(deltaTime);
+        game_update_.Trigger(deltaTime);
 
         render_system_->ApplyQueue(render_queue_.GetItems());
         render_queue_.ClearQueue();

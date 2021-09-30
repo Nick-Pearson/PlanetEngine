@@ -57,7 +57,7 @@ void ThreadPoolJobSystem::Run(int thread_number)
     P_LOG("Stopping pool thread {}", thread_number);
 }
 
-bool ThreadPoolJobSystem::RunJob(const std::function<void()>& job)
+bool ThreadPoolJobSystem::RunJob(const job_fp& job)
 {
     std::unique_lock<std::mutex> lock(lock_);
     job_queue_.push(job);

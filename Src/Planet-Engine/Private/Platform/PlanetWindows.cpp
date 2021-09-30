@@ -81,3 +81,100 @@ void Platform::CreateDirectoryIfNotExists(const char* directory)
     auto error = GetLastError();
     P_ASSERT(error == ERROR_ALREADY_EXISTS || error == 0, "Failed to create directory {} due to {}", directory, error);
 }
+
+namespace Wait
+{
+struct ActiveWait
+{
+    std::string directory_;
+    std::function<void()> change_func_;
+};
+std::vector<ActiveWait*> active_waits_;
+
+ActiveWait* CreateWait(const char* directory, const std::function<void()>& change_func)
+{
+    ActiveWait* wait = new ActiveWait{};
+    wait->directory_ = directory;
+    wait-> change_func_ = change_func;
+
+    active_waits_.push_back(wait);
+    return wait;
+}
+
+void RegisterChangeCallback(ActiveWait* wait);
+
+void CALLBACK DirectoryChangeCallback(PVOID lpParameter, BOOLEAN TimerOrWaitFired)
+{
+    ActiveWait* wait = reinterpret_cast<ActiveWait*>(lpParameter);
+    wait->change_func_();
+    // after each trigger the change callback must be reregistered
+    RegisterChangeCallback(wait);
+}
+
+void RegisterChangeCallback(ActiveWait* wait)
+{
+    auto flags = FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE;
+    HANDLE h = FindFirstChangeNotificationA(wait->directory_.c_str(), true, flags);
+    P_ASSERT(h != nullptr, "Failed to register change notification on {}", wait->directory_);
+    HANDLE ph;
+    bool result = RegisterWaitForSingleObject(&ph, h, &Wait::DirectoryChangeCallback, wait, INFINITE, WT_EXECUTEONLYONCE);
+    P_ASSERT(result, "Failed to wait for change notification on {}", wait->directory_);
+}
+
+}  // namespace Wait
+
+void Platform::AddDirectoryChangeListener(const char* directory, const std::function<void()>& change_func)
+{
+    Wait::ActiveWait* wait = Wait::CreateWait(directory, change_func);
+    Wait::RegisterChangeCallback(wait);
+}
+
+std::vector<std::string> Platform::ListFiles(const char* directory)
+{
+    std::vector<std::string> files;
+
+    char search[MAX_PATH];
+    std::snprintf(search, MAX_PATH * sizeof(char), "%s\\*", directory);
+
+    WIN32_FIND_DATA ffd;
+    HANDLE find_result = FindFirstFile(search, &ffd);
+    do
+    {
+        const bool is_dir = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        if (!is_dir)
+        {
+            char full_path[MAX_PATH];
+            std::snprintf(full_path, MAX_PATH * sizeof(char), "%s\\%s", directory, ffd.cFileName);
+            files.push_back(std::string{full_path});
+        }
+    }
+    while (FindNextFile(find_result, &ffd) != 0);
+
+    FindClose(find_result);
+    return files;
+}
+
+std::vector<std::string> Platform::ListDirectories(const char* directory)
+{
+    std::vector<std::string> files;
+
+    char search[MAX_PATH];
+    std::snprintf(search, MAX_PATH * sizeof(char), "%s\\*", directory);
+
+    WIN32_FIND_DATA ffd;
+    HANDLE find_result = FindFirstFile(search, &ffd);
+    do
+    {
+        const bool is_dir = ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        if (is_dir && ffd.cFileName[0] != '.')
+        {
+            char full_path[MAX_PATH];
+            std::snprintf(full_path, MAX_PATH * sizeof(char), "%s\\%s", directory, ffd.cFileName);
+            files.push_back(std::string{full_path});
+        }
+    }
+    while (FindNextFile(find_result, &ffd) != 0);
+
+    FindClose(find_result);
+    return files;
+}

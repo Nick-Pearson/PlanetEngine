@@ -13,7 +13,6 @@ ImGUIRenderer::ImGUIRenderer(HWND window, Microsoft::WRL::ComPtr<ID3D11Device> d
 
     ImGui_ImplWin32_Init(window);
     ImGui_ImplDX11_Init(device.Get(), context.Get());
-    NewFrame();
 }
 
 ImGUIRenderer::~ImGUIRenderer()
