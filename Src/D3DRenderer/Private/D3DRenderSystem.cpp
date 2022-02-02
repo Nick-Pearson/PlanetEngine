@@ -138,9 +138,9 @@ void D3DRenderSystem::InvokeCompute(const ComputeShader& shader)
 
 void D3DRenderSystem::UpdateWindowSize()
 {
-    // mRenderer->UnbindRenderTarget();
-    // window_render_target_->UpdateWindowSize(mDevice.Get());
-    // mRenderer->BindRenderTarget(*window_render_target_);
+    renderer_->UnbindRenderTarget();
+    window_render_target_->UpdateWindowSize(device_);
+    renderer_->BindRenderTarget(window_render_target_);
 }
 
 #if defined(DX_DEBUG)

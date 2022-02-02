@@ -11,5 +11,5 @@ class D3DWindowEvents : public IWindowsMessageHandler
     bool HandleMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) override;
 
  private:
-    D3DRenderSystem* mRenderer;
+    D3DRenderSystem* renderer_;
 };

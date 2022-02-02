@@ -59,6 +59,16 @@ void WindowRenderTarget::Present()
 
 void WindowRenderTarget::UpdateWindowSize(ID3D12Device* device)
 {
+    for (int i = 0; i < NUM_BUFFERS; ++i)
+    {
+        frame_fence_->WaitForSignal(frame_signals_[i]);
+
+        if (target_view_[i].resource_)
+            target_view_[i].resource_->Release();
+
+        target_view_[i].resource_ = nullptr;
+    }
+
     d3dAssert(swap_chain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
 
     auto rtv_descriptor_size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
@@ -69,9 +79,6 @@ void WindowRenderTarget::UpdateWindowSize(ID3D12Device* device)
 
     for (int i = 0; i < NUM_BUFFERS; ++i)
     {
-        if (target_view_[i].resource_)
-            target_view_[i].resource_->Release();
-
         ID3D12Resource* back_buffer;
         d3dAssert(swap_chain_->GetBuffer(i, IID_PPV_ARGS(&back_buffer)));
 
