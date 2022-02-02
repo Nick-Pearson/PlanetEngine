@@ -1,12 +1,30 @@
 #pragma once
 
-#include <d3d11.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
 #include <dxgidebug.h>
 #include <wrl/client.h>
 
 #include "Platform/PlanetWindows.h"
 #include "Render/RenderSystem.h"
 #include "Container/RingBuffer.h"
+
+#define DX_DEBUG 1
+
+#define NUM_BUFFERS 3
+
+#if defined(DX_DEBUG)
+    #define SET_NAME(obj, name) obj->SetName(L##name);
+    #define SET_NAME_F(obj, name, ...) \
+        { \
+            wchar_t ___buff[256]; \
+            swprintf(___buff, 256, L##name, ##__VA_ARGS__); \
+            obj->SetName(___buff); \
+        }
+#else
+    #define SET_NAME(obj, name)
+    #define SET_NAME_F(obj, name, ...)
+#endif
 
 class D3DRenderSystem : public RenderSystem
 {
@@ -29,19 +47,40 @@ class D3DRenderSystem : public RenderSystem
     void UpdateWindowSize();
 
  private:
+    void Present();
+
     void RenderDebugUI();
-    void InitD3D11Device(HWND window);
+
+    void InitDevice(HWND window);
+
+    ID3D12Device2* CreateDevice();
+    ID3D12CommandQueue* CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type);
+    IDXGISwapChain4* CreateSwapChain(HWND window);
+    ID3D12DescriptorHeap* CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, int num_descriptors);
+
+#if defined(DX_DEBUG)
     void FlushDebugMessages();
 
-    Microsoft::WRL::ComPtr<ID3D11Device> mDevice;
-    Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> mContext;
-    Microsoft::WRL::ComPtr<IDXGIInfoQueue> mDxgiInfoQueue;
+    ID3D12Debug* debug_ = nullptr;
+    ID3D12InfoQueue* info_queue_ = nullptr;
+#endif
 
-    class D3DRenderer* mRenderer;
-    class ImGUIRenderer* mUIRenderer;
+    IDXGIAdapter4* adapter_ = nullptr;
+    ID3D12Device2* device_ = nullptr;
+    IDXGISwapChain4* swap_chain_ = nullptr;
+
+    ID3D12CommandQueue* draw_command_queue_ = nullptr;
+    ID3D12GraphicsCommandList* draw_command_list_ = nullptr;
+    ID3D12CommandAllocator* draw_command_allocator_ = nullptr;
+    ID3D12CommandQueue* compute_command_queue_ = nullptr;
+    ID3D12CommandQueue* loading_command_queue_ = nullptr;
+
+    ID3D12DescriptorHeap* rtv_descriptor_heap_ = nullptr;
+
+    class D3DRenderer* renderer_;
+    class ImGUIRenderer* ui_renderer_;
     class GPUResourceManager* mResourceManager;
-    class D3DWindowEvents* mWindowEvents;
+    class D3DWindowEvents* window_events_;
 
     class WindowRenderTarget* window_render_target_;
 

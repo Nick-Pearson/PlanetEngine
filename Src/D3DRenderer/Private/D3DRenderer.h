@@ -1,7 +1,6 @@
 #pragma once
 
-#include <d3d11.h>
-#include <wrl/client.h>
+#include <d3d12.h>
 #include <iostream>
 #include <memory>
 #include <DirectXMath.h>
@@ -19,19 +18,13 @@
 #include "RenderState.h"
 #include "D3DAssert.h"
 
-namespace wrl = Microsoft::WRL;
-
 __declspec(align(16))
 class D3DRenderer : public Renderer
 {
     friend class D3DShader;
 
  public:
-    D3DRenderer(
-        wrl::ComPtr<ID3D11Device> mDevice,
-        wrl::ComPtr<IDXGISwapChain> mSwapChain,
-        wrl::ComPtr<ID3D11DeviceContext> mContext,
-        std::shared_ptr<GPUMaterialHandle> wireframe_shader);
+    D3DRenderer(ID3D12GraphicsCommandList* command_list);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -47,7 +40,7 @@ class D3DRenderer : public Renderer
         _mm_free(p);
     }
 
-    void BindRenderTarget(const RenderTarget& target);
+    void BindRenderTarget(const RenderTarget* target);
     void UnbindRenderTarget();
 
     // renders a particular camera
@@ -66,32 +59,21 @@ class D3DRenderer : public Renderer
     void PreRender(const CameraComponent& camera);
     void PostRender();
 
-    void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
+    // void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
     bool render_solid_ = true;
     bool render_wireframe_ = false;
 
-    // D3D11 Ptrs
-    wrl::ComPtr<ID3D11Device> mDevice;
-    wrl::ComPtr<IDXGISwapChain> mSwapChain;
-    wrl::ComPtr<ID3D11DeviceContext> mContext;
-    ID3D11RenderTargetView* render_target_view_ = nullptr;
-    ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
+    ID3D12GraphicsCommandList* command_list_;
 
-    wrl::ComPtr<ID3D11BlendState> mAlphaBlendState;
-    wrl::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
+    const RenderTarget* render_target_ = nullptr;
 
-    wrl::ComPtr<ID3D11DepthStencilState> use_depth_stencil_state_;
-    wrl::ComPtr<ID3D11DepthStencilState> no_depth_stencil_state_;
-
-    ID3D11RasterizerState* solid_state_ = nullptr;
-    ID3D11RasterizerState* wire_frame_state_ = nullptr;
     // standard vertex shader, later will be specified based on which vertex attributes a mesh has
     std::shared_ptr<D3DVertexShader> vertexShader;
 
     // Constant Buffers
-    wrl::ComPtr<ID3D11Buffer> mSlowConstantBuffer;
+    // wrl::ComPtr<ID3D12Buffer> mSlowConstantBuffer;
     struct SlowConstantBuffer
     {
         SlowConstantBuffer()
@@ -105,7 +87,7 @@ class D3DRenderer : public Renderer
     };
     SlowConstantBuffer mSlowConstantBufferData;
 
-    wrl::ComPtr<ID3D11Buffer> mFastConstantBuffer;
+    // wrl::ComPtr<ID3D11Buffer> mFastConstantBuffer;
     struct FastConstantBuffer
     {
         FastConstantBuffer()
@@ -116,10 +98,10 @@ class D3DRenderer : public Renderer
     };
     FastConstantBuffer mFastConstantBufferData;
 
-    wrl::ComPtr<ID3D11Buffer> mWorldPixelBuffer;
+    // wrl::ComPtr<ID3D11Buffer> mWorldPixelBuffer;
     WorldBufferData mWorldPixelBufferData;
 
-    void CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize);
+    // void CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize);
 
  private:
     // list of render commands

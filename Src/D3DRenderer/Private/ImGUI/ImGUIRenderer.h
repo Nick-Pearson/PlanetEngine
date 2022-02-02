@@ -1,12 +1,11 @@
 #pragma once
 
-#include <d3d11.h>
-#include <wrl/client.h>
+#include "Platform/PlanetWindows.h"
 
 class ImGUIRenderer
 {
  public:
-    ImGUIRenderer(HWND window, Microsoft::WRL::ComPtr<ID3D11Device> device, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context);
+    explicit ImGUIRenderer(HWND window);
     ~ImGUIRenderer();
 
     void Render();
