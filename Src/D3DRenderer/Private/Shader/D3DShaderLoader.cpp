@@ -8,12 +8,19 @@
 
 #include "D3DAssert.h"
 
-D3DShaderLoader::D3DShaderLoader(wrl::ComPtr<struct ID3D11Device> device) :
+D3DShaderLoader::D3DShaderLoader(ID3D12Device2* device) :
     device_(device)
 {
+    device_->AddRef();
 }
 
-std::shared_ptr<D3DVertexShader> D3DShaderLoader::LoadVertex(const char* filepath)
+D3DShaderLoader::~D3DShaderLoader()
+{
+    device_->Release();
+    device_ = nullptr;
+}
+
+const D3DVertexShader* D3DShaderLoader::LoadVertex(const char* filepath)
 {
     P_LOG("Loading vertex shader {}", filepath);
     std::unordered_map<std::string, std::string> defines;
@@ -22,19 +29,8 @@ std::shared_ptr<D3DVertexShader> D3DShaderLoader::LoadVertex(const char* filepat
     {
         return nullptr;
     }
-    ID3D11VertexShader* handle;
-    d3dAssert(device_->CreateVertexShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
 
-    ID3D11InputLayout* layout;
-    const D3D11_INPUT_ELEMENT_DESC ied[] =
-    {
-        {"Position", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"Normal", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12u, D3D11_INPUT_PER_VERTEX_DATA, 0},
-        {"TexCoord", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24u, D3D11_INPUT_PER_VERTEX_DATA, 0},
-    };
-    d3dAssert(device_->CreateInputLayout(ied, (UINT)std::size(ied), blob->GetBufferPointer(), blob->GetBufferSize(), &layout));
-
-    return std::make_shared<D3DVertexShader>(blob, handle, layout);
+    return new D3DVertexShader{ blob };
 }
 
 std::shared_ptr<D3DPixelShader> D3DShaderLoader::LoadPixel(const char* filepath)
@@ -46,9 +42,10 @@ std::shared_ptr<D3DPixelShader> D3DShaderLoader::LoadPixel(const char* filepath)
     {
         return nullptr;
     }
-    ID3D11PixelShader* handle;
-    d3dAssert(device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
-    return std::make_shared<D3DPixelShader>(filepath, blob, handle);
+    // ID3D11PixelShader* handle;
+    // d3dAssert(device_->CreatePixelShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
+    // return std::make_shared<D3DPixelShader>(filepath, blob, handle);
+    return nullptr;
 }
 
 std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const ComputeShader& shader)
@@ -59,9 +56,10 @@ std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const ComputeShad
     {
         return nullptr;
     }
-    ID3D11ComputeShader* handle;
-    d3dAssert(device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
-    return std::make_shared<D3DComputeShader>(blob, handle, shader.GetNumThreads());
+    // ID3D11ComputeShader* handle;
+    // d3dAssert(device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
+    // return std::make_shared<D3DComputeShader>(blob, handle, shader.GetNumThreads());
+    return nullptr;
 }
 
 ID3DBlob* D3DShaderLoader::CompileShaderBlob(const char* filepath, const char* target, const std::unordered_map<std::string, std::string>& defines)
@@ -83,7 +81,7 @@ ID3DBlob* D3DShaderLoader::CompileShaderBlob(const char* filepath, const char* t
     macros[i].Definition = nullptr;
 
     ID3DBlob* shaderBlob = nullptr;
-    Microsoft::WRL::ComPtr<ID3DBlob> errorBlob;
+    ID3DBlob* errorBlob = nullptr;
     d3dAssert(D3DCompileFromFile(fullpath.c_str(), &macros[0], nullptr, "main", target, compileFlags, 0u, &shaderBlob, &errorBlob));
 
     delete[] macros;
@@ -93,6 +91,7 @@ ID3DBlob* D3DShaderLoader::CompileShaderBlob(const char* filepath, const char* t
         P_ERROR("Failed to compile shader file: {}", filepath);
         const char* message = (const char*)errorBlob->GetBufferPointer();
         P_ERROR("{}", message);
+        errorBlob->Release();
         return nullptr;
     }
     else if (shaderBlob == nullptr)

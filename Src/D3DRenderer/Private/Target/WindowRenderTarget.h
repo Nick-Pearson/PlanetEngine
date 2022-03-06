@@ -3,12 +3,17 @@
 #include <d3d12.h>
 
 #include "D3DRenderSystem.h"
+#include "D3DCommandQueue.h"
 #include "RenderTarget.h"
 
 class WindowRenderTarget : public RenderTarget
 {
  public:
-    WindowRenderTarget(ID3D12Device2* device, IDXGISwapChain4* swap_chain, ID3D12DescriptorHeap* rtv_heap, ID3D12CommandQueue* command_queue);
+    WindowRenderTarget(ID3D12Device2* device,
+      IDXGISwapChain4* swap_chain,
+      ID3D12DescriptorHeap* rtv_heap,
+      ID3D12DescriptorHeap* dsv_heap,
+      D3DCommandQueue* command_queue);
     ~WindowRenderTarget();
 
     void PreRender();
@@ -18,7 +23,7 @@ class WindowRenderTarget : public RenderTarget
     inline int GetWidth() const override { return width_; }
     inline int GetHeight() const override { return height_; }
     inline const D3DResource* GetRenderTarget() const override { return &target_view_[current_buffer_]; }
-    inline const D3DResource* GetDepthStencil() const override { return &depth_stencil_view_[current_buffer_]; }
+    inline const D3DResource* GetDepthStencil() const override { return &depth_stencil_view_; }
     inline ID3D12CommandAllocator* GetCommandAllocator() const override { return command_allocator_[current_buffer_]; }
 
  private:
@@ -30,9 +35,9 @@ class WindowRenderTarget : public RenderTarget
 
     UINT current_buffer_ = 0;
     D3DResource target_view_[NUM_BUFFERS];
-    D3DResource depth_stencil_view_[NUM_BUFFERS];
+    D3DResource depth_stencil_view_;
     ID3D12CommandAllocator* command_allocator_[NUM_BUFFERS];
 
-    class D3DFence* frame_fence_;
+    D3DCommandQueue* command_queue_;
     uint64_t frame_signals_[NUM_BUFFERS];
 };

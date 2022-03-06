@@ -2,6 +2,8 @@
 
 #include <memory>
 
+#include "Mesh/D3DMesh.h"
+
 #include "Math/Transform.h"
 
 struct GPUMeshHandle;
@@ -23,7 +25,7 @@ struct RenderState
     bool UseDepthBuffer;
     bool UseWorldMatrix;
 
-    GPUMeshHandle* mesh;
+    MeshResource* mesh;
     std::shared_ptr<GPUMaterialHandle> material;
     Transform model;
     const char* debugName;

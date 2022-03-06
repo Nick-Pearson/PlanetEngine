@@ -20,6 +20,7 @@
 #include "Compute/ComputeShader.h"
 #include "Material/Material.h"
 #include "D3DAssert.h"
+#include "D3DCommandQueue.h"
 #include "imgui.h"
 
 namespace
@@ -59,37 +60,43 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
 
     InitDevice(window);
 
+    draw_command_allocator_->Reset();
+    d3dAssert(draw_command_list_->Reset(draw_command_allocator_, nullptr));
 
     ui_renderer_ = new ImGUIRenderer{ window };
-    // mResourceManager = new GPUResourceManager{ mDevice, mContext };
+    resource_manager_ = new GPUResourceManager{ device_ };
     window_events_ = new D3DWindowEvents{ this };
 
     // Material wireframe_material{"WireframeShader.hlsl"};
     // auto wireframe_shader = mResourceManager->LoadMaterial(&wireframe_material);
-    renderer_ = new D3DRenderer{ draw_command_list_ };
-    window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, draw_command_queue_};
+    renderer_ = new D3DRenderer{ device_, draw_command_list_ };
+    window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, dsv_descriptor_heap_, draw_command_queue_};
     renderer_->BindRenderTarget(window_render_target_);
 
 #if defined(DX_DEBUG)
     FlushDebugMessages();
 #endif
+
+    draw_command_queue_->ExecuteCommandList(draw_command_list_);
+    auto signal = draw_command_queue_->Signal();
+    draw_command_queue_->WaitForSignal(signal);
 }
 
 D3DRenderSystem::~D3DRenderSystem()
 {
     delete renderer_;
     delete ui_renderer_;
-    delete mResourceManager;
+    delete resource_manager_;
     delete window_events_;
     delete window_render_target_;
 
-    draw_command_queue_->Release();
+    delete draw_command_queue_;
     draw_command_allocator_->Release();
     draw_command_list_->Release();
-    compute_command_queue_->Release();
-    loading_command_queue_->Release();
+    delete compute_command_queue_;
 
     rtv_descriptor_heap_->Release();
+    dsv_descriptor_heap_->Release();
 
     device_->Release();
     adapter_->Release();
@@ -99,6 +106,8 @@ void D3DRenderSystem::Load(class PlanetEngine* engine)
 {
     engine->RegisterMessageHandler(window_events_);
     ui_renderer_->NewFrame();
+
+    engine->GetJobSystem()->RunJobRepeatedly([=](){ resource_manager_->ProcessCompletedBatches(); }, 500);
 }
 
 void D3DRenderSystem::UnLoad(class PlanetEngine* engine)
@@ -119,12 +128,14 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
         renderState.debugName = mesh->GetParent()->GetName();
         renderState.UseDepthBuffer = mesh->render_config_.use_depth_buffer;
         renderState.UseWorldMatrix = mesh->render_config_.use_world_matrix;
-        // renderState.mesh = mResourceManager->LoadMesh(mesh->GetMesh());
+        renderState.mesh = resource_manager_->LoadMesh(mesh->GetMesh());
         // renderState.material = mResourceManager->LoadMaterial(mesh->GetMaterial());
         renderState.model = mesh->GetWorldTransform();
 
         renderer_->AddRenderState(renderState);
     }
+
+    resource_manager_->ExecuteResourceLoads();
 }
 
 void D3DRenderSystem::InvokeCompute(const ComputeShader& shader)
@@ -168,7 +179,7 @@ void D3DRenderSystem::FlushDebugMessages()
 
 void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 {
-    chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();
+    const auto start = chr::steady_clock::now();
     window_render_target_->PreRender();
     renderer_->Render(camera);
     // RenderDebugUI();
@@ -176,7 +187,7 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 
     Present();
     // mUIRenderer->NewFrame();
-    auto time = chr::high_resolution_clock::now() - start;
+    auto time = chr::steady_clock::now() - start;
     frame_times_ms_.Add(time/chr::milliseconds(1));
     FlushDebugMessages();
 }
@@ -187,10 +198,7 @@ void D3DRenderSystem::Present()
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
     draw_command_list_->ResourceBarrier(1, &barrier);
 
-    d3dAssert(draw_command_list_->Close());
-
-    ID3D12CommandList* const command_lists[] = {draw_command_list_};
-    draw_command_queue_->ExecuteCommandLists(_countof(command_lists), command_lists);
+    draw_command_queue_->ExecuteCommandList(draw_command_list_);
 
     window_render_target_->Present();
 }
@@ -256,17 +264,19 @@ void D3DRenderSystem::InitDevice(HWND window)
 {
     device_ = CreateDevice();
 
-    draw_command_queue_ = CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_DIRECT);
+    draw_command_queue_ = new D3DCommandQueue{device_, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_QUEUE_PRIORITY_HIGH};
     d3dAssert(device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&draw_command_allocator_)));
+    SET_NAME(draw_command_allocator_, "Draw Command Allocator")
     d3dAssert(device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, draw_command_allocator_, nullptr, IID_PPV_ARGS(&draw_command_list_)));
+    SET_NAME(draw_command_list_, "Draw Command List")
     d3dAssert(draw_command_list_->Close());
 
-    compute_command_queue_ = CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_COMPUTE);
-    loading_command_queue_ = CreateCommandQueue(D3D12_COMMAND_LIST_TYPE_COPY);
+    compute_command_queue_ = new D3DCommandQueue{device_, D3D12_COMMAND_LIST_TYPE_COMPUTE, D3D12_COMMAND_QUEUE_PRIORITY_NORMAL};
 
     swap_chain_ = CreateSwapChain(window);
 
     rtv_descriptor_heap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, NUM_BUFFERS);
+    dsv_descriptor_heap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
 }
 
 ID3D12Device2* D3DRenderSystem::CreateDevice()
@@ -306,19 +316,6 @@ ID3D12Device2* D3DRenderSystem::CreateDevice()
     return device;
 }
 
-ID3D12CommandQueue* D3DRenderSystem::CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type)
-{
-    D3D12_COMMAND_QUEUE_DESC desc = {};
-    desc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
-    desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-    desc.Type = type;
-    desc.NodeMask = 0;
-
-    ID3D12CommandQueue* command_queue = nullptr;
-    d3dAssert(device_->CreateCommandQueue(&desc, IID_PPV_ARGS(&command_queue)));
-    return command_queue;
-}
-
 IDXGISwapChain4* D3DRenderSystem::CreateSwapChain(HWND window)
 {
     IDXGIFactory6* factory6 = nullptr;
@@ -342,7 +339,7 @@ IDXGISwapChain4* D3DRenderSystem::CreateSwapChain(HWND window)
     desc.Flags = 0;
 
     IDXGISwapChain1* swap_chain1 = nullptr;
-    d3dAssert(factory6->CreateSwapChainForHwnd(draw_command_queue_,
+    d3dAssert(factory6->CreateSwapChainForHwnd(draw_command_queue_->GetQueue(),
         window,
         &desc,
         nullptr,
@@ -364,6 +361,7 @@ ID3D12DescriptorHeap* D3DRenderSystem::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEA
     D3D12_DESCRIPTOR_HEAP_DESC desc = {};
     desc.NumDescriptors = num_descriptors;
     desc.Type = type;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
     d3dAssert(device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptor_heap)));
 

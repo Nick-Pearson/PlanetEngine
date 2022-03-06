@@ -8,7 +8,8 @@
 #include "d3dx12.h"
 
 #include "Platform/Window.h"
-#include "Shader/D3DShader.h"
+#include "Shader/D3DVertexShader.h"
+#include "Shader/D3DPixelShader.h"
 #include "Shader/D3DShaderLoader.h"
 #include "Texture/D3DTexture.h"
 #include "GPUResourceManager.h"
@@ -17,9 +18,10 @@
 #include "Math/Transform.h"
 #include "imgui.h"
 
-D3DRenderer::D3DRenderer(ID3D12GraphicsCommandList* command_list) :
-    command_list_(command_list)
+D3DRenderer::D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list) :
+    device_(device), command_list_(command_list)
 {
+    device_->AddRef();
     command_list_->AddRef();
 
     // // apply depth buffer
@@ -35,13 +37,16 @@ D3DRenderer::D3DRenderer(ID3D12GraphicsCommandList* command_list) :
     // // bind depth state
     // mContext->OMSetDepthStencilState(use_depth_stencil_state_.Get(), 1u);
 
-    // // Compile Shaders
-    // auto shader_loader = new D3DShaderLoader{ device };
-    // vertexShader = shader_loader->LoadVertex("VertexShader.hlsl");
-    // delete shader_loader;
+    // Compile Shaders
+    auto shader_loader = new D3DShaderLoader{ device_ };
+    const D3DVertexShader* vertex_shader = shader_loader->LoadVertex("VertexShader.hlsl");
+    delete shader_loader;
 
-    // // bind vertex layout
-    // mContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    root_signature_ = new D3DRootSignature{ vertex_shader->GetBlob(), device_ };
+    root_signature_->Bind(command_list_);
+    // bind vertex layout
+
     // vertexShader->Use(mContext.Get());
 
     // CreateConstantBuffer(&mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
@@ -90,6 +95,9 @@ D3DRenderer::D3DRenderer(ID3D12GraphicsCommandList* command_list) :
 
 D3DRenderer::~D3DRenderer()
 {
+    delete root_signature_;
+
+    device_->Release();
     command_list_->Release();
 }
 
@@ -97,22 +105,20 @@ void D3DRenderer::BindRenderTarget(const RenderTarget* target)
 {
     render_target_ = target;
 
-    // D3D11_VIEWPORT vp;
-    // vp.Width = static_cast<float>(target->GetWidth());
-    // vp.Height = static_cast<float>(target->GetHeight());
-    // vp.MinDepth = 0;
-    // vp.MaxDepth = 1;
-    // vp.TopLeftX = 0;
-    // vp.TopLeftY = 0;
-    // mContext->RSSetViewports(1u, &vp);
+    D3D12_VIEWPORT viewport;
+    viewport.Width = static_cast<float>(target->GetWidth());
+    viewport.Height = static_cast<float>(target->GetHeight());
+    viewport.MinDepth = 0;
+    viewport.MaxDepth = 1;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    command_list_->RSSetViewports(1, &viewport);
 
-    // aspect_ratio_ = vp.Height / vp.Width;
+    D3D12_RECT scissor_rect = CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX);
+    command_list_->RSSetScissorRects(1, &scissor_rect);
 
-    // render_target_view_ = target->GetRenderTarget();
-    // render_target_view_->AddRef();
-    // depth_stencil_view_ = target->GetDepthStencil();
-    // depth_stencil_view_->AddRef();
-    // mContext->OMSetRenderTargets(1u, &render_target_view_, depth_stencil_view_);
+    aspect_ratio_ = viewport.Height / viewport.Width;
+
     P_LOG("Set render size to {}x{}", target->GetWidth(), target->GetHeight());
 }
 
@@ -164,30 +170,29 @@ void D3DRenderer::Render(const CameraComponent& camera)
 void D3DRenderer::PreRender(const CameraComponent& camera)
 {
     auto command_allocator = render_target_->GetCommandAllocator();
-    auto back_buffer = render_target_->GetRenderTarget();
- 
+
     command_allocator->Reset();
     d3dAssert(command_list_->Reset(command_allocator, nullptr));
 
+    auto back_buffer = render_target_->GetRenderTarget();
     CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(back_buffer->resource_,
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     command_list_->ResourceBarrier(1, &barrier);
- 
     const float colour[4] = { 0.f, 0.5f, 0.5f, 1.0f };
     command_list_->ClearRenderTargetView(back_buffer->cpu_handle_, colour, 0, nullptr);
 
-    // setup projection matrix
-    // TODO: Maybe not do this every frame?
-    // TODO: Collect stats on how often these buffers are updated
-    // mSlowConstantBufferData.view = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspect_ratio_, camera.NearClip, camera.FarClip));
-    // Transform cameraTransform = camera.GetWorldTransform();
-    // cameraTransform.location = Vector{};
-    // cameraTransform.scale = Vector{1.0f, 1.0f, 1.0f};
-    // DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
-    // mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
+    auto depth_stencil = render_target_->GetDepthStencil();
+    command_list_->ClearDepthStencilView(depth_stencil->cpu_handle_, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
-    // UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-    // currentRenderState.UseWorldMatrix = false;
+    command_list_->OMSetRenderTargets(1u, &back_buffer->cpu_handle_, false, &depth_stencil->cpu_handle_);
+
+    root_signature_->Bind(command_list_);
+    // setup projection matrix
+    DirectX::XMMATRIX view_matrix = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspect_ratio_, camera.NearClip, camera.FarClip));
+    command_list_->SetGraphicsRoot32BitConstants(1, sizeof(DirectX::XMMATRIX) / sizeof(uint32_t), &view_matrix, 0);
+
+    UpdateWorldMatrix(camera, false);
+    currentRenderState.UseWorldMatrix = false;
 }
 
 void D3DRenderer::PostRender()
@@ -226,6 +231,8 @@ void D3DRenderer::RenderDebugUI()
 
 void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, bool use_materials)
 {
+    bool mesh_loaded = state.mesh->IsLoaded();
+    if (!mesh_loaded) return;
     // if (!state.IsValid()) return;
 
     // // apply the render state
@@ -241,31 +248,23 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     //     }
     // }
 
-    // if (currentRenderState.UseWorldMatrix != state.UseWorldMatrix)
-    // {
-    //     Transform cameraTransform = camera.GetWorldTransform();
-    //     if (!state.UseWorldMatrix)
-    //     {
-    //         cameraTransform.location = Vector{};
-    //         cameraTransform.scale = Vector{1.0f, 1.0f, 1.0f};
-    //     }
-    //     DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(cameraTransform.GetMatrix());
-    //     mSlowConstantBufferData.world = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, cameraTransform.GetMatrix()));
-
-    //     UpdateBuffer(mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-    // }
+    if (currentRenderState.UseWorldMatrix != state.UseWorldMatrix)
+    {
+        UpdateWorldMatrix(camera, state.UseWorldMatrix);
+    }
 
     // DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(state.model.GetMatrix());
     // mFastConstantBufferData.model = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model.GetMatrix()));
     // UpdateBuffer(mFastConstantBuffer, &mFastConstantBufferData, sizeof(mFastConstantBufferData));
 
-    // if (currentRenderState.mesh != state.mesh)
-    // {
-    //     const unsigned int stride = sizeof(Vertex);
-    //     const unsigned int offset = 0u;
-    //     mContext->IASetVertexBuffers(0u, 1u, state.mesh->vertexBuffer.GetAddressOf(), &stride, &offset);
-    //     mContext->IASetIndexBuffer(state.mesh->triangleBuffer.Get(), DXGI_FORMAT_R16_UINT, 0u);
-    // }
+    if (currentRenderState.mesh != state.mesh)
+    {
+        command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        command_list_->IASetVertexBuffers(0u, 1u, state.mesh->GetVertexBuffer());
+        command_list_->IASetIndexBuffer(state.mesh->GetTriangleBuffer());
+    }
+
+    // command_list_->SetPipelineState()
 
     // if (use_materials && currentRenderState.material != state.material)
     // {
@@ -287,9 +286,9 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     //     }
     // }
 
-    // currentRenderState = state;
+    currentRenderState = state;
 
-    // mContext->DrawIndexed(state.mesh->numTriangles, 0u, 0u);
+    command_list_->DrawIndexedInstanced(state.mesh->GetTriangleCount(), 1u, 0u, 0u, 0u);
 }
 
 // void D3DRenderer::UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize)
@@ -313,3 +312,18 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
 //     csd.pSysMem = bufferPtr;
 //     d3dAssert(mDevice->CreateBuffer(&cbd, &csd, outBuffer));
 // }
+
+
+void D3DRenderer::UpdateWorldMatrix(const CameraComponent& camera, bool use_world_matrix)
+{
+    Transform camera_transform = camera.GetWorldTransform();
+    if (!use_world_matrix)
+    {
+        camera_transform.location = Vector{};
+        camera_transform.scale = Vector{1.0f, 1.0f, 1.0f};
+    }
+    DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(camera_transform.GetMatrix());
+    DirectX::XMMATRIX world_matrix = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, camera_transform.GetMatrix()));
+
+    command_list_->SetGraphicsRoot32BitConstants(0, sizeof(DirectX::XMMATRIX) / sizeof(uint32_t), &world_matrix, 0);
+}

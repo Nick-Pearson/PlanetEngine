@@ -1,40 +1,4 @@
-#include "D3DShader.h"
-
-D3DVertexShader::D3DVertexShader(ID3DBlob* blob, ID3D11VertexShader* handle, ID3D11InputLayout* layout) :
-    blob_(blob), handle_(handle), layout_(layout)
-{
-}
-
-D3DVertexShader::~D3DVertexShader()
-{
-    blob_->Release();
-    handle_->Release();
-    layout_->Release();
-}
-
-void D3DVertexShader::Use(ID3D11DeviceContext* context)
-{
-    context->IASetInputLayout(layout_);
-    context->VSSetShader(handle_, nullptr, 0u);
-}
-
-
-D3DPixelShader::D3DPixelShader(const char* path, ID3DBlob* blob, ID3D11PixelShader* handle) :
-    path_(path), blob_(blob), handle_(handle)
-{
-}
-
-D3DPixelShader::~D3DPixelShader()
-{
-    blob_->Release();
-    handle_->Release();
-}
-
-void D3DPixelShader::Use(ID3D11DeviceContext* context)
-{
-    context->PSSetShader(handle_, nullptr, 0u);
-}
-
+#include "D3DComputeShader.h"
 
 D3DComputeShader::D3DComputeShader(ID3DBlob* blob, ID3D11ComputeShader* handle, const NumThreads& num_threads) :
     blob_(blob), handle_(handle), num_threads_(num_threads)

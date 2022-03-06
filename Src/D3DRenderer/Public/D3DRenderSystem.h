@@ -54,7 +54,7 @@ class D3DRenderSystem : public RenderSystem
     void InitDevice(HWND window);
 
     ID3D12Device2* CreateDevice();
-    ID3D12CommandQueue* CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type);
+    ID3D12CommandQueue* CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type, D3D12_COMMAND_QUEUE_PRIORITY priority);
     IDXGISwapChain4* CreateSwapChain(HWND window);
     ID3D12DescriptorHeap* CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, int num_descriptors);
 
@@ -69,17 +69,18 @@ class D3DRenderSystem : public RenderSystem
     ID3D12Device2* device_ = nullptr;
     IDXGISwapChain4* swap_chain_ = nullptr;
 
-    ID3D12CommandQueue* draw_command_queue_ = nullptr;
+    class D3DCommandQueue* draw_command_queue_ = nullptr;
     ID3D12GraphicsCommandList* draw_command_list_ = nullptr;
     ID3D12CommandAllocator* draw_command_allocator_ = nullptr;
-    ID3D12CommandQueue* compute_command_queue_ = nullptr;
-    ID3D12CommandQueue* loading_command_queue_ = nullptr;
+
+    class D3DCommandQueue* compute_command_queue_ = nullptr;
 
     ID3D12DescriptorHeap* rtv_descriptor_heap_ = nullptr;
+    ID3D12DescriptorHeap* dsv_descriptor_heap_ = nullptr;
 
     class D3DRenderer* renderer_;
     class ImGUIRenderer* ui_renderer_;
-    class GPUResourceManager* mResourceManager;
+    class GPUResourceManager* resource_manager_;
     class D3DWindowEvents* window_events_;
 
     class WindowRenderTarget* window_render_target_;

@@ -24,7 +24,8 @@
 #include "Texture/TextureFactory.h"
 #include "Texture/TextureWriter.h"
 #include "Compute/ComputeShader.h"
-#include "Jobs/ThreadPoolJobSystem.h"
+#include "Jobs/ThreadPoolJobRunner.h"
+#include "Jobs/LazyJobSystem.h"
 
 namespace
 {
@@ -35,12 +36,16 @@ PlanetEngine::PlanetEngine(RenderSystem* render_system) :
     scene_(new Scene{}),
     render_system_(render_system),
     input_manager_(new InputManager{}),
-    job_system_(new ThreadPoolJobSystem{2})
+    job_runner_(new ThreadPoolJobRunner{2})
 {
     assert(sEngine == nullptr);
     sEngine = this;
 
-    PlanetLogging::init_logging();
+    LazyJobSystem* job_system = new LazyJobSystem{job_runner_};
+    game_update_.AddListener([=] (float delta_time) {
+        job_system->RunJobs();
+    });
+    job_system_ = job_system;
 }
 
 PlanetEngine::~PlanetEngine()
@@ -145,18 +150,12 @@ void PlanetEngine::SaveScreenshot(const CameraComponent& camera)
     Texture2D* texture = new Texture2D{3840, 2160};
     render_system_->RenderToTexture(texture, camera);
 
-    bool added = job_system_->RunJob([=]() {
+    job_system_->RunJobInstantly([=]() {
         Platform::CreateDirectoryIfNotExists("screenshots");
         TextureWriter::writeToFile("screenshots/screenshot.png", *texture);
         auto time = chr::high_resolution_clock::now() - start;
         P_LOG("Captured {}x{} screnshot in {}ms", texture->GetWidth(), texture->GetHeight(), time/chr::milliseconds(1));
     });
-
-    if (!added)
-    {
-        delete texture;
-        P_WARN("Failed to add screenshot job to job system");
-    }
 }
 
 #if PLATFORM_WIN

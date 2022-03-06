@@ -1,6 +1,6 @@
 #pragma once
 
-#include <d3d11.h>
+#include <d3d12.h>
 #include <wrl.h>
 #include <vector>
 #include <string>
@@ -11,20 +11,14 @@
 #include "Container/LinkedList.h"
 #include "Texture/D3DTextureLoader.h"
 #include "Shader/D3DShaderLoader.h"
-
-namespace wrl = Microsoft::WRL;
+#include "Mesh/MeshResource.h"
+#include "Mesh/D3DMesh.h"
 
 class Mesh;
 class Material;
 class D3DPixelShader;
 class D3DTexture;
-
-struct GPUMeshHandle
-{
-    wrl::ComPtr<ID3D11Buffer> vertexBuffer;
-    wrl::ComPtr<ID3D11Buffer> triangleBuffer;
-    unsigned int numTriangles;
-};
+class D3DCommandQueue;
 
 struct GPUMaterialHandle
 {
@@ -33,13 +27,29 @@ struct GPUMaterialHandle
     bool alpha;
 };
 
+#define EMPTY_BATCH 0
+#define BUILDING_BATCH 1
+#define MIN_SIGNAL 16
+
+struct ResourceLoadBatch
+{
+    uint64_t signal_ = EMPTY_BATCH;
+    std::vector<D3DMesh*> pending_meshes_;
+    ID3D12CommandAllocator* command_allocator_;
+
+    inline const bool IsInUse() const { return signal_ >= MIN_SIGNAL; }
+    inline const bool IsEmpty() const { return signal_ == EMPTY_BATCH; }
+};
+
+#define MAX_CONCURRENT_BATCHES 16
+
 class GPUResourceManager
 {
  public:
-    explicit GPUResourceManager(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context);
+    explicit GPUResourceManager(ID3D12Device2* device);
     ~GPUResourceManager();
 
-    GPUMeshHandle* LoadMesh(const Mesh* mesh);
+    MeshResource* LoadMesh(const Mesh* mesh);
 
     std::shared_ptr<GPUMaterialHandle> LoadMaterial(const Material* material);
 
@@ -47,19 +57,33 @@ class GPUResourceManager
 
     void RenderDebugUI();
 
+    void ExecuteResourceLoads();
+    void ProcessCompletedBatches();
+
  private:
     void ReloadAllShaders();
 
+    ResourceLoadBatch* PrepareBatch();
+
     std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
 
-    void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, unsigned int miscflags, ID3D11Buffer** outBuffer);
+    void CreateBuffer(const void* data,
+            size_t length,
+            size_t stride,
+            D3D12_RESOURCE_FLAGS flags,
+            ID3D12Resource** resource,
+            ID3D12Resource** intermediate_resource);
 
-    LinkedList <GPUMeshHandle> mLoadedMeshes;
     std::vector<std::shared_ptr<GPUMaterialHandle>> loaded_materials_;
 
     std::unordered_map<std::string, std::shared_ptr<D3DPixelShader>> loadedShaders;
 
-    wrl::ComPtr<ID3D11Device> mDevice;
+    ResourceLoadBatch batches_[MAX_CONCURRENT_BATCHES];
+    size_t next_load_batch_ = 0;
+
+    ID3D12Device2* device_;
+    D3DCommandQueue* command_queue_;
+    ID3D12GraphicsCommandList* command_list_;
 
     D3DShaderLoader* shader_loader_;
     D3DTextureLoader* texture_loader_;

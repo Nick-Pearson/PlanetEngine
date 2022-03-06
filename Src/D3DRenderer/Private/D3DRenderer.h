@@ -17,6 +17,7 @@
 #include "Shader/D3DShaderLoader.h"
 #include "RenderState.h"
 #include "D3DAssert.h"
+#include "D3DRootSignature.h"
 
 __declspec(align(16))
 class D3DRenderer : public Renderer
@@ -24,7 +25,7 @@ class D3DRenderer : public Renderer
     friend class D3DShader;
 
  public:
-    D3DRenderer(ID3D12GraphicsCommandList* command_list);
+    D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -59,18 +60,18 @@ class D3DRenderer : public Renderer
     void PreRender(const CameraComponent& camera);
     void PostRender();
 
+    void UpdateWorldMatrix(const CameraComponent& camera, bool use_world_matrix);
     // void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
     bool render_solid_ = true;
     bool render_wireframe_ = false;
 
+    ID3D12Device2* device_;
     ID3D12GraphicsCommandList* command_list_;
+    D3DRootSignature* root_signature_;
 
     const RenderTarget* render_target_ = nullptr;
-
-    // standard vertex shader, later will be specified based on which vertex attributes a mesh has
-    std::shared_ptr<D3DVertexShader> vertexShader;
 
     // Constant Buffers
     // wrl::ComPtr<ID3D12Buffer> mSlowConstantBuffer;

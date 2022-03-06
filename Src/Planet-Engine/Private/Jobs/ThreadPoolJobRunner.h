@@ -6,16 +6,16 @@
 #include <condition_variable>
 #include <mutex>
 
-#include "Jobs/JobSystem.h"
+#include "Jobs/JobRunner.h"
 
 // Runs jobs py passing them to one of the available threads
-class ThreadPoolJobSystem : public JobSystem
+class ThreadPoolJobRunner : public JobRunner
 {
  public:
-    explicit ThreadPoolJobSystem(int num_threads);
-    virtual ~ThreadPoolJobSystem();
+    explicit ThreadPoolJobRunner(int num_threads);
+    virtual ~ThreadPoolJobRunner();
 
-    bool RunJob(const job_fp& job) final;
+    void RunJob(const job_fp& job) final;
 
  private:
     void Run(int thread_number);
