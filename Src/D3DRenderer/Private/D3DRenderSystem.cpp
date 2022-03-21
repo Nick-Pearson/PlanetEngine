@@ -21,6 +21,7 @@
 #include "Material/Material.h"
 #include "D3DAssert.h"
 #include "D3DCommandQueue.h"
+#include "D3DRootSignature.h"
 #include "imgui.h"
 
 namespace
@@ -45,9 +46,53 @@ namespace
             "EXECUTION",
             "SHADER"
     };
-}  // namespace
 
-namespace chr = std::chrono;
+#if defined(DX_DEBUG)
+    // https://devblogs.microsoft.com/pix/taking-a-capture/
+    static std::wstring GetLatestWinPixGpuCapturerPath()
+    {
+        LPWSTR programFilesPath = nullptr;
+        SHGetKnownFolderPath(FOLDERID_ProgramFiles, KF_FLAG_DEFAULT, NULL, &programFilesPath);
+
+        std::wstring pixSearchPath = std::wstring(L"\\\\?\\") + programFilesPath + std::wstring(L"\\Microsoft PIX\\*");
+
+        WIN32_FIND_DATAW findData;
+        bool foundPixInstallation = false;
+        wchar_t newestVersionFound[MAX_PATH];
+
+        HANDLE hFind = FindFirstFileW(pixSearchPath.c_str(), &findData);
+        if (hFind != INVALID_HANDLE_VALUE)
+        {
+            for (int i = 0; i < 1000000; ++i)
+            {
+                if (((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY) &&
+                    (findData.cFileName[0] != '.'))
+                {
+                    if (!foundPixInstallation || wcscmp(newestVersionFound, findData.cFileName) <= 0)
+                    {
+                        foundPixInstallation = true;
+                        StringCchCopyW(newestVersionFound, _countof(newestVersionFound), findData.cFileName);
+                    }
+                }
+                if (!FindNextFileW(hFind, &findData))
+                {
+                    break;
+                }
+            }
+        }
+
+        FindClose(hFind);
+        P_ASSERT(foundPixInstallation, "PIX dll not found, unable to load PIX debugging");
+
+        wchar_t output[MAX_PATH];
+        StringCchCopyW(output, pixSearchPath.length(), pixSearchPath.data());
+        StringCchCatW(output, MAX_PATH, &newestVersionFound[0]);
+        StringCchCatW(output, MAX_PATH, L"\\WinPixGpuCapturer.dll");
+
+        return &output[0];
+    }
+#endif
+}  // namespace
 
 D3DRenderSystem::D3DRenderSystem(HWND window)
 {
@@ -55,6 +100,11 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     {
         d3dAssert(D3D12GetDebugInterface(IID_PPV_ARGS(&debug_)));
         debug_->EnableDebugLayer();
+
+        if (GetModuleHandleW(L"WinPixGpuCapturer.dll") == 0)
+        {
+            LoadLibraryW(GetLatestWinPixGpuCapturerPath().c_str());
+        }
     }
 #endif
 
@@ -63,13 +113,18 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     draw_command_allocator_->Reset();
     d3dAssert(draw_command_list_->Reset(draw_command_allocator_, nullptr));
 
+    // Compile Shaders
+    const D3DVertexShader* vertex_shader = D3DShaderLoader::LoadVertex("VertexShader.hlsl");
+    root_signature_ = new D3DRootSignature{ vertex_shader, device_ };
+    root_signature_->Bind(draw_command_list_);
+
     ui_renderer_ = new ImGUIRenderer{ window };
     resource_manager_ = new GPUResourceManager{ device_ };
     window_events_ = new D3DWindowEvents{ this };
 
     // Material wireframe_material{"WireframeShader.hlsl"};
     // auto wireframe_shader = mResourceManager->LoadMaterial(&wireframe_material);
-    renderer_ = new D3DRenderer{ device_, draw_command_list_ };
+    renderer_ = new D3DRenderer{ device_, draw_command_list_, root_signature_ };
     window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, dsv_descriptor_heap_, draw_command_queue_};
     renderer_->BindRenderTarget(window_render_target_);
 
@@ -98,6 +153,8 @@ D3DRenderSystem::~D3DRenderSystem()
     rtv_descriptor_heap_->Release();
     dsv_descriptor_heap_->Release();
 
+    delete root_signature_;
+
     device_->Release();
     adapter_->Release();
 }
@@ -124,15 +181,21 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
 {
     for (auto mesh : items.new_meshes)
     {
-        RenderState renderState;
-        renderState.debugName = mesh->GetParent()->GetName();
-        renderState.UseDepthBuffer = mesh->render_config_.use_depth_buffer;
-        renderState.UseWorldMatrix = mesh->render_config_.use_world_matrix;
-        renderState.mesh = resource_manager_->LoadMesh(mesh->GetMesh());
-        // renderState.material = mResourceManager->LoadMaterial(mesh->GetMaterial());
-        renderState.model = mesh->GetWorldTransform();
+        auto d3d_mesh = resource_manager_->LoadMesh(mesh->GetMesh());
+        auto d3d_material = resource_manager_->LoadMaterial(mesh->GetMaterial());
+        auto pipeline_state = root_signature_->NewPipelineState(d3d_material->GetPixelShader());
+        pipeline_state->Compile(device_);
 
-        renderer_->AddRenderState(renderState);
+        RenderState render_state{
+            d3d_mesh,
+            d3d_material,
+            pipeline_state,
+            mesh->GetWorldTransform(),
+            mesh->render_config_.use_depth_buffer_,
+            mesh->render_config_.use_world_matrix_
+        };
+
+        renderer_->AddRenderState(render_state);
     }
 
     resource_manager_->ExecuteResourceLoads();
@@ -179,7 +242,7 @@ void D3DRenderSystem::FlushDebugMessages()
 
 void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 {
-    const auto start = chr::steady_clock::now();
+    const auto start = std::chrono::steady_clock::now();
     window_render_target_->PreRender();
     renderer_->Render(camera);
     // RenderDebugUI();
@@ -187,8 +250,8 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 
     Present();
     // mUIRenderer->NewFrame();
-    auto time = chr::steady_clock::now() - start;
-    frame_times_ms_.Add(time/chr::milliseconds(1));
+    auto time = std::chrono::steady_clock::now() - start;
+    frame_times_ms_.Add(time/std::chrono::milliseconds(1));
     FlushDebugMessages();
 }
 

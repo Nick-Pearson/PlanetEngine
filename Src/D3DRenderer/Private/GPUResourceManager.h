@@ -12,20 +12,13 @@
 #include "Texture/D3DTextureLoader.h"
 #include "Shader/D3DShaderLoader.h"
 #include "Mesh/MeshResource.h"
-#include "Mesh/D3DMesh.h"
+#include "Material/MaterialResource.h"
 
 class Mesh;
 class Material;
 class D3DPixelShader;
 class D3DTexture;
 class D3DCommandQueue;
-
-struct GPUMaterialHandle
-{
-    std::shared_ptr<D3DPixelShader> shader;
-    std::vector<std::shared_ptr<D3DTexture>> textures;
-    bool alpha;
-};
 
 #define EMPTY_BATCH 0
 #define BUILDING_BATCH 1
@@ -34,7 +27,7 @@ struct GPUMaterialHandle
 struct ResourceLoadBatch
 {
     uint64_t signal_ = EMPTY_BATCH;
-    std::vector<D3DMesh*> pending_meshes_;
+    std::vector<class D3DMesh*> pending_meshes_;
     ID3D12CommandAllocator* command_allocator_;
 
     inline const bool IsInUse() const { return signal_ >= MIN_SIGNAL; }
@@ -51,7 +44,7 @@ class GPUResourceManager
 
     MeshResource* LoadMesh(const Mesh* mesh);
 
-    std::shared_ptr<GPUMaterialHandle> LoadMaterial(const Material* material);
+    MaterialResource* LoadMaterial(const Material* material);
 
     std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
 
@@ -65,7 +58,7 @@ class GPUResourceManager
 
     ResourceLoadBatch* PrepareBatch();
 
-    std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
+    const D3DPixelShader* LoadShader(const std::string& ShaderFile, bool force);
 
     void CreateBuffer(const void* data,
             size_t length,
@@ -74,9 +67,7 @@ class GPUResourceManager
             ID3D12Resource** resource,
             ID3D12Resource** intermediate_resource);
 
-    std::vector<std::shared_ptr<GPUMaterialHandle>> loaded_materials_;
-
-    std::unordered_map<std::string, std::shared_ptr<D3DPixelShader>> loadedShaders;
+    std::unordered_map<std::string, const D3DPixelShader*> loadedShaders;
 
     ResourceLoadBatch batches_[MAX_CONCURRENT_BATCHES];
     size_t next_load_batch_ = 0;
@@ -85,6 +76,5 @@ class GPUResourceManager
     D3DCommandQueue* command_queue_;
     ID3D12GraphicsCommandList* command_list_;
 
-    D3DShaderLoader* shader_loader_;
     D3DTextureLoader* texture_loader_;
 };

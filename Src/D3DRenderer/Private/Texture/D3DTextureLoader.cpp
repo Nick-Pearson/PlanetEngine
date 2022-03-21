@@ -7,9 +7,8 @@
 #include "D3DAssert.h"
 
 D3DTextureLoader::D3DTextureLoader(wrl::ComPtr<ID3D11Device> device,
-    wrl::ComPtr<ID3D11DeviceContext> context,
-    D3DShaderLoader* shader_loader) :
-    device_(device), context_(context), shader_loader_(shader_loader)
+    wrl::ComPtr<ID3D11DeviceContext> context) :
+    device_(device), context_(context)
 {
 }
 

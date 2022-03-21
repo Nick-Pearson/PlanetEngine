@@ -93,16 +93,16 @@ void PlanetEngine::Run()
     // treeEntity->Translate(Vector{ 15.0f, 0.0f, 50.0f });
     // treeEntity->Rotate(Vector{ 0.0f, 0.0f, 90.0f });
 
-    std::shared_ptr<Entity> floorEntity = scene_->SpawnEntity("floor");
-    floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
-    floorEntity->AddComponent<MeshComponent>(Primitives::Plane(100000.0f), standardMaterial);
+    // std::shared_ptr<Entity> floorEntity = scene_->SpawnEntity("floor");
+    // floorEntity->Rotate(Vector{ 90.0f, 90.0f, -90.0f });
+    // floorEntity->AddComponent<MeshComponent>(Primitives::Plane(100000.0f), standardMaterial);
 
     std::shared_ptr<Entity> planeEntity = scene_->SpawnEntity("wall");
     planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
     planeEntity->Translate(Vector{ -4.0f, -2.0f, -2.0f });
     planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
 
-    scene_->SpawnEntity<SkyDome>("sky");
+    // scene_->SpawnEntity<SkyDome>("sky");
 
     float deltaTime = 0.01f;
     auto begin = std::chrono::high_resolution_clock::now();

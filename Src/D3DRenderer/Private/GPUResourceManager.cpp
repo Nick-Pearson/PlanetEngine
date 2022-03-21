@@ -7,7 +7,9 @@
 #include "D3DRenderer.h"
 #include "Texture/D3DTexture.h"
 #include "Mesh/Mesh.h"
+#include "Mesh/D3DMesh.h"
 #include "Material/Material.h"
+#include "Material/D3DMaterial.h"
 #include "Texture/Texture2D.h"
 #include "Compute/ComputeShader.h"
 #include "D3DCommandQueue.h"
@@ -35,7 +37,6 @@ GPUResourceManager::GPUResourceManager(ID3D12Device2* device) :
     SET_NAME(command_list_, "Copy Command List")
     d3dAssert(command_list_->Close());
 
-    // shader_loader_ = new D3DShaderLoader{device};
     // texture_loader_ = new D3DTextureLoader{device, context, shader_loader_};
 }
 
@@ -92,40 +93,37 @@ MeshResource* GPUResourceManager::LoadMesh(const Mesh* mesh)
     return d3d_mesh;
 }
 
-std::shared_ptr<GPUMaterialHandle> GPUResourceManager::LoadMaterial(const Material* material)
+MaterialResource* GPUResourceManager::LoadMaterial(const Material* material)
 {
     auto loaded_shader = LoadShader(material->GetShaderPath(), false);
 
-    std::shared_ptr<GPUMaterialHandle> entry = std::make_shared<GPUMaterialHandle>();
-    entry->shader = loaded_shader;
-    entry->alpha = material->IsAlphaBlendingEnabled();
+    std::vector<std::shared_ptr<D3DTexture>> textures;
+    // int num_textures = material->GetNumTextures();
+    // for (int i = 0; i < num_textures; ++i)
+    // {
+    //     const Texture* texture = material->GetTextureAt(i);
+    //     auto loaded_texture = texture_loader_->Load(texture);
+    //     if (loaded_texture)
+    //     {
+    //         textures.push_back(loaded_texture);
+    //     }
+    //     else
+    //     {
+    //         P_FATAL("failed to load texture {}", (void*) texture)
+    //     }
+    // }
 
-    int numTextures = material->GetNumTextures();
-    for (int i = 0; i < numTextures; ++i)
-    {
-        const Texture* texture = material->GetTextureAt(i);
-        auto loaded_texture = texture_loader_->Load(texture);
-        if (loaded_texture)
-        {
-            entry->textures.push_back(loaded_texture);
-        }
-        else
-        {
-            P_FATAL("failed to load texture {}", (void*) texture)
-        }
-    }
-
-    loaded_materials_.push_back(entry);
-    return entry;
+    auto d3d_material = new D3DMaterial{
+        loaded_shader,
+        textures,
+        material->IsAlphaBlendingEnabled()
+    };
+    return d3d_material;
 }
 
 void GPUResourceManager::ReloadAllShaders()
 {
     P_LOG("Reloading all shaders");
-    for (auto& i : loaded_materials_)
-    {
-        i->shader = LoadShader(i->shader->GetPath(), true);
-    }
 }
 
 ResourceLoadBatch* GPUResourceManager::PrepareBatch()
@@ -176,7 +174,7 @@ void GPUResourceManager::ProcessCompletedBatches()
 
 std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeShader& shader)
 {
-    std::shared_ptr<D3DComputeShader> program = shader_loader_->LoadCompute(shader);
+    std::shared_ptr<D3DComputeShader> program = D3DShaderLoader::LoadCompute(shader);
     if (!program)
     {
         return nullptr;
@@ -235,7 +233,7 @@ void GPUResourceManager::ExecuteResourceLoads()
     }
 }
 
-std::shared_ptr<D3DPixelShader> GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)
+const D3DPixelShader* GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)
 {
     if (!force)
     {
@@ -246,11 +244,12 @@ std::shared_ptr<D3DPixelShader> GPUResourceManager::LoadShader(const std::string
         }
     }
 
-    auto loaded_shader = shader_loader_->LoadPixel(shaderFile.c_str());
+    // auto loaded_shader = D3DShaderLoader::LoadPixel(shaderFile.c_str());
+    auto loaded_shader = D3DShaderLoader::LoadPixel("FallbackShader.hlsl");
     if (!loaded_shader)
     {
         P_ERROR("failed to load shader {}", shaderFile);
-        loaded_shader = shader_loader_->LoadPixel("FallbackShader.hlsl");
+        loaded_shader = D3DShaderLoader::LoadPixel("FallbackShader.hlsl");
     }
 
     loadedShaders.emplace(shaderFile, loaded_shader);

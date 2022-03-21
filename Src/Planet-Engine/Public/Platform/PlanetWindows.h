@@ -13,6 +13,8 @@
 
 #include <Windows.h>
 #include <windowsx.h>
+#include <shlobj.h>
+#include <strsafe.h>
 #include "../Input/KeyCode.h"
 
 class IWindowsMessageHandler

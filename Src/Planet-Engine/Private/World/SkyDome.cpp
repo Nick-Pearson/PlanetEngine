@@ -20,7 +20,7 @@ SkyDome::SkyDome()
     auto skyMaterial = std::make_shared<Material>("SkySphere.hlsl");
 
     auto domeMesh = AddComponent<MeshComponent>(mesh, skyMaterial);
-    domeMesh->render_config_.use_world_matrix = false;
+    domeMesh->render_config_.use_world_matrix_ = false;
 
     auto low_freq_texture = std::make_shared<ComputeTexture3D>(128, 128, 128);
     auto high_freq_texture = std::make_shared<ComputeTexture3D>(32, 32, 32);

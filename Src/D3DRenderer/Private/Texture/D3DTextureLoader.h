@@ -6,7 +6,6 @@
 #include <unordered_map>
 
 #include "Texture/Texture.h"
-#include "Shader/D3DShaderLoader.h"
 
 #include "D3DTexture.h"
 
@@ -26,7 +25,7 @@ struct LoadedTexture
 class D3DTextureLoader
 {
  public:
-    explicit D3DTextureLoader(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context, D3DShaderLoader* shader_loader);
+    explicit D3DTextureLoader(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context);
 
     std::shared_ptr<D3DTexture> Load(const Texture* texture);
 
@@ -41,7 +40,6 @@ class D3DTextureLoader
 
     wrl::ComPtr<ID3D11Device> device_;
     wrl::ComPtr<ID3D11DeviceContext> context_;
-    D3DShaderLoader* shader_loader_;
 
     std::unordered_map<const Texture*, LoadedTexture> loaded_textures_;
 };

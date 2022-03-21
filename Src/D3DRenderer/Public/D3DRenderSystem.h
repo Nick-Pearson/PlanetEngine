@@ -85,5 +85,7 @@ class D3DRenderSystem : public RenderSystem
 
     class WindowRenderTarget* window_render_target_;
 
+    class D3DRootSignature* root_signature_;
+
     RingBuffer<uint64_t> frame_times_ms_{50};
 };

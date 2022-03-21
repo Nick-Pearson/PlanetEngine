@@ -6,14 +6,12 @@
 class D3DPixelShader
 {
  public:
-    D3DPixelShader(const char* path, ID3DBlob* blob, ID3D11PixelShader* handle);
+    explicit D3DPixelShader(ID3DBlob* blob);
     ~D3DPixelShader();
 
-    void Use(ID3D11DeviceContext* context);
-    inline const std::string GetPath() const { return path_; }
+    inline ID3DBlob* GetBlob() const { return blob_; }
 
  private:
     std::string path_;
     ID3DBlob* blob_;
-    ID3D11PixelShader* handle_;
 };

@@ -1,34 +1,39 @@
-cbuffer CBufSlow
-{
-	matrix world;
-	matrix view;
-};
-
-cbuffer CBufFast
-{
-	matrix model;
-};
-
 struct VS_Out
 {
-	float3 normal : Color0;
-	float3 worldPos : Color1;
-	float2 texCoord : TexCoord;
 	float4 position : SV_Position;
+	float3 normal : Color0;
+	float2 texCoord : TexCoord;
 };
 
-VS_Out main(float3 pos : Position, float3 norm : Normal, float2 texCoord : TexCoord)
+struct VS_In
 {
-	VS_Out res;
+    float3 position : Position;
+    float3 normal : Normal;
+    float2 texCoord : TexCoord;
+};
 
-	matrix modelWorldView = mul(mul(model, world), view);
+struct SlowConstants
+{
+    matrix world;
+    matrix view;
+};
+ConstantBuffer<SlowConstants> slow : register(b0);
+
+struct FastConstants
+{
+    matrix model;
+};
+ConstantBuffer<FastConstants> fast : register(b1);
+
+VS_Out main(VS_In input)
+{
+	VS_Out output;
+
+	matrix modelWorldView = mul(mul(fast.model, slow.world), slow.view);
 	
-	res.position = mul(float4(pos, 1.0f), modelWorldView);
+	output.position = mul(float4(input.position, 1.0f), modelWorldView);
+	output.normal = normalize(mul(input.normal, (float3x3)fast.model));
+	output.texCoord = float2(input.texCoord.x, input.texCoord.y);
 
-	float4 translatedPos = mul(float4(pos, 1.0f), model);
-	res.normal = normalize(mul(norm, (float3x3)model));
-	res.worldPos = float3(translatedPos.x, translatedPos.y, translatedPos.z);
-	res.texCoord = float2(texCoord.x, texCoord.y);
-
-	return res;
+	return output;
 }

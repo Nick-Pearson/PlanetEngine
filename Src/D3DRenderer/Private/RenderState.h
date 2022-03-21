@@ -2,41 +2,45 @@
 
 #include <memory>
 
-#include "Mesh/D3DMesh.h"
+#include "Mesh/MeshResource.h"
+#include "Material/MaterialResource.h"
+#include "D3DPipelineState.h"
 
 #include "Math/Transform.h"
-
-struct GPUMeshHandle;
-struct GPUMaterialHandle;
 
 struct RenderState
 {
  public:
-    RenderState() :
-        UseDepthBuffer(true), UseWorldMatrix(true), mesh(nullptr), material(nullptr)
+    RenderState(MeshResource* mesh,
+                MaterialResource* material,
+                D3DPipelineState* pipeline_state,
+                const Transform& model,
+                bool use_depth_buffer,
+                bool use_world_matrix) :
+        mesh_(mesh), material_(material), pipeline_state_(pipeline_state), model_(model),
+        use_depth_buffer_(use_depth_buffer), use_world_matrix_(use_world_matrix)
     {
     }
 
     bool IsValid() const
     {
-        return mesh && material;
+        return mesh_->IsLoaded() && material_->IsLoaded();
     }
 
-    bool UseDepthBuffer;
-    bool UseWorldMatrix;
-
-    MeshResource* mesh;
-    std::shared_ptr<GPUMaterialHandle> material;
-    Transform model;
-    const char* debugName;
+    MeshResource* const mesh_;
+    MaterialResource* const material_;
+    D3DPipelineState* const pipeline_state_;
+    Transform model_;
+    bool use_depth_buffer_;
+    bool use_world_matrix_;
 
     bool operator==(const RenderState& other) const
     {
-        return UseDepthBuffer == other.UseDepthBuffer &&
-            UseWorldMatrix == other.UseWorldMatrix &&
-            mesh == other.mesh &&
-            material == other.material &&
-            model == other.model &&
-            debugName == other.debugName;
+        return use_depth_buffer_ == other.use_depth_buffer_ &&
+            use_world_matrix_ == other.use_world_matrix_ &&
+            mesh_ == other.mesh_ &&
+            material_ == other.material_ &&
+            pipeline_state_ == other.pipeline_state_ &&
+            model_ == other.model_;
     }
 };

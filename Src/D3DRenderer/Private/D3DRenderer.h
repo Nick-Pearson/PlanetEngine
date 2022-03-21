@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <iostream>
 #include <memory>
+#include <vector>
 #include <DirectXMath.h>
 
 #include "Platform/PlanetWindows.h"
@@ -14,10 +15,9 @@
 #include "World/CameraComponent.h"
 
 #include "Target/RenderTarget.h"
-#include "Shader/D3DShaderLoader.h"
 #include "RenderState.h"
+#include "D3DConstants.h"
 #include "D3DAssert.h"
-#include "D3DRootSignature.h"
 
 __declspec(align(16))
 class D3DRenderer : public Renderer
@@ -25,7 +25,7 @@ class D3DRenderer : public Renderer
     friend class D3DShader;
 
  public:
-    D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list);
+    D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list, const D3DRootSignature* root_signature);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -47,8 +47,7 @@ class D3DRenderer : public Renderer
     // renders a particular camera
     void Render(const CameraComponent& camera);
 
-    RenderState* AddRenderState(const RenderState& state);
-    void RemoveRenderState(const RenderState* state);
+    void AddRenderState(const RenderState& state);
 
     void UpdateWorldBuffer(const WorldBufferData& data);
 
@@ -69,35 +68,14 @@ class D3DRenderer : public Renderer
 
     ID3D12Device2* device_;
     ID3D12GraphicsCommandList* command_list_;
-    D3DRootSignature* root_signature_;
+    const D3DRootSignature* const root_signature_;
 
     const RenderTarget* render_target_ = nullptr;
 
-    // Constant Buffers
-    // wrl::ComPtr<ID3D12Buffer> mSlowConstantBuffer;
-    struct SlowConstantBuffer
-    {
-        SlowConstantBuffer()
-        {
-            world = DirectX::XMMatrixIdentity();
-            view = DirectX::XMMatrixIdentity();
-        }
+int count = 0;
 
-        DirectX::XMMATRIX world;
-        DirectX::XMMATRIX view;
-    };
-    SlowConstantBuffer mSlowConstantBufferData;
-
-    // wrl::ComPtr<ID3D11Buffer> mFastConstantBuffer;
-    struct FastConstantBuffer
-    {
-        FastConstantBuffer()
-        {
-            model = DirectX::XMMatrixIdentity();
-        }
-        DirectX::XMMATRIX model;
-    };
-    FastConstantBuffer mFastConstantBufferData;
+    D3DSlowVSConstants::Data slow_constants_;
+    D3DFastVSConstants::Data fast_constants_;
 
     // wrl::ComPtr<ID3D11Buffer> mWorldPixelBuffer;
     WorldBufferData mWorldPixelBufferData;
@@ -107,12 +85,9 @@ class D3DRenderer : public Renderer
  private:
     // list of render commands
     // TODO: Replace with a heap?
-    LinkedList<RenderState> renderStates;
-
-    RenderState currentRenderState;
-    unsigned int used_texture_slots_ = 0;
+    std::vector<RenderState> render_states_;
 
     float aspect_ratio_ = 1.0f;
 
-    std::shared_ptr<GPUMaterialHandle> wireframe_shader_;
+    // std::shared_ptr<GPUMaterialHandle> wireframe_shader_;
 };
