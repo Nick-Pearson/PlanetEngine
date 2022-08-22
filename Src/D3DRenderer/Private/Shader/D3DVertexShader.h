@@ -9,7 +9,9 @@ class D3DVertexShader
     ~D3DVertexShader();
 
     inline ID3DBlob* GetBlob() const { return blob_; }
+    D3D12_INPUT_LAYOUT_DESC GetInputLayout() const;
 
  private:
-    ID3DBlob* blob_;
+    D3D12_INPUT_ELEMENT_DESC ied_[3];
+    ID3DBlob* const blob_;
 };

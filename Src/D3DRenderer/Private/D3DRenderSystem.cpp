@@ -19,9 +19,10 @@
 #include "D3DWindowEvents.h"
 #include "Compute/ComputeShader.h"
 #include "Material/Material.h"
+#include "Descriptor/SRVHeap.h"
 #include "D3DAssert.h"
 #include "D3DCommandQueue.h"
-#include "D3DRootSignature.h"
+#include "BaseRootSignature.h"
 #include "imgui.h"
 
 namespace
@@ -46,6 +47,8 @@ namespace
             "EXECUTION",
             "SHADER"
     };
+
+
 
 #if defined(DX_DEBUG)
     // https://devblogs.microsoft.com/pix/taking-a-capture/
@@ -115,16 +118,16 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
 
     // Compile Shaders
     const D3DVertexShader* vertex_shader = D3DShaderLoader::LoadVertex("VertexShader.hlsl");
-    root_signature_ = new D3DRootSignature{ vertex_shader, device_ };
+    root_signature_ = new BaseRootSignature{ device_ };
     root_signature_->Bind(draw_command_list_);
 
     ui_renderer_ = new ImGUIRenderer{ window };
-    resource_manager_ = new GPUResourceManager{ device_ };
+    resource_manager_ = new GPUResourceManager{ device_, srv_heap_ };
     window_events_ = new D3DWindowEvents{ this };
 
     // Material wireframe_material{"WireframeShader.hlsl"};
     // auto wireframe_shader = mResourceManager->LoadMaterial(&wireframe_material);
-    renderer_ = new D3DRenderer{ device_, draw_command_list_, root_signature_ };
+    renderer_ = new D3DRenderer{ device_, draw_command_list_, root_signature_, srv_heap_ };
     window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, dsv_descriptor_heap_, draw_command_queue_};
     renderer_->BindRenderTarget(window_render_target_);
 
@@ -183,13 +186,10 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
     {
         auto d3d_mesh = resource_manager_->LoadMesh(mesh->GetMesh());
         auto d3d_material = resource_manager_->LoadMaterial(mesh->GetMaterial());
-        auto pipeline_state = root_signature_->NewPipelineState(d3d_material->GetPixelShader());
-        pipeline_state->Compile(device_);
 
         RenderState render_state{
             d3d_mesh,
             d3d_material,
-            pipeline_state,
             mesh->GetWorldTransform(),
             mesh->render_config_.use_depth_buffer_,
             mesh->render_config_.use_world_matrix_
@@ -340,6 +340,8 @@ void D3DRenderSystem::InitDevice(HWND window)
 
     rtv_descriptor_heap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, NUM_BUFFERS);
     dsv_descriptor_heap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+
+    srv_heap_ = new SRVHeap{device_};
 }
 
 ID3D12Device2* D3DRenderSystem::CreateDevice()
@@ -393,7 +395,7 @@ IDXGISwapChain4* D3DRenderSystem::CreateSwapChain(HWND window)
     desc.Height = 720;
     desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.Stereo = false;
-    desc.SampleDesc = { 1, 0 };
+    desc.SampleDesc = DXGI_SAMPLE_DESC{ 1, 0 };
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     desc.BufferCount = 3;
     desc.Scaling = DXGI_SCALING_STRETCH;

@@ -8,9 +8,6 @@
 #include "d3dx12.h"
 
 #include "Platform/Window.h"
-#include "Shader/D3DVertexShader.h"
-#include "Shader/D3DPixelShader.h"
-#include "Shader/D3DShaderLoader.h"
 #include "Texture/D3DTexture.h"
 #include "GPUResourceManager.h"
 #include "Mesh/Mesh.h"
@@ -18,8 +15,8 @@
 #include "Math/Transform.h"
 #include "imgui.h"
 
-D3DRenderer::D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list, const D3DRootSignature* root_signature) :
-    device_(device), command_list_(command_list), root_signature_(root_signature)
+D3DRenderer::D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list, const BaseRootSignature* root_signature, SRVHeap* srv_heap) :
+    device_(device), command_list_(command_list), root_signature_(root_signature), srv_heap_(srv_heap)
 {
     device_->AddRef();
     command_list_->AddRef();
@@ -163,7 +160,7 @@ void D3DRenderer::PreRender(const CameraComponent& camera)
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     command_list_->ResourceBarrier(1, &barrier);
     const int period = 10000;
-    const float colour[4] = { ((count++ % period) / (float)period), 0.5f, 0.5f, 1.0f };
+    const float colour[4] = { ((count++ % period) / static_cast<float>(period)), 0.5f, 0.5f, 1.0f };
     command_list_->ClearRenderTargetView(back_buffer->cpu_handle_, colour, 0, nullptr);
 
     auto depth_stencil = render_target_->GetDepthStencil();
@@ -182,12 +179,10 @@ void D3DRenderer::PreRender(const CameraComponent& camera)
 
     D3D12_RECT scissor_rect = CD3DX12_RECT(0, 0, LONG_MAX, LONG_MAX);
     command_list_->RSSetScissorRects(1, &scissor_rect);
-    
-    root_signature_->Bind(command_list_);
     // setup projection matrix
     slow_constants_.view_ = DirectX::XMMatrixTranspose(DirectX::XMMatrixPerspectiveLH(1.0f, aspect_ratio_, camera.NearClip, camera.FarClip));
 
-    UpdateWorldMatrix(camera, false);
+    srv_heap_->Bind(command_list_);
 }
 
 void D3DRenderer::PostRender()
@@ -228,17 +223,25 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     //     }
     // }
 
+
+    state.material_->GetRootSignature()->Bind(command_list_);
+
     UpdateWorldMatrix(camera, state.use_world_matrix_);
 
     DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(state.model_.GetMatrix());
     fast_constants_.model_ = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model_.GetMatrix()));
     command_list_->SetGraphicsRoot32BitConstants(1, D3DFastVSConstants::size_32_bit_, &fast_constants_, 0);
 
+    // bind textures
+    // command_list_->SetGraphicsRootDescriptorTable();
+
     command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     command_list_->IASetVertexBuffers(0u, 1u, state.mesh_->GetVertexBuffer());
     command_list_->IASetIndexBuffer(state.mesh_->GetTriangleBuffer());
 
-    state.pipeline_state_->Bind(command_list_);
+    state.material_->Bind(command_list_);
+
+    // command_list_->SetGraphicsRootShaderResourceView()
 
     // if (use_materials && currentRenderState.material != state.material)
     // {

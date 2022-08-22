@@ -23,6 +23,7 @@
 #include "Texture/Texture2D.h"
 #include "Texture/TextureFactory.h"
 #include "Texture/TextureWriter.h"
+#include "Shader/PixelShader.h"
 #include "Compute/ComputeShader.h"
 #include "Jobs/ThreadPoolJobRunner.h"
 #include "Jobs/LazyJobSystem.h"
@@ -72,9 +73,13 @@ void PlanetEngine::Run()
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
     std::shared_ptr<Mesh> tree = FBXImporter::Import("Assets/Models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
 
-    std::shared_ptr<Material> standardMaterial = std::make_shared<Material>("PixelShader.hlsl");
-    std::shared_ptr<Material> treeMaterial = std::make_shared<Material>("TexturedShader.hlsl");
-    std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>("TexturedShader.hlsl");
+    PixelShader* pixel_shader = new PixelShader{ "PixelShader.hlsl" };
+    PixelShader* textured_shader = new PixelShader{ "TexturedShader.hlsl" };
+    textured_shader->AddInput(ShaderParameterType::TEXTURE_2D);
+
+    std::shared_ptr<Material> standardMaterial = std::make_shared<Material>(pixel_shader);
+    std::shared_ptr<Material> treeMaterial = std::make_shared<Material>(pixel_shader);
+    std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>(textured_shader);
 
     std::shared_ptr<Texture2D> brickAlbedo = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
     texturedMaterial->AddTexture(brickAlbedo);
@@ -141,6 +146,8 @@ void PlanetEngine::Run()
     delete imguiInput;
     delete input_manager_;
     delete job_system_;
+    delete pixel_shader;
+    delete textured_shader;
 }
 
 void PlanetEngine::SaveScreenshot(const CameraComponent& camera)

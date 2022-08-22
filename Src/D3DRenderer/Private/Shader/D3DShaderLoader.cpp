@@ -61,11 +61,11 @@ const D3DVertexShader* D3DShaderLoader::LoadVertex(const char* filepath)
     return new D3DVertexShader{ blob };
 }
 
-const D3DPixelShader* D3DShaderLoader::LoadPixel(const char* filepath)
+const D3DPixelShader* D3DShaderLoader::LoadPixel(const PixelShader* shader)
 {
-    P_LOG("Loading pixel shader {}", filepath);
+    P_LOG("Loading pixel shader {}", shader->GetShaderPath());
     std::unordered_map<std::string, std::string> defines;
-    ID3DBlob* blob = compile_shader_blob(filepath, "ps_5_1", defines);
+    ID3DBlob* blob = compile_shader_blob(shader->GetShaderPath().c_str(), "ps_5_1", defines);
     if (!blob)
     {
         return nullptr;

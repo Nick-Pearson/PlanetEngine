@@ -2,11 +2,9 @@
 
 #include <d3d12.h>
 
-#include "MeshResource.h"
-
 #include "Mesh/Mesh.h"
 
-class D3DMesh : public MeshResource
+class D3DMesh
 {
  public:
     D3DMesh(const Mesh* mesh,
@@ -16,10 +14,10 @@ class D3DMesh : public MeshResource
             ID3D12Resource* triangle_intermediate_buffer);
     virtual ~D3DMesh();
 
-    inline const D3D12_VERTEX_BUFFER_VIEW* GetVertexBuffer() const override { return &vertex_buffer_view_; }
-    inline const D3D12_INDEX_BUFFER_VIEW* GetTriangleBuffer() const override { return &triangle_buffer_view_; }
-    inline size_t GetTriangleCount() const override { return mesh_->GetTriangleCount(); }
-    inline bool IsLoaded() const override { return loaded_; }
+    inline const D3D12_VERTEX_BUFFER_VIEW* GetVertexBuffer() const { return &vertex_buffer_view_; }
+    inline const D3D12_INDEX_BUFFER_VIEW* GetTriangleBuffer() const { return &triangle_buffer_view_; }
+    inline size_t GetTriangleCount() const { return mesh_->GetTriangleCount(); }
+    inline bool IsLoaded() const { return loaded_; }
 
     void OnLoadingComplete();
 

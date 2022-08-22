@@ -1,22 +1,30 @@
 #pragma once
 
+#include <d3d12.h>
 #include <memory>
 #include <vector>
 
-#include "MaterialResource.h"
-#include "../Texture/D3DTexture.h"
-#include "../Shader/D3DPixelShader.h"
+#include "D3DRootSignature.h"
+#include "D3DPipelineState.h"
+#include "../Descriptor/D3DDescriptorTable.h"
 
-class D3DMaterial : public MaterialResource
+class D3DMaterial
 {
  public:
-    D3DMaterial(const D3DPixelShader* shader, const std::vector<std::shared_ptr<D3DTexture>>& textures, bool alpha);
+    D3DMaterial(D3DRootSignature* root_signature, D3DPipelineState* pipeline_state, D3DDescriptorTable* descriptor_table);
+    ~D3DMaterial();
 
-    inline const D3DPixelShader* GetPixelShader() const override { return shader_; }
-    inline bool IsLoaded() const override { return true; }
+    inline D3DRootSignature* GetRootSignature() const { return root_signature_; }
+
+    void Bind(ID3D12GraphicsCommandList* command_list);
+    inline bool IsLoaded() const { return loaded_; }
+
+    void OnLoadingComplete();
 
  private:
-    const D3DPixelShader* const shader_;
-    std::vector<std::shared_ptr<D3DTexture>> textures_;
-    bool alpha_;
+    bool loaded_ = false;
+
+    D3DRootSignature* const root_signature_;
+    D3DPipelineState* const pipeline_state_;
+    D3DDescriptorTable* const descriptor_table_;
 };

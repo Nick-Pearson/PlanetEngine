@@ -38,7 +38,6 @@ WindowRenderTarget::~WindowRenderTarget()
     }
 }
 
-
 void WindowRenderTarget::PreRender()
 {
     current_buffer_ = swap_chain_->GetCurrentBackBufferIndex();
@@ -91,12 +90,18 @@ void WindowRenderTarget::UpdateWindowSize(ID3D12Device* device)
     D3D12_CLEAR_VALUE clear_value = {};
     clear_value.Format = DXGI_FORMAT_D32_FLOAT;
     clear_value.DepthStencil = { 1.0f, 0 };
+
     // Update the depth-stencil view.
+    CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
+        width_, height_,
+        1, 0, 1, 0,
+        D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
+
     ID3D12Resource* depth_buffer;
     d3dAssert(device->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width_, height_, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+        &desc,
         D3D12_RESOURCE_STATE_DEPTH_WRITE,
         &clear_value,
         IID_PPV_ARGS(&depth_buffer)));

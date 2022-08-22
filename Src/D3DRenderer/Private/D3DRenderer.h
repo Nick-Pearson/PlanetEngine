@@ -15,8 +15,10 @@
 #include "World/CameraComponent.h"
 
 #include "Target/RenderTarget.h"
+#include "BaseRootSignature.h"
 #include "RenderState.h"
 #include "D3DConstants.h"
+#include "Descriptor/SRVHeap.h"
 #include "D3DAssert.h"
 
 __declspec(align(16))
@@ -25,7 +27,7 @@ class D3DRenderer : public Renderer
     friend class D3DShader;
 
  public:
-    D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list, const D3DRootSignature* root_signature);
+    D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list, const BaseRootSignature* root_signature, SRVHeap* srv_heap);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -68,7 +70,8 @@ class D3DRenderer : public Renderer
 
     ID3D12Device2* device_;
     ID3D12GraphicsCommandList* command_list_;
-    const D3DRootSignature* const root_signature_;
+    const BaseRootSignature* const root_signature_;
+    SRVHeap* const srv_heap_;
 
     const RenderTarget* render_target_ = nullptr;
 

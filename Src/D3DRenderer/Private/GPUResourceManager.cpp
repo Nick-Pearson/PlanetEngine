@@ -14,12 +14,35 @@
 #include "Compute/ComputeShader.h"
 #include "D3DCommandQueue.h"
 #include "D3DRenderSystem.h"
+#include "D3DRootSignature.h"
+#include "D3DPipelineState.h"
 #include "PlanetEngine.h"
 
 #include "imgui.h"
 
-GPUResourceManager::GPUResourceManager(ID3D12Device2* device) :
-    device_(device)
+void ResourceLoadBatch::OnLoadingComplete()
+{
+    for (auto mesh : pending_meshes_)
+    {
+        mesh->OnLoadingComplete();
+    }
+    pending_meshes_.clear();
+    for (auto texture : pending_textures_)
+    {
+        texture->OnLoadingComplete();
+    }
+    pending_textures_.clear();
+    for (auto material : pending_materials_)
+    {
+        material->OnLoadingComplete();
+    }
+    pending_materials_.clear();
+
+    signal_ = EMPTY_BATCH;
+}
+
+GPUResourceManager::GPUResourceManager(ID3D12Device2* device, SRVHeap* srv_heap) :
+    device_(device), srv_heap_(srv_heap)
 {
     device_->AddRef();
 
@@ -37,7 +60,9 @@ GPUResourceManager::GPUResourceManager(ID3D12Device2* device) :
     SET_NAME(command_list_, "Copy Command List")
     d3dAssert(command_list_->Close());
 
-    // texture_loader_ = new D3DTextureLoader{device, context, shader_loader_};
+    texture_loader_ = new D3DTextureLoader{command_list_, device_};
+
+    vertex_shader_ = D3DShaderLoader::LoadVertex("VertexShader.hlsl");
 }
 
 GPUResourceManager::~GPUResourceManager()
@@ -51,11 +76,10 @@ GPUResourceManager::~GPUResourceManager()
     }
     delete command_queue_;
 
-    // delete texture_loader_;
-    // delete shader_loader_;
+    delete texture_loader_;
 }
 
-MeshResource* GPUResourceManager::LoadMesh(const Mesh* mesh)
+D3DMesh* GPUResourceManager::LoadMesh(const Mesh* mesh)
 {
     ResourceLoadBatch* batch = PrepareBatch();
 
@@ -93,31 +117,46 @@ MeshResource* GPUResourceManager::LoadMesh(const Mesh* mesh)
     return d3d_mesh;
 }
 
-MaterialResource* GPUResourceManager::LoadMaterial(const Material* material)
+D3DMaterial* GPUResourceManager::LoadMaterial(const Material* material)
 {
-    auto loaded_shader = LoadShader(material->GetShaderPath(), false);
+    ResourceLoadBatch* batch = PrepareBatch();
 
-    std::vector<std::shared_ptr<D3DTexture>> textures;
-    // int num_textures = material->GetNumTextures();
-    // for (int i = 0; i < num_textures; ++i)
-    // {
-    //     const Texture* texture = material->GetTextureAt(i);
-    //     auto loaded_texture = texture_loader_->Load(texture);
-    //     if (loaded_texture)
-    //     {
-    //         textures.push_back(loaded_texture);
-    //     }
-    //     else
-    //     {
-    //         P_FATAL("failed to load texture {}", (void*) texture)
-    //     }
-    // }
+    auto pixel_shader = D3DShaderLoader::LoadPixel(material->GetPixelShader());
+
+    std::vector<const D3DTexture*> textures;
+    int num_textures = material->GetNumTextures();
+    for (int i = 0; i < num_textures; ++i)
+    {
+        const Texture* texture = material->GetTextureAt(i);
+        auto loaded_texture = texture_loader_->Load(texture);
+        if (loaded_texture)
+        {
+            textures.push_back(loaded_texture);
+            batch->pending_textures_.push_back(loaded_texture);
+        }
+        else
+        {
+            P_FATAL("failed to load texture {}", (void*) texture)
+        }
+    }
+
+    auto root_signature = new D3DRootSignature{material->GetPixelShader(), device_};
+    auto pipeline_state = new D3DPipelineState{device_,
+        root_signature->GetRootSignature(),
+        vertex_shader_,
+        pixel_shader};
+    pipeline_state->Compile();
+
+    D3DDescriptorTable* descriptor_table = nullptr;
+    if (!textures.empty())
+        descriptor_table = srv_heap_->CreateDescriptorTable(textures.size(), textures.data());
 
     auto d3d_material = new D3DMaterial{
-        loaded_shader,
-        textures,
-        material->IsAlphaBlendingEnabled()
+        root_signature,
+        pipeline_state,
+        descriptor_table
     };
+    batch->pending_materials_.push_back(d3d_material);
     return d3d_material;
 }
 
@@ -161,13 +200,7 @@ void GPUResourceManager::ProcessCompletedBatches()
         ResourceLoadBatch& batch = batches_[i];
         if (batch.signal_ <= last_signal && batch.IsInUse())
         {
-            for (auto mesh : batch.pending_meshes_)
-            {
-                mesh->OnLoadingComplete();
-            }
-
-            batch.signal_ = EMPTY_BATCH;
-            batch.pending_meshes_.clear();
+            batch.OnLoadingComplete();
         }
     }
 }
@@ -231,29 +264,6 @@ void GPUResourceManager::ExecuteResourceLoads()
         batch.signal_ = command_queue_->Signal();
         next_load_batch_ = (next_load_batch_ + 1) % MAX_CONCURRENT_BATCHES;
     }
-}
-
-const D3DPixelShader* GPUResourceManager::LoadShader(const std::string& shaderFile, bool force)
-{
-    if (!force)
-    {
-        auto it = loadedShaders.find(shaderFile);
-        if (it != loadedShaders.end())
-        {
-            return it->second;
-        }
-    }
-
-    // auto loaded_shader = D3DShaderLoader::LoadPixel(shaderFile.c_str());
-    auto loaded_shader = D3DShaderLoader::LoadPixel("FallbackShader.hlsl");
-    if (!loaded_shader)
-    {
-        P_ERROR("failed to load shader {}", shaderFile);
-        loaded_shader = D3DShaderLoader::LoadPixel("FallbackShader.hlsl");
-    }
-
-    loadedShaders.emplace(shaderFile, loaded_shader);
-    return loaded_shader;
 }
 
 void GPUResourceManager::CreateBuffer(const void* data,

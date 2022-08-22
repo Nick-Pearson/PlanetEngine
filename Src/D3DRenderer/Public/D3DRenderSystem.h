@@ -13,19 +13,6 @@
 
 #define NUM_BUFFERS 3
 
-#if defined(DX_DEBUG)
-    #define SET_NAME(obj, name) obj->SetName(L##name);
-    #define SET_NAME_F(obj, name, ...) \
-        { \
-            wchar_t ___buff[256]; \
-            swprintf(___buff, 256, L##name, ##__VA_ARGS__); \
-            obj->SetName(___buff); \
-        }
-#else
-    #define SET_NAME(obj, name)
-    #define SET_NAME_F(obj, name, ...)
-#endif
-
 class D3DRenderSystem : public RenderSystem
 {
  public:
@@ -77,6 +64,7 @@ class D3DRenderSystem : public RenderSystem
 
     ID3D12DescriptorHeap* rtv_descriptor_heap_ = nullptr;
     ID3D12DescriptorHeap* dsv_descriptor_heap_ = nullptr;
+    class SRVHeap* srv_heap_ = nullptr;
 
     class D3DRenderer* renderer_;
     class ImGUIRenderer* ui_renderer_;
@@ -85,7 +73,7 @@ class D3DRenderSystem : public RenderSystem
 
     class WindowRenderTarget* window_render_target_;
 
-    class D3DRootSignature* root_signature_;
+    class BaseRootSignature* root_signature_;
 
     RingBuffer<uint64_t> frame_times_ms_{50};
 };

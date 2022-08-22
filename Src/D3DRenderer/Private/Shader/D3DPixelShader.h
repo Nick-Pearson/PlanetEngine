@@ -12,6 +12,5 @@ class D3DPixelShader
     inline ID3DBlob* GetBlob() const { return blob_; }
 
  private:
-    std::string path_;
     ID3DBlob* blob_;
 };
