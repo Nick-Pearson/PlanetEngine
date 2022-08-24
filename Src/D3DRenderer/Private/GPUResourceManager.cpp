@@ -154,7 +154,8 @@ D3DMaterial* GPUResourceManager::LoadMaterial(const Material* material)
     auto d3d_material = new D3DMaterial{
         root_signature,
         pipeline_state,
-        descriptor_table
+        descriptor_table,
+        textures
     };
     batch->pending_materials_.push_back(d3d_material);
     return d3d_material;

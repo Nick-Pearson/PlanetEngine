@@ -10,7 +10,7 @@
 class D3DTextureLoader
 {
  public:
-    D3DTextureLoader(ID3D12GraphicsCommandList* command_list, ID3D12Device2* device);
+    D3DTextureLoader(ID3D12GraphicsCommandList* copy_command_list, ID3D12Device2* device);
     ~D3DTextureLoader();
 
     D3DTexture* Load(const Texture* texture);
@@ -23,5 +23,5 @@ class D3DTextureLoader
     D3DTexture* LoadComputeTexture3D(const class ComputeTexture3D* texture);
 
     ID3D12Device2* const device_;
-    ID3D12GraphicsCommandList* const command_list_;
+    ID3D12GraphicsCommandList* const copy_command_list_;
 };

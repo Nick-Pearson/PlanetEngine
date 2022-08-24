@@ -8,16 +8,16 @@
 #include "Texture/ComputeTexture3D.h"
 #include "D3DAssert.h"
 
-D3DTextureLoader::D3DTextureLoader(ID3D12GraphicsCommandList* command_list, ID3D12Device2* device) :
-    command_list_(command_list), device_(device)
+D3DTextureLoader::D3DTextureLoader(ID3D12GraphicsCommandList* copy_command_list, ID3D12Device2* device) :
+    copy_command_list_(copy_command_list), device_(device)
 {
-    command_list_->AddRef();
+    copy_command_list_->AddRef();
     device_->AddRef();
 }
 
 D3DTextureLoader::~D3DTextureLoader()
 {
-    command_list_->Release();
+    copy_command_list_->Release();
     device_->Release();
 }
 
@@ -99,27 +99,24 @@ D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
         IID_PPV_ARGS(&resource)));
     SET_NAME(resource, L"Texture Buffer Resource Heap");
 
-    const auto stride = texture->GetWidth() * sizeof(Colour);
-    const auto buffer_size = texture->GetHeight() * stride;
+    uint32_t num_rows;
+    uint64_t row_size, total_size;
+    device_->GetCopyableFootprints(&resource_desc, 0U, 1U, 0U, nullptr, &num_rows, &row_size, &total_size);
+
     ID3D12Resource* intermediate_resource;
     d3dAssert(device_->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(buffer_size),
+        &CD3DX12_RESOURCE_DESC::Buffer(total_size),
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&intermediate_resource)));
 
     D3D12_SUBRESOURCE_DATA subresource_data = {};
     subresource_data.pData = texture->GetData();
-    subresource_data.RowPitch = texture->GetHeight();
-    subresource_data.SlicePitch = stride;
-    UpdateSubresources(command_list_, resource, intermediate_resource, 0, 0, 1, &subresource_data);
-
-    // CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource,
-    //         D3D12_RESOURCE_STATE_COPY_DEST,
-    //         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    // command_list_->ResourceBarrier(1, &barrier);
+    subresource_data.RowPitch = texture->GetWidth() * sizeof(Colour);
+    subresource_data.SlicePitch = subresource_data.RowPitch * texture->GetHeight();
+    UpdateSubresources(copy_command_list_, resource, intermediate_resource, 0, 0, 1, &subresource_data);
 
     return new D3DTexture{resource,
         intermediate_resource,

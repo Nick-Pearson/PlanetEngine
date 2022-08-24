@@ -15,6 +15,8 @@ class D3DTexture : public TextureResource
 
     void OnLoadingComplete();
 
+    void TransitionResource(ID3D12GraphicsCommandList* command_list) const;
+
     ID3D12Resource* const resource_;
     DXGI_FORMAT const format_;
 
