@@ -196,8 +196,9 @@ void D3DRenderer::AddRenderState(const RenderState& state)
 
 void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
 {
-    mWorldPixelBufferData = data;
-    // UpdateBuffer(mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
+    world_constants_.sun_dir_ = data.sunDir.ToVector3Reg();
+    world_constants_.sun_sky_strength_ = data.sunSkyStrength;
+    world_constants_.sun_col_ = data.sunCol.ToVector3Reg();
 }
 
 void D3DRenderer::RenderDebugUI()
@@ -232,8 +233,7 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     fast_constants_.model_ = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model_.GetMatrix()));
     command_list_->SetGraphicsRoot32BitConstants(1, D3DFastVSConstants::size_32_bit_, &fast_constants_, 0);
 
-    // bind textures
-    // command_list_->SetGraphicsRootDescriptorTable();
+    command_list_->SetGraphicsRoot32BitConstants(2, D3DWorldPSConstants::size_32_bit_, &world_constants_, 0);
 
     command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     command_list_->IASetVertexBuffers(0u, 1u, state.mesh_->GetVertexBuffer());
@@ -269,29 +269,6 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     const auto start_instance = 0u;
     command_list_->DrawIndexedInstanced(state.mesh_->GetTriangleCount(), instance_count, start_index, start_vertex, start_instance);
 }
-
-// void D3DRenderer::UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize)
-// {
-//     D3D11_MAPPED_SUBRESOURCE mappedResource;
-//     mContext->Map(buffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-//     std::memcpy(mappedResource.pData, bufferData, bufferSize);
-//     mContext->Unmap(buffer.Get(), 0);
-// }
-
-// void D3DRenderer::CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize)
-// {
-//     D3D11_BUFFER_DESC cbd;
-//     cbd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-//     cbd.Usage = D3D11_USAGE_DYNAMIC;
-//     cbd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-//     cbd.MiscFlags = 0u;
-//     cbd.ByteWidth = bufferSize;
-//     cbd.StructureByteStride = 0u;
-//     D3D11_SUBRESOURCE_DATA csd = {};
-//     csd.pSysMem = bufferPtr;
-//     d3dAssert(mDevice->CreateBuffer(&cbd, &csd, outBuffer));
-// }
-
 
 void D3DRenderer::UpdateWorldMatrix(const CameraComponent& camera, bool use_world_matrix)
 {

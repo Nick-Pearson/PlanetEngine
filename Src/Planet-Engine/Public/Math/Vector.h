@@ -149,6 +149,11 @@ struct Vector
         return DirectX::XMVectorSet(x, y, z, 1.0f);
     }
 
+    DirectX::XMFLOAT3 ToVector3Reg() const
+    {
+        return DirectX::XMFLOAT3(x, y, z);
+    }
+
     inline float Length() const
     {
         return std::sqrt(LengthSqrd());

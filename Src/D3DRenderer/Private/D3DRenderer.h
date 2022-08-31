@@ -80,10 +80,7 @@ int count = 0;
     D3DSlowVSConstants::Data slow_constants_;
     D3DFastVSConstants::Data fast_constants_;
 
-    // wrl::ComPtr<ID3D11Buffer> mWorldPixelBuffer;
-    WorldBufferData mWorldPixelBufferData;
-
-    // void CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize);
+    D3DWorldPSConstants::Data world_constants_;
 
  private:
     // list of render commands
