@@ -40,7 +40,9 @@ void D3DPipelineState::Compile()
     rtvFormats.RTFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     CD3DX12_DEPTH_STENCIL_DESC depth_stencil{};
-    depth_stencil.DepthEnable = false;
+    depth_stencil.DepthEnable = true;
+    depth_stencil.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depth_stencil.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 
     CD3DX12_RASTERIZER_DESC rasterizer{};
     rasterizer.FillMode = D3D12_FILL_MODE_SOLID;

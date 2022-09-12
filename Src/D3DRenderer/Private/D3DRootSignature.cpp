@@ -32,9 +32,9 @@ D3DRootSignature::D3DRootSignature(const PixelShader* pixel_shader, ID3D12Device
     if (num_inputs > 0)
     {
         num_params++;
-        P_ASSERT(num_inputs == 1, "Must have only 1 input");
 
-        CD3DX12_DESCRIPTOR_RANGE1 desc_range{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0};
+        uint32_t t = static_cast<uint32_t>(num_inputs);
+        CD3DX12_DESCRIPTOR_RANGE1 desc_range{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV, t, 0};
         params[3].InitAsDescriptorTable(1U, &desc_range, D3D12_SHADER_VISIBILITY_PIXEL);
     }
 
@@ -55,7 +55,7 @@ D3DRootSignature::D3DRootSignature(const PixelShader* pixel_shader, ID3D12Device
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC desc;
-    desc.Init_1_1(num_params, params, num_inputs, &sampler, flags);
+    desc.Init_1_1(num_params, params, 1, &sampler, flags);
 
     // Serialize the root signature.
     ID3DBlob* blob;
