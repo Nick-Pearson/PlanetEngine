@@ -15,24 +15,24 @@ namespace chr = std::chrono;
 
 SkyDome::SkyDome()
 {
-    // auto mesh = Primitives::SubdivisionSurfacesHemisphere(Elipsoid(1.0f), 3);
-    // mesh->FlipFaces();
-    // mesh->Scale(4900.0f);
+    auto mesh = Primitives::SubdivisionSurfacesHemisphere(Elipsoid(1.0f), 3);
+    mesh->FlipFaces();
+    mesh->Scale(4900.0f);
 
-    // auto sky_shader = new PixelShader("SkySphere.hlsl");
-    // sky_shader->AddInput(ShaderParameterType::TEXTURE_3D);
-    // sky_shader->AddInput(ShaderParameterType::TEXTURE_3D);
+    auto sky_shader = new PixelShader("SkySphere.hlsl");
+    sky_shader->AddInput(ShaderParameterType::TEXTURE_3D);
+    sky_shader->AddInput(ShaderParameterType::TEXTURE_3D);
 
-    // auto sky_material = std::make_shared<Material>(sky_shader);
+    auto sky_material = std::make_shared<Material>(sky_shader);
 
-    // auto domeMesh = AddComponent<MeshComponent>(mesh, sky_material);
-    // domeMesh->render_config_.use_world_matrix_ = false;
+    auto domeMesh = AddComponent<MeshComponent>(mesh, sky_material);
+    domeMesh->render_config_.use_world_matrix_ = false;
 
     auto low_freq_texture = std::make_shared<ComputeTexture3D>(128, 128, 128);
     auto high_freq_texture = std::make_shared<ComputeTexture3D>(32, 32, 32);
 
-    // sky_material->AddTexture(low_freq_texture);
-    // sky_material->AddTexture(high_freq_texture);
+    sky_material->AddTexture(low_freq_texture);
+    sky_material->AddTexture(high_freq_texture);
 
     time_of_day_ = new TimeOfDay{};
     low_freq_worley_ = new Worley{low_freq_texture};

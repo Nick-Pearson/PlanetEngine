@@ -327,7 +327,7 @@ float4 cloud_col(float3 dir)
     return float4(colour.r, colour.g, colour.b, 1.0f - transmittance);
 }
 
-float4 main(float3 normal : Color0) : SV_Target
+float4 main(float4 position : SV_Position, float3 normal : Color0, float2 texCoord : TexCoord) : SV_Target
 {
 	float3 dir = normalize(-normal);
 	float4 clouds = cloud_col(dir);

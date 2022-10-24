@@ -32,18 +32,28 @@ namespace
 
         delete[] macros;
 
-        if (error_blob)
+        if (shader_blob == nullptr)
         {
-            P_ERROR("Failed to compile shader file: {}", filepath);
-            const char* message = (const char*)error_blob->GetBufferPointer();
-            P_ERROR("{}", message);
-            error_blob->Release();
+            if (error_blob)
+            {
+                const char* message = (const char*)error_blob->GetBufferPointer();
+                P_ERROR("Failed to compile shader file: {}\n{}", filepath, message);
+                error_blob->Release();
+            }
+            else
+            {
+                P_ERROR("Unkown error while compiling shader file: {}", filepath);
+            }
             return nullptr;
         }
-        else if (shader_blob == nullptr)
+
+        if (error_blob)
         {
-            P_ERROR("Unkown error while compiling shader file: {}", filepath);
+            const char* message = (const char*)error_blob->GetBufferPointer();
+            P_WARN("Warnings while compiling shader file: {}\n{}", filepath, message);
+            error_blob->Release();
         }
+
         return shader_blob;
     }
 }  // namespace

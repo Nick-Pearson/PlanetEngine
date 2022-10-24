@@ -2,6 +2,29 @@
 
 #include "D3DAssert.h"
 
+namespace
+{
+    D3D12_SRV_DIMENSION get_srv_dimension(const D3DTexture* texture)
+    {
+        if (texture->dimensions_ == 1)
+        {
+            return D3D12_SRV_DIMENSION_TEXTURE1D;
+        }
+        else if (texture->dimensions_ == 2)
+        {
+            return D3D12_SRV_DIMENSION_TEXTURE2D;
+        }
+        else if (texture->dimensions_ == 3)
+        {
+            return D3D12_SRV_DIMENSION_TEXTURE3D;
+        }
+        else
+        {
+            P_FATAL("invalid texture for use in SRV");
+        }
+    }
+}  // namespace
+
 SRVHeap::SRVHeap(ID3D12Device2* device) :
     device_(device)
 {
@@ -37,7 +60,7 @@ D3DDescriptorTable* SRVHeap::CreateDescriptorTable(size_t num_textures, const D3
         D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
         srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srv_desc.Format = texture->format_;
-        srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srv_desc.ViewDimension = get_srv_dimension(texture);
         srv_desc.Texture2D.MipLevels = 1;
 
         device_->CreateShaderResourceView(texture->resource_, &srv_desc, cpu_handle_);

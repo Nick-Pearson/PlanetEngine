@@ -97,7 +97,7 @@ D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(&resource)));
-    SET_NAME(resource, L"Texture Buffer Resource Heap");
+    SET_NAME(resource, L"2D Texture Buffer Resource Heap");
 
     uint32_t num_rows;
     uint64_t row_size, total_size;
@@ -120,45 +120,45 @@ D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
 
     return new D3DTexture{resource,
         intermediate_resource,
-        resource_desc.Format};
+        resource_desc.Format,
+        2};
 }
 
 D3DTexture* D3DTextureLoader::LoadComputeTexture2D(const ComputeTexture2D* texture)
 {
-    // create texture resource
-    // D3D11_TEXTURE2D_DESC textureDesc = {};
-    // textureDesc.Width = texture->GetWidth();
-    // textureDesc.Height = texture->GetHeight();
-    // textureDesc.MipLevels = 1;
-    // textureDesc.ArraySize = 1;
-    // textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    // textureDesc.SampleDesc.Count = 1;
-    // textureDesc.SampleDesc.Quality = 0;
-    // textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    // textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-    // textureDesc.CPUAccessFlags = 0;
-    // textureDesc.MiscFlags = 0;
-    // ID3D11Texture2D* d3d11Texture;
-    // d3dAssert(device_->CreateTexture2D(&textureDesc, NULL, &d3d11Texture));
-    // return LoadedTexture{nullptr, nullptr, DXGI_FORMAT_R32G32B32A32_FLOAT};
     return nullptr;
 }
 
 D3DTexture* D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* texture)
 {
-    // create texture resource
-    // D3D11_TEXTURE3D_DESC textureDesc = {};
-    // textureDesc.Width = texture->GetWidth();
-    // textureDesc.Height = texture->GetHeight();
-    // textureDesc.Depth = texture->GetDepth();
-    // textureDesc.MipLevels = 1;
-    // textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    // textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    // textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-    // textureDesc.CPUAccessFlags = 0;
-    // textureDesc.MiscFlags = 0;
-    // ID3D11Texture3D* d3d11Texture;
-    // d3dAssert(device_->CreateTexture3D(&textureDesc, NULL, &d3d11Texture));
-    // return LoadedTexture{nullptr, nullptr, DXGI_FORMAT_R8G8B8A8_UNORM };
-    return nullptr;
+    P_ASSERT(texture->GetDepth() < 65536, "3D texture depth must fit in 16 bit int");
+
+    D3D12_RESOURCE_DESC resource_desc{};
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+    resource_desc.Alignment = 0;
+    resource_desc.Width = texture->GetWidth();
+    resource_desc.Height = texture->GetHeight();
+    resource_desc.DepthOrArraySize = texture->GetDepth();
+    resource_desc.MipLevels = 1;
+    resource_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    // multisampling
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resource_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    ID3D12Resource* resource;
+    d3dAssert(device_->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &resource_desc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        nullptr,
+        IID_PPV_ARGS(&resource)));
+    SET_NAME(resource, L"3D Texture Buffer Resource Heap");
+
+    return new D3DTexture{resource,
+        nullptr,
+        resource_desc.Format,
+        3};
 }
