@@ -121,7 +121,7 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     root_signature_ = new BaseRootSignature{ device_ };
     root_signature_->Bind(draw_command_list_);
 
-    ui_renderer_ = new ImGUIRenderer{ window };
+    ui_renderer_ = new ImGUIRenderer{ window, device_, srv_heap_, draw_command_list_ };
     resource_manager_ = new GPUResourceManager{ device_, srv_heap_ };
     window_events_ = new D3DWindowEvents{ this };
 
@@ -245,11 +245,11 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
     const auto start = std::chrono::steady_clock::now();
     window_render_target_->PreRender();
     renderer_->Render(camera);
-    // RenderDebugUI();
-    // mUIRenderer->Render();
+    RenderDebugUI();
+    ui_renderer_->Render();
 
     Present();
-    // mUIRenderer->NewFrame();
+    ui_renderer_->NewFrame();
     auto time = std::chrono::steady_clock::now() - start;
     frame_times_ms_.Add(time/std::chrono::milliseconds(1));
     FlushDebugMessages();
@@ -293,34 +293,34 @@ float get_fps_time(void* b, int idx)
 
 void D3DRenderSystem::RenderDebugUI()
 {
-    // ImGui::Begin("Rendering");
-    // DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    // BOOL fullscreen;
-    // d3dAssert(mSwapChain->GetDesc(&swapChainDesc));
-    // d3dAssert(mSwapChain->GetFullscreenState(&fullscreen, nullptr));
+    ImGui::Begin("Rendering");
+    DXGI_SWAP_CHAIN_DESC swapChainDesc;
+    BOOL fullscreen;
+    d3dAssert(swap_chain_->GetDesc(&swapChainDesc));
+    d3dAssert(swap_chain_->GetFullscreenState(&fullscreen, nullptr));
 
-    // ImGui::Text("%d x %d %s",
-    //     swapChainDesc.BufferDesc.Width,
-    //     swapChainDesc.BufferDesc.Height,
-    //     fullscreen ? "(fullscreen)" : "");
+    ImGui::Text("%d x %d %s",
+        swapChainDesc.BufferDesc.Width,
+        swapChainDesc.BufferDesc.Height,
+        fullscreen ? "(fullscreen)" : "");
 
-    // if (!frame_times_ms_.IsEmpty())
-    // {
-    //     auto last_frame_time = frame_times_ms_.Head();
-    //     auto average_frame_time = 0;
-    //     for (int i = 0; i < frame_times_ms_.Capacity(); ++i)
-    //         average_frame_time += frame_times_ms_[i];
-    //     average_frame_time /= frame_times_ms_.Capacity();
+    if (!frame_times_ms_.IsEmpty())
+    {
+        auto last_frame_time = frame_times_ms_.Head();
+        auto average_frame_time = 0;
+        for (int i = 0; i < frame_times_ms_.Capacity(); ++i)
+            average_frame_time += frame_times_ms_[i];
+        average_frame_time /= frame_times_ms_.Capacity();
 
-    //     ImGui::Text("%.1f FPS (%d ms)", calc_fps(last_frame_time), last_frame_time);
-    //     ImGui::Text("%.1f Average FPS (over last %d frames)", calc_fps(average_frame_time), frame_times_ms_.Capacity());
-    //     ImGui::PlotLines("FPS", &get_fps_time, &frame_times_ms_, frame_times_ms_.Capacity(), 0, nullptr, 0.0f, 120.0f, ImVec2(200, 60));
-    // }
+        ImGui::Text("%.1f FPS (%d ms)", calc_fps(last_frame_time), last_frame_time);
+        ImGui::Text("%.1f Average FPS (over last %d frames)", calc_fps(average_frame_time), frame_times_ms_.Capacity());
+        ImGui::PlotLines("FPS", &get_fps_time, &frame_times_ms_, frame_times_ms_.Capacity(), 0, nullptr, 0.0f, 120.0f, ImVec2(200, 60));
+    }
 
     // mResourceManager->RenderDebugUI();
     // mRenderer->RenderDebugUI();
 
-    // ImGui::End();
+    ImGui::End();
 }
 
 void D3DRenderSystem::InitDevice(HWND window)

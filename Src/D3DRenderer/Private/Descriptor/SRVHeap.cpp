@@ -72,6 +72,19 @@ D3DDescriptorTable* SRVHeap::CreateDescriptorTable(size_t num_textures, const D3
     return new D3DDescriptorTable{root_handle, num_textures};
 }
 
+DescriptorHandle SRVHeap::CreateDescriptorHandle()
+{
+    DescriptorHandle root_handle;
+    root_handle.cpu_ = cpu_handle_;
+    root_handle.gpu_ = gpu_handle_;
+
+    auto descriptor_size = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    cpu_handle_.ptr += descriptor_size;
+    gpu_handle_.ptr += descriptor_size;
+
+    return root_handle;
+}
+
 void SRVHeap::Bind(ID3D12GraphicsCommandList* command_list)
 {
     command_list->SetDescriptorHeaps(1, &descriptor_heap_);
