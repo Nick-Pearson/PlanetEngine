@@ -148,7 +148,7 @@ std::vector<std::string> Platform::ListFiles(const char* directory)
             files.push_back(std::string{full_path});
         }
     }
-    while (FindNextFile(find_result, &ffd) != 0);
+    while (FindNextFile(find_result, &ffd) != 0);  // NOLINT
 
     FindClose(find_result);
     return files;
@@ -173,7 +173,7 @@ std::vector<std::string> Platform::ListDirectories(const char* directory)
             files.push_back(std::string{full_path});
         }
     }
-    while (FindNextFile(find_result, &ffd) != 0);
+    while (FindNextFile(find_result, &ffd) != 0);    // NOLINT
 
     FindClose(find_result);
     return files;

@@ -33,4 +33,4 @@ namespace Platform
 
     extern std::vector<std::string> ListFiles(const char* directory);
     extern std::vector<std::string> ListDirectories(const char* directory);
-}
+}  // namespace Platform

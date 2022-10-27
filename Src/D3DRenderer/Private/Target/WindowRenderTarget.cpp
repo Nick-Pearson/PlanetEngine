@@ -46,7 +46,7 @@ void WindowRenderTarget::PreRender()
 
 void WindowRenderTarget::Present()
 {
-    UINT syncInterval = 0;
+    UINT syncInterval = 1;
     UINT presentFlags = 0;
     d3dAssert(swap_chain_->Present(syncInterval, presentFlags));
 

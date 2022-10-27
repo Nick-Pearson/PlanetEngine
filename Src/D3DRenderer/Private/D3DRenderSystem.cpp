@@ -138,6 +138,8 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     draw_command_queue_->ExecuteCommandList(draw_command_list_);
     auto signal = draw_command_queue_->Signal();
     draw_command_queue_->WaitForSignal(signal);
+
+    last_present_time_ = std::chrono::steady_clock::now();
 }
 
 D3DRenderSystem::~D3DRenderSystem()
@@ -242,7 +244,6 @@ void D3DRenderSystem::FlushDebugMessages()
 
 void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 {
-    const auto start = std::chrono::steady_clock::now();
     window_render_target_->PreRender();
     renderer_->Render(camera);
     RenderDebugUI();
@@ -250,8 +251,6 @@ void D3DRenderSystem::RenderFrame(const CameraComponent& camera)
 
     Present();
     ui_renderer_->NewFrame();
-    auto time = std::chrono::steady_clock::now() - start;
-    frame_times_ms_.Add(time/std::chrono::milliseconds(1));
     FlushDebugMessages();
 }
 
@@ -264,6 +263,12 @@ void D3DRenderSystem::Present()
     draw_command_queue_->ExecuteCommandList(draw_command_list_);
 
     window_render_target_->Present();
+
+    const auto present_time = std::chrono::steady_clock::now();
+    const auto frame_time = (present_time - last_present_time_)/std::chrono::milliseconds(1);
+    frame_times_ms_.Add(frame_time);
+
+    last_present_time_ = present_time;
 }
 
 void D3DRenderSystem::RenderToTexture(Texture2D* texture, const CameraComponent& camera)
@@ -328,6 +333,7 @@ void D3DRenderSystem::InitDevice(HWND window)
     device_ = CreateDevice();
 
     draw_command_queue_ = new D3DCommandQueue{device_, D3D12_COMMAND_LIST_TYPE_DIRECT, D3D12_COMMAND_QUEUE_PRIORITY_HIGH};
+    SET_NAME(draw_command_queue_, "Draw Command Queue")
     d3dAssert(device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&draw_command_allocator_)));
     SET_NAME(draw_command_allocator_, "Draw Command Allocator")
     d3dAssert(device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, draw_command_allocator_, nullptr, IID_PPV_ARGS(&draw_command_list_)));
@@ -335,6 +341,7 @@ void D3DRenderSystem::InitDevice(HWND window)
     d3dAssert(draw_command_list_->Close());
 
     compute_command_queue_ = new D3DCommandQueue{device_, D3D12_COMMAND_LIST_TYPE_COMPUTE, D3D12_COMMAND_QUEUE_PRIORITY_NORMAL};
+    SET_NAME(draw_command_queue_, "Compute Command Queue")
 
     swap_chain_ = CreateSwapChain(window);
 

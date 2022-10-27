@@ -142,7 +142,7 @@ struct Vector
     {
         return !(*this == other);
     }
-    
+
  public:
     DirectX::XMVECTOR ToVectorReg() const
     {

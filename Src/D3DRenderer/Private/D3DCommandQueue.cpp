@@ -31,6 +31,11 @@ void D3DCommandQueue::ExecuteCommandList(ID3D12GraphicsCommandList* command_list
     command_queue_->ExecuteCommandLists(_countof(command_lists), command_lists);
 }
 
+void D3DCommandQueue::SetName(wchar_t* name)
+{
+    command_queue_->SetName(name);
+}
+
 uint64_t D3DCommandQueue::Signal()
 {
     uint64_t signal = ++next_signal_;

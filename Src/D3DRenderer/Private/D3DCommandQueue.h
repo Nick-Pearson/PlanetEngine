@@ -13,6 +13,8 @@ class D3DCommandQueue
     inline ID3D12CommandQueue* GetQueue() const { return command_queue_; }
     void ExecuteCommandList(ID3D12GraphicsCommandList* command_list);
 
+    void SetName(wchar_t* name);
+
     uint64_t Signal();
 
     // fetching the current fence state from the gpu is potentially expensive

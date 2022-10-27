@@ -56,6 +56,7 @@ GPUResourceManager::GPUResourceManager(ID3D12Device2* device, SRVHeap* srv_heap)
     }
 
     command_queue_ = new D3DCommandQueue{device_, D3D12_COMMAND_LIST_TYPE_COPY, D3D12_COMMAND_QUEUE_PRIORITY_NORMAL};
+    SET_NAME(command_queue_, "Copy Command Queue")
     d3dAssert(device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COPY, batches_[0].command_allocator_, nullptr, IID_PPV_ARGS(&command_list_)));
     SET_NAME(command_list_, "Copy Command List")
     d3dAssert(command_list_->Close());

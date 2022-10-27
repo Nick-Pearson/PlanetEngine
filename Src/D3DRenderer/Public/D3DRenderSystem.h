@@ -76,4 +76,5 @@ class D3DRenderSystem : public RenderSystem
     class BaseRootSignature* root_signature_;
 
     RingBuffer<uint64_t> frame_times_ms_{50};
+    std::chrono::steady_clock::time_point last_present_time_;
 };
