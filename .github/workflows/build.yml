@@ -27,10 +27,9 @@ jobs:
            pip3 install wheel setuptools
            pip3 install conan
            conan --version
-           ls
 
     - name: Conan install
-      run: conan install . --install-folder build
+      run: conan install . --install-folder build -s compiler.version=16
       
     - name: Conan build
       run: conan build . --build-folder build
