@@ -29,7 +29,7 @@ jobs:
            conan --version
 
     - name: Conan install
-      run: conan install . --install-folder build
+      run: conan install . --install-folder build --build=missing
       
     - name: Conan build
       run: conan build . --build-folder build
