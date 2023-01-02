@@ -10,3 +10,6 @@ class PlanetEngine(ConanFile):
       cmake = CMake(self)
       cmake.configure()
       cmake.build()
+
+   def configure(self):
+      self.options["wxwidgets"].tiff = "off"
