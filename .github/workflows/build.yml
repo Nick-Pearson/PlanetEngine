@@ -27,6 +27,8 @@ jobs:
            pip3 install wheel setuptools
            pip3 install conan
            conan --version
+           conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
+           conan config set general.revisions_enabled=1
 
     - name: Conan install
       run: conan install . --install-folder build --build=missing
