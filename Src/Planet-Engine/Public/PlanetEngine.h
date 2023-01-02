@@ -6,6 +6,7 @@
 #include "Render/RenderSystem.h"
 #include "Render/RenderQueue.h"
 #include "Jobs/JobSystem.h"
+#include "Jobs/JobRunner.h"
 #include "UpdateEvents.h"
 
 class InputManager;
@@ -53,5 +54,6 @@ class PlanetEngine
     Scene* const scene_;
     RenderSystem* const render_system_;
     InputManager* const input_manager_;
-    JobSystem* const job_system_;
+    JobSystem* job_system_;
+    JobRunner* const job_runner_;
 };

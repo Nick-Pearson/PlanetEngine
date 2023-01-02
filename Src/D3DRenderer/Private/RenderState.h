@@ -1,40 +1,40 @@
 #pragma once
 
-#include <memory>
+#include "Mesh/D3DMesh.h"
+#include "Material/D3DMaterial.h"
 
 #include "Math/Transform.h"
-
-struct GPUMeshHandle;
-struct GPUMaterialHandle;
 
 struct RenderState
 {
  public:
-    RenderState() :
-        UseDepthBuffer(true), UseWorldMatrix(true), mesh(nullptr), material(nullptr)
+    RenderState(D3DMesh* mesh,
+                D3DMaterial* material,
+                const Transform& model,
+                bool use_depth_buffer,
+                bool use_world_matrix) :
+        mesh_(mesh), material_(material), model_(model),
+        use_depth_buffer_(use_depth_buffer), use_world_matrix_(use_world_matrix)
     {
     }
 
     bool IsValid() const
     {
-        return mesh && material;
+        return mesh_->IsLoaded() && material_->IsLoaded();
     }
 
-    bool UseDepthBuffer;
-    bool UseWorldMatrix;
-
-    GPUMeshHandle* mesh;
-    std::shared_ptr<GPUMaterialHandle> material;
-    Transform model;
-    const char* debugName;
+    D3DMesh* const mesh_;
+    D3DMaterial* const material_;
+    Transform model_;
+    bool use_depth_buffer_;
+    bool use_world_matrix_;
 
     bool operator==(const RenderState& other) const
     {
-        return UseDepthBuffer == other.UseDepthBuffer &&
-            UseWorldMatrix == other.UseWorldMatrix &&
-            mesh == other.mesh &&
-            material == other.material &&
-            model == other.model &&
-            debugName == other.debugName;
+        return use_depth_buffer_ == other.use_depth_buffer_ &&
+            use_world_matrix_ == other.use_world_matrix_ &&
+            mesh_ == other.mesh_ &&
+            material_ == other.material_ &&
+            model_ == other.model_;
     }
 };

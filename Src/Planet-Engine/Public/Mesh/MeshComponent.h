@@ -10,8 +10,8 @@ class Material;
 
 struct RenderConfig
 {
-    bool use_depth_buffer = true;
-    bool use_world_matrix = true;
+    bool use_depth_buffer_ = true;
+    bool use_world_matrix_ = true;
 };
 class MeshComponent : public Component
 {

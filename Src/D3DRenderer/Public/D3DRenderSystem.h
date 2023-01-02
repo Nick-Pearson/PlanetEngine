@@ -1,12 +1,17 @@
 #pragma once
 
-#include <d3d11.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
 #include <dxgidebug.h>
 #include <wrl/client.h>
 
 #include "Platform/PlanetWindows.h"
 #include "Render/RenderSystem.h"
 #include "Container/RingBuffer.h"
+
+#define DX_DEBUG 1
+
+#define NUM_BUFFERS 3
 
 class D3DRenderSystem : public RenderSystem
 {
@@ -29,21 +34,47 @@ class D3DRenderSystem : public RenderSystem
     void UpdateWindowSize();
 
  private:
+    void Present();
+
     void RenderDebugUI();
-    void InitD3D11Device(HWND window);
+
+    void InitDevice(HWND window);
+
+    ID3D12Device2* CreateDevice();
+    ID3D12CommandQueue* CreateCommandQueue(D3D12_COMMAND_LIST_TYPE type, D3D12_COMMAND_QUEUE_PRIORITY priority);
+    IDXGISwapChain4* CreateSwapChain(HWND window);
+    ID3D12DescriptorHeap* CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE type, int num_descriptors);
+
+#if defined(DX_DEBUG)
     void FlushDebugMessages();
 
-    Microsoft::WRL::ComPtr<ID3D11Device> mDevice;
-    Microsoft::WRL::ComPtr<IDXGISwapChain> mSwapChain;
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> mContext;
-    Microsoft::WRL::ComPtr<IDXGIInfoQueue> mDxgiInfoQueue;
+    ID3D12Debug* debug_ = nullptr;
+    ID3D12InfoQueue* info_queue_ = nullptr;
+#endif
 
-    class D3DRenderer* mRenderer;
-    class ImGUIRenderer* mUIRenderer;
-    class GPUResourceManager* mResourceManager;
-    class D3DWindowEvents* mWindowEvents;
+    IDXGIAdapter4* adapter_ = nullptr;
+    ID3D12Device2* device_ = nullptr;
+    IDXGISwapChain4* swap_chain_ = nullptr;
+
+    class D3DCommandQueue* draw_command_queue_ = nullptr;
+    ID3D12GraphicsCommandList* draw_command_list_ = nullptr;
+    ID3D12CommandAllocator* draw_command_allocator_ = nullptr;
+
+    class D3DCommandQueue* compute_command_queue_ = nullptr;
+
+    ID3D12DescriptorHeap* rtv_descriptor_heap_ = nullptr;
+    ID3D12DescriptorHeap* dsv_descriptor_heap_ = nullptr;
+    class SRVHeap* srv_heap_ = nullptr;
+
+    class D3DRenderer* renderer_;
+    class ImGUIRenderer* ui_renderer_;
+    class GPUResourceManager* resource_manager_;
+    class D3DWindowEvents* window_events_;
 
     class WindowRenderTarget* window_render_target_;
 
+    class BaseRootSignature* root_signature_;
+
     RingBuffer<uint64_t> frame_times_ms_{50};
+    std::chrono::steady_clock::time_point last_present_time_;
 };

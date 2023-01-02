@@ -1,13 +1,16 @@
 #pragma once
 
-#include <functional>
+#include "JobRunner.h"
 
-typedef std::function<void()> job_fp;
+typedef uint32_t JobHandle;
 
 class JobSystem
 {
  public:
     virtual ~JobSystem() {}
 
-    virtual bool RunJob(const job_fp& job) = 0;
+    virtual void RunJobInstantly(const job_fp& job) = 0;
+    virtual JobHandle RunJobRepeatedly(const job_fp& job, uint64_t interval_millis) = 0;
+
+    virtual bool CancelJob(JobHandle handle) = 0;
 };

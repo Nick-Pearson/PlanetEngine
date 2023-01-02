@@ -2,8 +2,8 @@
 
 #include <memory>
 
-Material::Material(const char* shader_name) :
-    shader_path_(shader_name)
+Material::Material(const PixelShader* pixel_shader) :
+    pixel_shader_(pixel_shader)
 {
 }
 

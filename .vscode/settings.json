@@ -83,6 +83,7 @@
         "bit": "cpp",
         "stop_token": "cpp",
         "queue": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "d3ddescriptortable cpp": "cpp"
     }
 }

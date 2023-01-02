@@ -1,106 +1,27 @@
 #include "D3DTextureLoader.h"
 
+#include "d3dx12.h"
+
 #include "PlanetLogging.h"
 #include "Texture/Texture2D.h"
 #include "Texture/ComputeTexture2D.h"
 #include "Texture/ComputeTexture3D.h"
 #include "D3DAssert.h"
 
-D3DTextureLoader::D3DTextureLoader(wrl::ComPtr<ID3D11Device> device,
-    wrl::ComPtr<ID3D11DeviceContext> context,
-    D3DShaderLoader* shader_loader) :
-    device_(device), context_(context), shader_loader_(shader_loader)
+D3DTextureLoader::D3DTextureLoader(ID3D12GraphicsCommandList* copy_command_list, ID3D12Device2* device) :
+    copy_command_list_(copy_command_list), device_(device)
 {
+    copy_command_list_->AddRef();
+    device_->AddRef();
 }
 
-
-std::shared_ptr<D3DTexture> D3DTextureLoader::Load(const Texture* texture)
+D3DTextureLoader::~D3DTextureLoader()
 {
-    LoadedTexture texture_resource = GetOrLoadTexture(texture);
-
-    D3D11_SAMPLER_DESC samplerDesc = {};
-    samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-    samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
-    ID3D11SamplerState* sampler_state;
-    d3dAssert(device_->CreateSamplerState(&samplerDesc, &sampler_state));
-
-    // create the resource view on the texture
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.Format = texture_resource.format_;
-
-    auto dimensions = texture->GetDimensions();
-    if (dimensions == TextureDimensions::_1D)
-    {
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
-        srvDesc.Texture1D.MostDetailedMip = 0;
-        srvDesc.Texture1D.MipLevels = 1;
-    }
-    else if (dimensions == TextureDimensions::_2D)
-    {
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MostDetailedMip = 0;
-        srvDesc.Texture2D.MipLevels = 1;
-    }
-    else if (dimensions == TextureDimensions::_3D)
-    {
-        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-        srvDesc.Texture3D.MostDetailedMip = 0;
-        srvDesc.Texture3D.MipLevels = 1;
-    }
-
-    ID3D11ShaderResourceView* texture_view;
-    d3dAssert(device_->CreateShaderResourceView(texture_resource.resource_, &srvDesc, &texture_view));
-
-    return std::make_shared<D3DTexture>(texture_resource.resource_, texture_view, sampler_state);
+    copy_command_list_->Release();
+    device_->Release();
 }
 
-
-ID3D11UnorderedAccessView* D3DTextureLoader::LoadForCompute(const Texture* texture)
-{
-    LoadedTexture texture_resource = GetOrLoadTexture(texture);
-
-    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-    uavDesc.Format = texture_resource.format_;
-
-    auto dimensions = texture->GetDimensions();
-    if (dimensions == TextureDimensions::_1D)
-    {
-        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1D;
-    }
-    else if (dimensions == TextureDimensions::_2D)
-    {
-        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-    }
-    else if (dimensions == TextureDimensions::_3D)
-    {
-        uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-        uavDesc.Texture3D.MipSlice = 0;
-        uavDesc.Texture3D.FirstWSlice = 0;
-        uavDesc.Texture3D.WSize = -1;
-    }
-
-    ID3D11UnorderedAccessView* uav_view = nullptr;
-    d3dAssert(device_->CreateUnorderedAccessView(texture_resource.resource_, &uavDesc, &uav_view));
-    return uav_view;
-}
-
-LoadedTexture D3DTextureLoader::GetOrLoadTexture(const Texture* texture)
-{
-    const auto it = loaded_textures_.find(texture);
-    if (it != loaded_textures_.end())
-    {
-        it->second.resource_->AddRef();
-        return it->second;
-    }
-
-    LoadedTexture loaded = LoadTexture(texture);
-    loaded_textures_.emplace(texture, loaded);
-    return loaded;
-}
-
-LoadedTexture D3DTextureLoader::LoadTexture(const Texture* texture)
+D3DTexture* D3DTextureLoader::Load(const Texture* texture)
 {
     TextureDimensions dimensions = texture->GetDimensions();
     TextureDataType data_type = texture->GetDataType();
@@ -119,66 +40,125 @@ LoadedTexture D3DTextureLoader::LoadTexture(const Texture* texture)
     }
 
     P_FATAL("unsupported texture data type {} {}", data_type, dimensions);
-    return LoadedTexture{nullptr, DXGI_FORMAT_UNKNOWN};
+    return nullptr;
 }
 
-LoadedTexture D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
+
+// ID3D11UnorderedAccessView* D3DTextureLoader::LoadForCompute(const Texture* texture)
+// {
+    // LoadedTexture texture_resource = GetOrLoadTexture(texture);
+
+    // D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+    // uavDesc.Format = texture_resource.format_;
+
+    // auto dimensions = texture->GetDimensions();
+    // if (dimensions == TextureDimensions::_1D)
+    // {
+    //     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1D;
+    // }
+    // else if (dimensions == TextureDimensions::_2D)
+    // {
+    //     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+    // }
+    // else if (dimensions == TextureDimensions::_3D)
+    // {
+    //     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+    //     uavDesc.Texture3D.MipSlice = 0;
+    //     uavDesc.Texture3D.FirstWSlice = 0;
+    //     uavDesc.Texture3D.WSize = -1;
+    // }
+
+    // ID3D11UnorderedAccessView* uav_view = nullptr;
+    // d3dAssert(device_->CreateUnorderedAccessView(texture_resource.resource_, &uavDesc, &uav_view));
+//     return nullptr;
+// }
+
+D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
 {
-    // create texture resource
-    D3D11_TEXTURE2D_DESC textureDesc = {};
-    textureDesc.Width = texture->GetWidth();
-    textureDesc.Height = texture->GetHeight();
-    textureDesc.MipLevels = 1;
-    textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Usage = D3D11_USAGE_IMMUTABLE;
-    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    textureDesc.CPUAccessFlags = 0;
-    textureDesc.MiscFlags = 0;
-    D3D11_SUBRESOURCE_DATA sd = {};
-    sd.pSysMem = texture->GetData();
-    sd.SysMemPitch = texture->GetWidth() * sizeof(Colour);
-    ID3D11Texture2D* d3d11Texture;
-    d3dAssert(device_->CreateTexture2D(&textureDesc, &sd, &d3d11Texture));
-    return LoadedTexture{d3d11Texture, DXGI_FORMAT_R8G8B8A8_UNORM};
+    D3D12_RESOURCE_DESC resource_desc{};
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    resource_desc.Alignment = 0;
+    resource_desc.Width = texture->GetWidth();
+    resource_desc.Height = texture->GetHeight();
+    resource_desc.DepthOrArraySize = 1;
+    resource_desc.MipLevels = 1;
+    resource_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    // multisampling
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resource_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    ID3D12Resource* resource;
+    d3dAssert(device_->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &resource_desc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&resource)));
+    SET_NAME(resource, L"2D Texture Buffer Resource Heap");
+
+    uint32_t num_rows;
+    uint64_t row_size, total_size;
+    device_->GetCopyableFootprints(&resource_desc, 0U, 1U, 0U, nullptr, &num_rows, &row_size, &total_size);
+
+    ID3D12Resource* intermediate_resource;
+    d3dAssert(device_->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(total_size),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&intermediate_resource)));
+
+    D3D12_SUBRESOURCE_DATA subresource_data = {};
+    subresource_data.pData = texture->GetData();
+    subresource_data.RowPitch = texture->GetWidth() * sizeof(Colour);
+    subresource_data.SlicePitch = subresource_data.RowPitch * texture->GetHeight();
+    UpdateSubresources(copy_command_list_, resource, intermediate_resource, 0, 0, 1, &subresource_data);
+
+    return new D3DTexture{resource,
+        intermediate_resource,
+        resource_desc.Format,
+        2};
 }
 
-LoadedTexture D3DTextureLoader::LoadComputeTexture2D(const ComputeTexture2D* texture)
+D3DTexture* D3DTextureLoader::LoadComputeTexture2D(const ComputeTexture2D* texture)
 {
-    // create texture resource
-    D3D11_TEXTURE2D_DESC textureDesc = {};
-    textureDesc.Width = texture->GetWidth();
-    textureDesc.Height = texture->GetHeight();
-    textureDesc.MipLevels = 1;
-    textureDesc.ArraySize = 1;
-    textureDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    textureDesc.SampleDesc.Count = 1;
-    textureDesc.SampleDesc.Quality = 0;
-    textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-    textureDesc.CPUAccessFlags = 0;
-    textureDesc.MiscFlags = 0;
-    ID3D11Texture2D* d3d11Texture;
-    d3dAssert(device_->CreateTexture2D(&textureDesc, NULL, &d3d11Texture));
-    return LoadedTexture{d3d11Texture, DXGI_FORMAT_R32G32B32A32_FLOAT};
+    return nullptr;
 }
 
-LoadedTexture D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* texture)
+D3DTexture* D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* texture)
 {
-    // create texture resource
-    D3D11_TEXTURE3D_DESC textureDesc = {};
-    textureDesc.Width = texture->GetWidth();
-    textureDesc.Height = texture->GetHeight();
-    textureDesc.Depth = texture->GetDepth();
-    textureDesc.MipLevels = 1;
-    textureDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    textureDesc.Usage = D3D11_USAGE_DEFAULT;
-    textureDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-    textureDesc.CPUAccessFlags = 0;
-    textureDesc.MiscFlags = 0;
-    ID3D11Texture3D* d3d11Texture;
-    d3dAssert(device_->CreateTexture3D(&textureDesc, NULL, &d3d11Texture));
-    return LoadedTexture{d3d11Texture, DXGI_FORMAT_R8G8B8A8_UNORM };
+    P_ASSERT(texture->GetDepth() < 65536, "3D texture depth must fit in 16 bit int");
+
+    D3D12_RESOURCE_DESC resource_desc{};
+    resource_desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
+    resource_desc.Alignment = 0;
+    resource_desc.Width = texture->GetWidth();
+    resource_desc.Height = texture->GetHeight();
+    resource_desc.DepthOrArraySize = texture->GetDepth();
+    resource_desc.MipLevels = 1;
+    resource_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    // multisampling
+    resource_desc.SampleDesc.Count = 1;
+    resource_desc.SampleDesc.Quality = 0;
+    resource_desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    resource_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    ID3D12Resource* resource;
+    d3dAssert(device_->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &resource_desc,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        nullptr,
+        IID_PPV_ARGS(&resource)));
+    SET_NAME(resource, L"3D Texture Buffer Resource Heap");
+
+    return new D3DTexture{resource,
+        nullptr,
+        resource_desc.Format,
+        3};
 }

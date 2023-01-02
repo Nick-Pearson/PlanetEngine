@@ -1,66 +1,120 @@
 #include "WindowRenderTarget.h"
 
-#include "../D3DAssert.h"
+#include "d3dx12.h"
 
-WindowRenderTarget::WindowRenderTarget(ID3D11Device* device, IDXGISwapChain* swap_chain)
+WindowRenderTarget::WindowRenderTarget(ID3D12Device2* device,
+        IDXGISwapChain4* swap_chain,
+        ID3D12DescriptorHeap* rtv_heap,
+        ID3D12DescriptorHeap* dsv_heap,
+        D3DCommandQueue* command_queue) :
+    swap_chain_(swap_chain), rtv_heap_(rtv_heap), dsv_heap_(dsv_heap), command_queue_(command_queue)
 {
-    swap_chain_ = swap_chain;
+    swap_chain_->AddRef();
+    rtv_heap_->AddRef();
+    dsv_heap_->AddRef();
+
+    for (int i = 0; i < NUM_BUFFERS; ++i)
+    {
+        d3dAssert(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&command_allocator_[i])));
+        SET_NAME_F(command_allocator_[i], "Window Allocator %d", i)
+
+        frame_signals_[i] = 0;
+    }
+
     UpdateWindowSize(device);
 }
 
 WindowRenderTarget::~WindowRenderTarget()
 {
     swap_chain_->Release();
-    target_view_->Release();
-    depth_stencil_view_->Release();
+    rtv_heap_->Release();
+    dsv_heap_->Release();
+
+    depth_stencil_view_.resource_->Release();
+    for (int i = 0; i < NUM_BUFFERS; ++i)
+    {
+        target_view_[i].resource_->Release();
+        command_allocator_[i]->Release();
+    }
 }
 
-void WindowRenderTarget::SwapBuffers()
+void WindowRenderTarget::PreRender()
 {
-    swap_chain_->Present(1u, 0u);
+    current_buffer_ = swap_chain_->GetCurrentBackBufferIndex();
+    command_queue_->WaitForSignal(frame_signals_[current_buffer_]);
 }
 
-void WindowRenderTarget::UpdateWindowSize(ID3D11Device* device)
+void WindowRenderTarget::Present()
 {
-    if (target_view_)
-        target_view_->Release();
-    if (depth_stencil_view_)
-        depth_stencil_view_->Release();
+    UINT syncInterval = 1;
+    UINT presentFlags = 0;
+    d3dAssert(swap_chain_->Present(syncInterval, presentFlags));
+
+    frame_signals_[current_buffer_] = command_queue_->Signal();
+}
+
+void WindowRenderTarget::UpdateWindowSize(ID3D12Device* device)
+{
+    for (int i = 0; i < NUM_BUFFERS; ++i)
+    {
+        command_queue_->WaitForSignal(frame_signals_[i]);
+
+        if (target_view_[i].resource_)
+            target_view_[i].resource_->Release();
+
+        target_view_[i].resource_ = nullptr;
+    }
 
     d3dAssert(swap_chain_->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0));
+    DXGI_SWAP_CHAIN_DESC swap_chain_desc;
+    d3dAssert(swap_chain_->GetDesc(&swap_chain_desc));
+    width_ = swap_chain_desc.BufferDesc.Width;
+    height_ = swap_chain_desc.BufferDesc.Height;
 
-    // Get buffer and create a render-target-view.
-    ID3D11Texture2D* pBuffer;
-    d3dAssert(swap_chain_->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&pBuffer)));
-    d3dAssert(device->CreateRenderTargetView(pBuffer, NULL, &target_view_));
-    pBuffer->Release();
+    auto rtv_descriptor_size = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle{rtv_heap_->GetCPUDescriptorHandleForHeapStart()};
 
+    for (int i = 0; i < NUM_BUFFERS; ++i)
+    {
+        ID3D12Resource* back_buffer;
+        d3dAssert(swap_chain_->GetBuffer(i, IID_PPV_ARGS(&back_buffer)));
 
-    DXGI_SWAP_CHAIN_DESC swapChainDesc;
-    d3dAssert(swap_chain_->GetDesc(&swapChainDesc));
+        device->CreateRenderTargetView(back_buffer, nullptr, rtv_handle);
 
-    width_ = swapChainDesc.BufferDesc.Width;
-    height_ = swapChainDesc.BufferDesc.Height;
+        target_view_[i].resource_ = back_buffer;
+        target_view_[i].cpu_handle_ = rtv_handle;
 
-    // create depth stencil texture
-    ID3D11Texture2D* depth_stencil = nullptr;
-    D3D11_TEXTURE2D_DESC descDepth = {};
-    descDepth.Width = (UINT)width_;
-    descDepth.Height = (UINT)height_;
-    descDepth.MipLevels = 1u;
-    descDepth.ArraySize = 1u;
-    descDepth.Format = DXGI_FORMAT_D32_FLOAT;
-    descDepth.SampleDesc.Count = 1u;
-    descDepth.SampleDesc.Quality = 0u;
-    descDepth.Usage = D3D11_USAGE_DEFAULT;
-    descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    d3dAssert(device->CreateTexture2D(&descDepth, nullptr, &depth_stencil));
+        rtv_handle.Offset(rtv_descriptor_size);
+    }
 
-    // create view of depth stencil texture
-    D3D11_DEPTH_STENCIL_VIEW_DESC descDSV = {};
-    descDSV.Format = DXGI_FORMAT_D32_FLOAT;
-    descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    descDSV.Texture2D.MipSlice = 0u;
-    d3dAssert(device->CreateDepthStencilView(depth_stencil, &descDSV, &depth_stencil_view_));
-    depth_stencil->Release();
+    D3D12_CLEAR_VALUE clear_value = {};
+    clear_value.Format = DXGI_FORMAT_D32_FLOAT;
+    clear_value.DepthStencil = { 1.0f, 0 };
+
+    // Update the depth-stencil view.
+    CD3DX12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
+        width_, height_,
+        1, 0, 1, 0,
+        D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
+
+    ID3D12Resource* depth_buffer;
+    d3dAssert(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_DEPTH_WRITE,
+        &clear_value,
+        IID_PPV_ARGS(&depth_buffer)));
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC dsv = {};
+    dsv.Format = DXGI_FORMAT_D32_FLOAT;
+    dsv.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    dsv.Texture2D.MipSlice = 0;
+    dsv.Flags = D3D12_DSV_FLAG_NONE;
+    device->CreateDepthStencilView(depth_buffer, &dsv, dsv_heap_->GetCPUDescriptorHandleForHeapStart());
+
+    depth_stencil_view_.resource_ = depth_buffer;
+    depth_stencil_view_.cpu_handle_ = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    current_buffer_ = swap_chain_->GetCurrentBackBufferIndex();
 }

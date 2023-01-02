@@ -1,66 +1,82 @@
 #pragma once
 
-#include <d3d11.h>
+#include <d3d12.h>
 #include <wrl.h>
 #include <vector>
 #include <string>
 #include <memory>
-#include <unordered_map>
 
 #include "Platform/PlanetWindows.h"
 #include "Container/LinkedList.h"
 #include "Texture/D3DTextureLoader.h"
 #include "Shader/D3DShaderLoader.h"
-
-namespace wrl = Microsoft::WRL;
+#include "Mesh/D3DMesh.h"
+#include "Material/D3DMaterial.h"
+#include "Descriptor/SRVHeap.h"
 
 class Mesh;
 class Material;
-class D3DPixelShader;
 class D3DTexture;
+class D3DCommandQueue;
 
-struct GPUMeshHandle
+#define EMPTY_BATCH 0
+#define BUILDING_BATCH 1
+#define MIN_SIGNAL 16
+
+struct ResourceLoadBatch
 {
-    wrl::ComPtr<ID3D11Buffer> vertexBuffer;
-    wrl::ComPtr<ID3D11Buffer> triangleBuffer;
-    unsigned int numTriangles;
+    uint64_t signal_ = EMPTY_BATCH;
+    std::vector<D3DMesh*> pending_meshes_;
+    std::vector<D3DTexture*> pending_textures_;
+    std::vector<D3DMaterial*> pending_materials_;
+    ID3D12CommandAllocator* command_allocator_;
+
+    inline const bool IsInUse() const { return signal_ >= MIN_SIGNAL; }
+    inline const bool IsEmpty() const { return signal_ == EMPTY_BATCH; }
+    void OnLoadingComplete();
 };
 
-struct GPUMaterialHandle
-{
-    std::shared_ptr<D3DPixelShader> shader;
-    std::vector<std::shared_ptr<D3DTexture>> textures;
-    bool alpha;
-};
+#define MAX_CONCURRENT_BATCHES 16
 
 class GPUResourceManager
 {
  public:
-    explicit GPUResourceManager(wrl::ComPtr<ID3D11Device> device, wrl::ComPtr<ID3D11DeviceContext> context);
+    explicit GPUResourceManager(ID3D12Device2* device, SRVHeap* srv_heap);
     ~GPUResourceManager();
 
-    GPUMeshHandle* LoadMesh(const Mesh* mesh);
+    D3DMesh* LoadMesh(const Mesh* mesh);
 
-    std::shared_ptr<GPUMaterialHandle> LoadMaterial(const Material* material);
+    D3DMaterial* LoadMaterial(const Material* material);
 
     std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
 
     void RenderDebugUI();
 
+    void ExecuteResourceLoads();
+    void ProcessCompletedBatches();
+
  private:
     void ReloadAllShaders();
 
-    std::shared_ptr<D3DPixelShader> LoadShader(const std::string& ShaderFile, bool force);
+    ResourceLoadBatch* PrepareBatch();
 
-    void CreateBuffer(const void* data, size_t length, size_t stride, unsigned int flags, unsigned int miscflags, ID3D11Buffer** outBuffer);
+    void CreateBuffer(const void* data,
+            size_t length,
+            size_t stride,
+            D3D12_RESOURCE_FLAGS flags,
+            ID3D12Resource** resource,
+            ID3D12Resource** intermediate_resource);
 
-    LinkedList <GPUMeshHandle> mLoadedMeshes;
-    std::vector<std::shared_ptr<GPUMaterialHandle>> loaded_materials_;
+    ResourceLoadBatch batches_[MAX_CONCURRENT_BATCHES];
+    size_t next_load_batch_ = 0;
 
-    std::unordered_map<std::string, std::shared_ptr<D3DPixelShader>> loadedShaders;
+    ID3D12Device2* const device_;
+    SRVHeap* const srv_heap_;
 
-    wrl::ComPtr<ID3D11Device> mDevice;
+    D3DCommandQueue* command_queue_;
+    ID3D12GraphicsCommandList* command_list_;
 
-    D3DShaderLoader* shader_loader_;
     D3DTextureLoader* texture_loader_;
+
+    const D3DVertexShader* vertex_shader_;
 };

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <d3d11.h>
-#include <wrl/client.h>
+#include <d3d12.h>
 #include <iostream>
 #include <memory>
+#include <vector>
 #include <DirectXMath.h>
 
 #include "Platform/PlanetWindows.h"
@@ -15,11 +15,11 @@
 #include "World/CameraComponent.h"
 
 #include "Target/RenderTarget.h"
-#include "Shader/D3DShaderLoader.h"
+#include "BaseRootSignature.h"
 #include "RenderState.h"
+#include "D3DConstants.h"
+#include "Descriptor/SRVHeap.h"
 #include "D3DAssert.h"
-
-namespace wrl = Microsoft::WRL;
 
 __declspec(align(16))
 class D3DRenderer : public Renderer
@@ -27,11 +27,7 @@ class D3DRenderer : public Renderer
     friend class D3DShader;
 
  public:
-    D3DRenderer(
-        wrl::ComPtr<ID3D11Device> mDevice,
-        wrl::ComPtr<IDXGISwapChain> mSwapChain,
-        wrl::ComPtr<ID3D11DeviceContext> mContext,
-        std::shared_ptr<GPUMaterialHandle> wireframe_shader);
+    D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* command_list, const BaseRootSignature* root_signature, SRVHeap* srv_heap);
     D3DRenderer(const D3DRenderer&) = delete;
     D3DRenderer& operator=(const D3DRenderer&) = delete;
     ~D3DRenderer();
@@ -47,14 +43,13 @@ class D3DRenderer : public Renderer
         _mm_free(p);
     }
 
-    void BindRenderTarget(const RenderTarget& target);
+    void BindRenderTarget(const RenderTarget* target);
     void UnbindRenderTarget();
 
     // renders a particular camera
     void Render(const CameraComponent& camera);
 
-    RenderState* AddRenderState(const RenderState& state);
-    void RemoveRenderState(const RenderState* state);
+    void AddRenderState(const RenderState& state);
 
     void UpdateWorldBuffer(const WorldBufferData& data);
 
@@ -66,70 +61,33 @@ class D3DRenderer : public Renderer
     void PreRender(const CameraComponent& camera);
     void PostRender();
 
-    void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
+    void UpdateWorldMatrix(const CameraComponent& camera, bool use_world_matrix);
+    // void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
     bool render_solid_ = true;
     bool render_wireframe_ = false;
 
-    // D3D11 Ptrs
-    wrl::ComPtr<ID3D11Device> mDevice;
-    wrl::ComPtr<IDXGISwapChain> mSwapChain;
-    wrl::ComPtr<ID3D11DeviceContext> mContext;
-    ID3D11RenderTargetView* render_target_view_ = nullptr;
-    ID3D11DepthStencilView* depth_stencil_view_ = nullptr;
+    ID3D12Device2* device_;
+    ID3D12GraphicsCommandList* command_list_;
+    const BaseRootSignature* const root_signature_;
+    SRVHeap* const srv_heap_;
 
-    wrl::ComPtr<ID3D11BlendState> mAlphaBlendState;
-    wrl::ComPtr<ID3D11BlendState> mNoAlphaBlendState;
+    const RenderTarget* render_target_ = nullptr;
 
-    wrl::ComPtr<ID3D11DepthStencilState> use_depth_stencil_state_;
-    wrl::ComPtr<ID3D11DepthStencilState> no_depth_stencil_state_;
+int count = 0;
 
-    ID3D11RasterizerState* solid_state_ = nullptr;
-    ID3D11RasterizerState* wire_frame_state_ = nullptr;
-    // standard vertex shader, later will be specified based on which vertex attributes a mesh has
-    std::shared_ptr<D3DVertexShader> vertexShader;
+    D3DSlowVSConstants::Data slow_constants_;
+    D3DFastVSConstants::Data fast_constants_;
 
-    // Constant Buffers
-    wrl::ComPtr<ID3D11Buffer> mSlowConstantBuffer;
-    struct SlowConstantBuffer
-    {
-        SlowConstantBuffer()
-        {
-            world = DirectX::XMMatrixIdentity();
-            view = DirectX::XMMatrixIdentity();
-        }
-
-        DirectX::XMMATRIX world;
-        DirectX::XMMATRIX view;
-    };
-    SlowConstantBuffer mSlowConstantBufferData;
-
-    wrl::ComPtr<ID3D11Buffer> mFastConstantBuffer;
-    struct FastConstantBuffer
-    {
-        FastConstantBuffer()
-        {
-            model = DirectX::XMMatrixIdentity();
-        }
-        DirectX::XMMATRIX model;
-    };
-    FastConstantBuffer mFastConstantBufferData;
-
-    wrl::ComPtr<ID3D11Buffer> mWorldPixelBuffer;
-    WorldBufferData mWorldPixelBufferData;
-
-    void CreateConstantBuffer(ID3D11Buffer** outBuffer, void* bufferPtr, size_t bufferSize);
+    D3DWorldPSConstants::Data world_constants_;
 
  private:
     // list of render commands
     // TODO: Replace with a heap?
-    LinkedList<RenderState> renderStates;
-
-    RenderState currentRenderState;
-    unsigned int used_texture_slots_ = 0;
+    std::vector<RenderState> render_states_;
 
     float aspect_ratio_ = 1.0f;
 
-    std::shared_ptr<GPUMaterialHandle> wireframe_shader_;
+    // std::shared_ptr<GPUMaterialHandle> wireframe_shader_;
 };

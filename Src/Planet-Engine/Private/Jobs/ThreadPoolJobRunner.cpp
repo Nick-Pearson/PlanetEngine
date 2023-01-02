@@ -1,21 +1,21 @@
-#include "ThreadPoolJobSystem.h"
+#include "ThreadPoolJobRunner.h"
 
 #include <utility>
 
 #include "PlanetLogging.h"
 
-ThreadPoolJobSystem::ThreadPoolJobSystem(int num_threads) :
+ThreadPoolJobRunner::ThreadPoolJobRunner(int num_threads) :
     pool_(num_threads)
 {
     running_ = true;
 
     for (int i = 0; i < pool_.size(); ++i)
     {
-        pool_[i] = std::thread(&ThreadPoolJobSystem::Run, this, i);
+        pool_[i] = std::thread(&ThreadPoolJobRunner::Run, this, i);
     }
 }
 
-ThreadPoolJobSystem::~ThreadPoolJobSystem()
+ThreadPoolJobRunner::~ThreadPoolJobRunner()
 {
     running_ = false;
     queue_condition_.notify_all();
@@ -30,7 +30,7 @@ ThreadPoolJobSystem::~ThreadPoolJobSystem()
     pool_.clear();
 }
 
-void ThreadPoolJobSystem::Run(int thread_number)
+void ThreadPoolJobRunner::Run(int thread_number)
 {
     P_LOG("Starting pool thread {}", thread_number);
     std::unique_lock<std::mutex> lock(lock_);
@@ -47,7 +47,7 @@ void ThreadPoolJobSystem::Run(int thread_number)
             job_queue_.pop();
             lock.unlock();
 
-            P_LOG("Running job");
+            P_TRACE("Running job");
             func();
 
             lock.lock();
@@ -57,11 +57,10 @@ void ThreadPoolJobSystem::Run(int thread_number)
     P_LOG("Stopping pool thread {}", thread_number);
 }
 
-bool ThreadPoolJobSystem::RunJob(const job_fp& job)
+void ThreadPoolJobRunner::RunJob(const job_fp& job)
 {
     std::unique_lock<std::mutex> lock(lock_);
     job_queue_.push(job);
     lock.unlock();
     queue_condition_.notify_one();
-    return true;
 }

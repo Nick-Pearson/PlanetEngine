@@ -13,6 +13,8 @@
 
 #include <Windows.h>
 #include <windowsx.h>
+#include <shlobj.h>
+#include <strsafe.h>
 #include "../Input/KeyCode.h"
 
 class IWindowsMessageHandler
@@ -31,4 +33,4 @@ namespace Platform
 
     extern std::vector<std::string> ListFiles(const char* directory);
     extern std::vector<std::string> ListDirectories(const char* directory);
-}
+}  // namespace Platform
