@@ -26,6 +26,9 @@ WindowRenderTarget::WindowRenderTarget(ID3D12Device2* device,
 
 WindowRenderTarget::~WindowRenderTarget()
 {
+    auto current_buffer = swap_chain_->GetCurrentBackBufferIndex();
+    command_queue_->WaitForSignal(frame_signals_[current_buffer]);
+
     swap_chain_->Release();
     rtv_heap_->Release();
     dsv_heap_->Release();

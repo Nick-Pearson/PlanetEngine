@@ -381,14 +381,17 @@ static void ImGui_ImplDX12_CreateFontsTexture()
 
         ID3D12CommandQueue* cmdQueue = NULL;
         hr = bd->pd3dDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&cmdQueue));
+        SET_NAME(cmdQueue, "IMGUI Command Queue");
         IM_ASSERT(SUCCEEDED(hr));
 
         ID3D12CommandAllocator* cmdAlloc = NULL;
         hr = bd->pd3dDevice->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&cmdAlloc));
+        SET_NAME(cmdAlloc, "IMGUI Command Allocator");
         IM_ASSERT(SUCCEEDED(hr));
 
         ID3D12GraphicsCommandList* cmdList = NULL;
         hr = bd->pd3dDevice->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, cmdAlloc, NULL, IID_PPV_ARGS(&cmdList));
+        SET_NAME(cmdList, "IMGUI Command List");
         IM_ASSERT(SUCCEEDED(hr));
 
         cmdList->CopyTextureRegion(&dstLocation, 0, 0, 0, &srcLocation, NULL);
@@ -421,6 +424,7 @@ static void ImGui_ImplDX12_CreateFontsTexture()
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         bd->pd3dDevice->CreateShaderResourceView(pTexture, &srvDesc, bd->hFontSrvCpuDescHandle);
         SafeRelease(bd->pFontTextureResource);
+        SET_NAME(pTexture, "IMGUI Font Texture");
         bd->pFontTextureResource = pTexture;
     }
 
@@ -524,6 +528,7 @@ bool    ImGui_ImplDX12_CreateDeviceObjects()
             return false;
 
         bd->pd3dDevice->CreateRootSignature(0, blob->GetBufferPointer(), blob->GetBufferSize(), IID_PPV_ARGS(&bd->pRootSignature));
+        SET_NAME(bd->pRootSignature, "IMGUI Root Signature");
         blob->Release();
     }
 
@@ -660,6 +665,7 @@ bool    ImGui_ImplDX12_CreateDeviceObjects()
     }
 
     HRESULT result_pipeline_state = bd->pd3dDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&bd->pPipelineState));
+    SET_NAME(bd->pPipelineState, "IMGUI Pipeline State");
     vertexShaderBlob->Release();
     pixelShaderBlob->Release();
     if (result_pipeline_state != S_OK)

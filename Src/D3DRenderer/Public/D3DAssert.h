@@ -5,6 +5,8 @@
 
 #include "PlanetLogging.h"
 
+#define DX_DEBUG 1
+
 #define d3dAssert(E) { \
     HRESULT r = (E); \
     if (FAILED(r)) { \
