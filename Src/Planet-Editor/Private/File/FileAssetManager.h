@@ -4,14 +4,13 @@
 #include <vector>
 #include <functional>
 
-#include "Asset/AssetLoader.h"
+#include "DirectoryListener.h"
 
 struct Node
 {
     int id_;
     std::string path_;
     std::string name_;
-    Asset* asset_;
 };
 
 struct Directory : public Node
@@ -26,10 +25,13 @@ struct Directory : public Node
 class FileAssetManager
 {
  public:
-    FileAssetManager(AssetLoader* asset_loader, const std::string& project_path);
+    explicit FileAssetManager(const std::string& project_path);
     ~FileAssetManager();
 
     inline const Directory* GetAssets() const { return &assets_root_; }
+
+    void AddListener(DirectoryListener* listener);
+    void RemoveListener(DirectoryListener* listener);
 
  private:
     void LoadChangedAssets();
@@ -41,7 +43,7 @@ class FileAssetManager
 
     Directory assets_root_;
 
-    AssetLoader* asset_loader_;
+    std::vector<DirectoryListener*> listeners_;
     std::string assets_dir_;
     std::string data_dir_;
     std::string cache_dir_;

@@ -1,66 +1,51 @@
 #include "AssetViewer.h"
 
-#include "imgui.h"
-#include "../IconsFontAwesome4.h"
-
-AssetViewer::AssetViewer(const FileAssetManager* asset_manager) :
-    asset_manager_(asset_manager)
+AssetViewer::AssetViewer(wxWindow *parent, const FileAssetManager* asset_manager) :
+    wxPanel(parent, wxID_ANY), asset_manager_(asset_manager)
 {
+    SetMinSize(wxSize(200, 200));
+
+    tree_ = new wxTreeCtrl{this};
+
+    wxBoxSizer* panel_sizer = new wxBoxSizer{wxHORIZONTAL};
+    panel_sizer->Add(tree_, 1, wxEXPAND | wxALL);
+    SetSizerAndFit(panel_sizer);
+
+    Draw();
 }
 
-AssetViewer::~AssetViewer()
+void AssetViewer::OnFileAdded()
 {
+    Draw();
+}
+
+void AssetViewer::OnFileUpdated()
+{
+    Draw();
+}
+
+void AssetViewer::OnFileRemoved()
+{
+    Draw();
 }
 
 void AssetViewer::Draw()
 {
-    // ImGui::Push
-    // ImGui::Text("/");
-
-    ImGui::BeginChild("Scrolling");
-    DrawTreeRecursive(*asset_manager_->GetAssets());
-    ImGui::EndChild();
+    tree_->DeleteAllItems();
+    auto item_id = tree_->AddRoot("Assets");
+    DrawChildrenRecursive(item_id, *asset_manager_->GetAssets());
 }
 
-
-void AssetViewer::DrawTreeRecursive(const Directory& directory)
+void AssetViewer::DrawChildrenRecursive(wxTreeItemId parent, const Directory& directory)
 {
     for (auto sub_dir : directory.sub_directories_)
     {
-        if (ImGui::TreeNodeEx(sub_dir.name_.c_str()))
-        {
-            DrawTreeRecursive(sub_dir);
-            ImGui::TreePop();
-        }
+        auto item_id = tree_->AppendItem(parent, sub_dir.name_.c_str());
+        DrawChildrenRecursive(item_id, sub_dir);
     }
 
-    char name_buff[256];
     for (auto file : directory.files_)
     {
-        std::snprintf(name_buff, sizeof(name_buff), "  %s %s", GetIconForAsset(file), file.name_.c_str());
-
-        bool selected = ImGui::Selectable(name_buff, selected_file_ == file.id_);
-        if (selected)
-        {
-            selected_file_ = file.id_;
-        }
-    }
-}
-
-const char* AssetViewer::GetIconForAsset(const Node& file) const
-{
-    if (file.asset_ == nullptr)
-    {
-        return ICON_FA_QUESTION;
-    }
-
-    switch (file.asset_->type_)
-    {
-        case AssetType::MESH:
-            return ICON_FA_CUBE;
-        case AssetType::TEXTURE:
-            return ICON_FA_PICTURE_O;
-        default:
-            return ICON_FA_QUESTION_CIRCLE;
+        tree_->AppendItem(parent, file.name_.c_str());
     }
 }

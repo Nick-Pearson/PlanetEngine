@@ -21,6 +21,7 @@ class PlanetEngine
     ~PlanetEngine();
 
     void Run();
+    void Close();
 
     inline int GetExitCode() const { return exit_code_; }
 
