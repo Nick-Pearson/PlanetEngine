@@ -1,6 +1,6 @@
 #include "TextureRenderTarget.h"
 
-#include "../D3DAssert.h"
+#include "D3DAssert.h"
 
 TextureRenderTarget::TextureRenderTarget(ID3D12Device2* device, int width, int height)
 {

@@ -152,6 +152,11 @@ void PlanetEngine::Run()
     delete textured_shader;
 }
 
+void PlanetEngine::Close()
+{
+    exit_code_ = 0;
+}
+
 void PlanetEngine::SaveScreenshot(const CameraComponent& camera)
 {
     chr::high_resolution_clock::time_point start = chr::high_resolution_clock::now();

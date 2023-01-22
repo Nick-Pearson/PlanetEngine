@@ -1,21 +1,26 @@
 #pragma once
 
-#include "../EditorWindow.h"
-#include "../FileAssetManager.h"
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+    #include <wx/wx.h>
+#endif
+#include <wx/treectrl.h>
 
-class AssetViewer : public EditorWindow
+#include "../File/FileAssetManager.h"
+
+class AssetViewer : public wxPanel, public DirectoryListener
 {
  public:
-    explicit AssetViewer(const FileAssetManager* asset_manager);
-    virtual ~AssetViewer();
+    AssetViewer(wxWindow *parent, const FileAssetManager* asset_manager);
 
-    void Draw() final;
+    void OnFileAdded() final;
+    void OnFileUpdated() final;
+    void OnFileRemoved() final;
 
  private:
-    void DrawTreeRecursive(const Directory& directory);
+    void Draw();
+    void DrawChildrenRecursive(wxTreeItemId parent, const Directory& directory);
 
-    const char* GetIconForAsset(const Node& file) const;
-
-    const FileAssetManager* asset_manager_;
-    int selected_file_ = 0;
+    const FileAssetManager* const asset_manager_;
+    wxTreeCtrl* tree_;
 };

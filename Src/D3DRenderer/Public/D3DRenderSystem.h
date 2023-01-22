@@ -8,8 +8,7 @@
 #include "Platform/PlanetWindows.h"
 #include "Render/RenderSystem.h"
 #include "Container/RingBuffer.h"
-
-#define DX_DEBUG 1
+#include "D3DAssert.h"
 
 #define NUM_BUFFERS 3
 

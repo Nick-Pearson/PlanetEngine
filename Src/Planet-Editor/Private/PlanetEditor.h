@@ -1,24 +1,21 @@
 #pragma once
 
-#include <string>
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+    #include <wx/wx.h>
+#endif
 
-#include "imgui.h"
+#include <string>
 
 #include "PlanetEngine.h"
 
-class PlanetEditor
+class PlanetEditor: public wxApp
 {
  public:
-    explicit PlanetEditor(PlanetEngine* engine, const std::string& project_path);
+    virtual bool OnInit();
 
  private:
-    void Draw();
-
-    std::string project_path_;
-    PlanetEngine* engine_;
-
     class FileAssetManager* asset_manager_;
-    class AssetViewer* asset_viewer_;
-
-    ImFont* editor_font_;
 };
+
+wxIMPLEMENT_APP(PlanetEditor);

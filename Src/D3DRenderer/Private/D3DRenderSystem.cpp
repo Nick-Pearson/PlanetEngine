@@ -144,10 +144,10 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
 
 D3DRenderSystem::~D3DRenderSystem()
 {
-    delete renderer_;
     delete ui_renderer_;
     delete resource_manager_;
     delete window_events_;
+    delete renderer_;
     delete window_render_target_;
 
     delete draw_command_queue_;

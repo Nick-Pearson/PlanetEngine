@@ -97,7 +97,7 @@ D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr,
         IID_PPV_ARGS(&resource)));
-    SET_NAME(resource, L"2D Texture Buffer Resource Heap");
+    SET_NAME(resource, "2D Texture Buffer Resource Heap");
 
     uint32_t num_rows;
     uint64_t row_size, total_size;
@@ -119,6 +119,7 @@ D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
     UpdateSubresources(copy_command_list_, resource, intermediate_resource, 0, 0, 1, &subresource_data);
 
     return new D3DTexture{resource,
+        D3D12_RESOURCE_STATE_COPY_DEST,
         intermediate_resource,
         resource_desc.Format,
         2};
@@ -155,9 +156,10 @@ D3DTexture* D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* textu
         D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         nullptr,
         IID_PPV_ARGS(&resource)));
-    SET_NAME(resource, L"3D Texture Buffer Resource Heap");
+    SET_NAME(resource, "3D Texture Buffer Resource Heap");
 
     return new D3DTexture{resource,
+        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
         nullptr,
         resource_desc.Format,
         3};

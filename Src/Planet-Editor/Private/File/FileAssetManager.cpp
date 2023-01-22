@@ -32,8 +32,7 @@ Directory* Directory::GetDirectory(const std::string& path)
     return &(*it);
 }
 
-FileAssetManager::FileAssetManager(AssetLoader* asset_loader, const std::string& project_path) :
-    asset_loader_(asset_loader)
+FileAssetManager::FileAssetManager(const std::string& project_path)
 {
     assets_dir_ = project_path + "\\Assets";
     data_dir_ = project_path + "\\Data";
@@ -49,6 +48,15 @@ FileAssetManager::FileAssetManager(AssetLoader* asset_loader, const std::string&
 }
 
 FileAssetManager::~FileAssetManager()
+{
+}
+
+void FileAssetManager::AddListener(DirectoryListener* listener)
+{
+    listeners_.push_back(listener);
+}
+
+void FileAssetManager::RemoveListener(DirectoryListener* listener)
 {
 }
 
@@ -112,15 +120,20 @@ void FileAssetManager::LoadChangedAssetsRecursive(Directory* directory)
 void FileAssetManager::OnFileAdded(Node* file)
 {
     P_LOG("Found new file {}", file->path_);
-    file->asset_ = asset_loader_->LoadAsset(file->path_);
+    for (auto& l : listeners_)
+        l->OnFileAdded();
 }
 
 void FileAssetManager::OnFileUpdated(Node* file)
 {
     P_LOG("Found updated file {}", file->path_);
+    for (auto& l : listeners_)
+        l->OnFileUpdated();
 }
 
 void FileAssetManager::OnFileRemoved(Node* file)
 {
     P_LOG("Found removed file {}", file->path_);
+    for (auto& l : listeners_)
+        l->OnFileRemoved();
 }

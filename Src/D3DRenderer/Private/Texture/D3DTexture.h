@@ -7,7 +7,13 @@
 class D3DTexture : public TextureResource
 {
  public:
-    explicit D3DTexture(ID3D12Resource* resource, ID3D12Resource* intermediate_resource, DXGI_FORMAT format, int dimensions);
+    explicit D3DTexture(
+         ID3D12Resource* resource,
+         D3D12_RESOURCE_STATES initial_state,
+         ID3D12Resource* intermediate_resource,
+         DXGI_FORMAT format,
+         int dimensions);
+
     virtual ~D3DTexture();
 
     inline bool IsLoaded() const override { return loaded_; }
@@ -22,6 +28,7 @@ class D3DTexture : public TextureResource
 
  private:
     bool loaded_ = false;
+    const D3D12_RESOURCE_STATES initial_state_;
 
     ID3D12Resource* const intermediate_resource_;
 };

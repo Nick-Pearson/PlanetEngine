@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Add MSBuild to PATH
       uses: microsoft/setup-msbuild@v1.1
@@ -27,6 +27,8 @@ jobs:
            pip3 install wheel setuptools
            pip3 install conan
            conan --version
+           conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
+           conan config set general.revisions_enabled=1
 
     - name: Conan install
       run: conan install . --install-folder build --build=missing
@@ -40,7 +42,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Install cpplint
       run: |
