@@ -1,5 +1,8 @@
 #include "Primitives.h"
 
+#include <algorithm>
+#include <unordered_map>
+
 std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& elipsoid, int steps)
 {
     const float rootTwoOverThree = std::sqrt(2.0f) / 3.0f;
@@ -57,6 +60,106 @@ std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesHemisphere(const Elipsoid& 
 
     std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>(verts, indicies);
     return mesh;
+}
+
+std::shared_ptr<Mesh> Primitives::IcoHemisphere(const Elipsoid& elipsoid, int order)
+{
+    const float rootFive = std::sqrt(5.0f);
+    const float f = (1.0f + rootFive) / 2.0f;
+
+    std::vector<Vertex> verts{10, Vertex{ Vector{ 0.0f, 0.0f, 0.0f } }};
+    verts[0] = Vertex{ Vector{-1.0f, f, 0.0f} };
+    verts[1] = Vertex{ Vector{1.0f, f, 0.0f} };
+    verts[2] = Vertex{ Vector{0.0f, -1.0f, f} };
+    verts[3] = Vertex{ Vector{0.0f, 1.0f, f} };
+    verts[4] = Vertex{ Vector{0.0f, -1.0f, -f} };
+    verts[5] = Vertex{ Vector{0.0f, 1.0f, -f } };
+    verts[6] = Vertex{ Vector{f, 0.0f, -1.0f} };
+    verts[7] = Vertex{ Vector{f, 0.0f, 1.0f} };
+    verts[8] = Vertex{ Vector{-f, 0.0f, -1.0f} };
+    verts[9] = Vertex{ Vector{-f, 0.0f, 1.0f} };
+
+    uint16_t t[36] = {
+        0, 9, 3,
+        0, 3, 1,
+        0, 1, 5,
+        0, 5, 8,
+        0, 8, 9,
+        3, 9, 2,
+        1, 3, 7,
+        5, 1, 6,
+        8, 5, 4,
+        7, 6, 1,
+        2, 7, 3,
+        6, 4, 5
+        };
+    std::vector<uint16_t> indicies{t, t + (sizeof(t) / sizeof(uint16_t))};
+
+    std::unordered_map<uint32_t, uint16_t> mid_cache{};
+
+    auto addMidPoint = [&](uint16_t a, uint16_t b) {
+        const uint32_t key = a | (b << 16);
+
+        auto found = mid_cache.find(key);
+        if (found == mid_cache.end())
+        {
+            auto v = static_cast<uint16_t>(verts.size());
+            verts.push_back(Vertex{ (verts[a].positon + verts[b].positon) / 2.0f });
+
+            mid_cache[key] = v;
+            mid_cache[b | (a << 16)] = v;
+            return v;
+        }
+        else
+        {
+            return found->second;
+        }
+    };
+
+
+    std::vector<uint16_t> indicies_prev{indicies};
+    for (int i = 0; i < order; i++)
+    {
+        // subdivide each triangle into 4 triangles
+        indicies = std::vector<uint16_t>{indicies_prev.size() * 4, std::allocator<uint16_t>()};
+
+        for (int k = 0; k < indicies_prev.size(); k += 3)
+        {
+            const auto v1 = indicies_prev[k + 0];
+            const auto v2 = indicies_prev[k + 1];
+            const auto v3 = indicies_prev[k + 2];
+            const auto a = addMidPoint(v1, v2);
+            const auto b = addMidPoint(v2, v3);
+            const auto c = addMidPoint(v3, v1);
+
+            auto t = k * 4;
+            indicies[t++] = v1;
+            indicies[t++] = a;
+            indicies[t++] = c;
+
+            indicies[t++] = v2;
+            indicies[t++] = b;
+            indicies[t++] = a;
+
+            indicies[t++] = v3;
+            indicies[t++] = c;
+            indicies[t++] = b;
+
+            indicies[t++] = a;
+            indicies[t++] = b;
+            indicies[t++] = c;
+        }
+
+        indicies_prev = std::vector{indicies};
+    }
+
+    for (Vertex& vert : verts)
+    {
+        vert.positon.Normalise();
+        vert.normal = vert.positon;
+        vert.positon *= Vector(elipsoid.sizeX, elipsoid.sizeY, elipsoid.sizeZ);
+    }
+    return std::make_shared<Mesh>(verts, indicies);
 }
 
 std::shared_ptr<Mesh> Primitives::Cube(float scale)
