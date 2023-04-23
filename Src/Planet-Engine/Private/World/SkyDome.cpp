@@ -15,9 +15,8 @@ namespace chr = std::chrono;
 
 SkyDome::SkyDome()
 {
-    auto mesh = Primitives::SubdivisionSurfacesHemisphere(Elipsoid(1.0f), 3);
+    auto mesh = Primitives::IcoHemisphere(Elipsoid(4900.0f), 3);
     mesh->FlipFaces();
-    mesh->Scale(4900.0f);
 
     auto sky_shader = new PixelShader("SkySphere.hlsl");
     sky_shader->AddInput(ShaderParameterType::TEXTURE_3D);
