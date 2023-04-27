@@ -27,6 +27,11 @@ SkyDome::SkyDome()
     auto domeMesh = AddComponent<MeshComponent>(mesh, sky_material);
     domeMesh->render_config_.use_world_matrix_ = false;
 
+    auto sun_mesh = Primitives::Circle(50.0f, 32);
+    auto sun_shader = new PixelShader("SunDisc.hlsl");
+    auto sun_material = std::make_shared<Material>(sun_shader);
+    sun_mesh_component_ = AddComponent<MeshComponent>(sun_mesh, sun_material);
+
     auto low_freq_texture = std::make_shared<ComputeTexture3D>(128, 128, 128);
     auto high_freq_texture = std::make_shared<ComputeTexture3D>(32, 32, 32);
 

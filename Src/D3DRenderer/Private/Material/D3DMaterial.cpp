@@ -38,8 +38,6 @@ void D3DMaterial::Bind(ID3D12GraphicsCommandList* command_list)
     }
 
     pipeline_state_->Bind(command_list);
-
-    // TODO: Bind any textures
 }
 
 void D3DMaterial::OnLoadingComplete()

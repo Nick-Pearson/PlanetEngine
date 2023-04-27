@@ -19,6 +19,8 @@ class Primitives
 
     static std::shared_ptr<Mesh> Plane(float scale);
 
+    static std::shared_ptr<Mesh> Circle(float scale, int steps);
+
  private:
     static void SubdivisionStep(std::vector<Vertex>* verts, std::vector<uint16_t>* outIndicies, uint16_t v0, uint16_t v1, uint16_t v2, int level);
 };

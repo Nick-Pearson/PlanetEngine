@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <math.h>
 
 std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& elipsoid, int steps)
 {
@@ -219,6 +220,38 @@ std::shared_ptr<Mesh> Primitives::Plane(float scale)
     };
     return std::make_shared<Mesh>(v, 4, t, 6);
 }
+
+std::shared_ptr<Mesh> Primitives::Circle(float scale, int steps)
+{
+    std::vector<Vertex> verts{};
+    verts.reserve(steps+1);
+    verts.push_back(Vertex{ Vector{ 0.0f, 0.0f, 0.0f } });
+
+    constexpr float tau = 6.283185307179586f;
+    const float fraction = tau / steps;
+    for (int i = 0; i < steps; ++i)
+    {
+        const float y = scale * std::cos(fraction * i);
+        const float z = scale * std::sin(fraction * i);
+        verts.push_back(Vertex{ Vector{ 0.0f, y, z } });
+    }
+
+    std::vector<uint16_t> indicies{};
+    indicies.reserve(steps * 3);
+    for (int i = 1; i < steps; ++i)
+    {
+        indicies.push_back(0);
+        indicies.push_back(i);
+        indicies.push_back(i+1);
+    }
+    indicies.push_back(0);
+    indicies.push_back(steps);
+    indicies.push_back(1);
+
+    return std::make_shared<Mesh>(verts, indicies);
+}
+
+
 
 void Primitives::SubdivisionStep(std::vector<Vertex>* verts, std::vector<uint16_t>* outIndicies, uint16_t v0, uint16_t v1, uint16_t v2, int level)
 {

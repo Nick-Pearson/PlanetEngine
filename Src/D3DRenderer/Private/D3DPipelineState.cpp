@@ -65,9 +65,5 @@ void D3DPipelineState::Compile()
 
 void D3DPipelineState::Bind(ID3D12GraphicsCommandList* command_list)
 {
-    if (pipeline_state_ == nullptr)
-    {
-        Compile();
-    }
     command_list->SetPipelineState(pipeline_state_);
 }
