@@ -70,8 +70,8 @@ void PlanetEngine::Run()
     RegisterMessageHandler(imguiInput);
     render_system_->Load(this);
 
-    std::shared_ptr<Mesh> bunny = OBJImporter::Import("Assets/Models/bunny.obj", 20.0f);
-    // std::shared_ptr<Mesh> tree = FBXImporter::Import("Assets/Models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
+    std::shared_ptr<Mesh> bunny = OBJImporter::Import("assets/models/bunny.obj", 20.0f);
+    // std::shared_ptr<Mesh> tree = FBXImporter::Import("assets/models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
 
     PixelShader* pixel_shader = new PixelShader{ "PixelShader.hlsl" };
     PixelShader* textured_shader = new PixelShader{ "TexturedShader.hlsl" };
@@ -84,11 +84,11 @@ void PlanetEngine::Run()
     // std::shared_ptr<Material> treeMaterial = std::make_shared<Material>(tree_shader);
     std::shared_ptr<Material> texturedMaterial = std::make_shared<Material>(textured_shader);
 
-    std::shared_ptr<Texture2D> brickAlbedo = TextureFactory::fromFile("Assets/Textures/JailFloor.png");
+    std::shared_ptr<Texture2D> brickAlbedo = TextureFactory::fromFile("assets/textures/JailFloor.png");
     texturedMaterial->AddTexture(brickAlbedo);
 
-    // std::shared_ptr<Texture2D> treeAlbedo = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Albedo.jpg");
-    // std::shared_ptr<Texture2D> treeNormal = TextureFactory::fromFile("Assets/Models/tree/Aset_wood_root_M_rkswd_8K_Normal_LOD0.jpg");
+    // std::shared_ptr<Texture2D> treeAlbedo = TextureFactory::fromFile("assets/models/tree/Aset_wood_root_M_rkswd_8K_Albedo.jpg");
+    // std::shared_ptr<Texture2D> treeNormal = TextureFactory::fromFile("assets/models/tree/Aset_wood_root_M_rkswd_8K_Normal_LOD0.jpg");
     // treeMaterial->AddTexture(treeAlbedo);
     // treeMaterial->AddTexture(treeNormal);
 

@@ -10,7 +10,7 @@ const float epsilon = 1e-03;
 
 TEST(FBXImporterTest, import_plane_vertex_positions)
 {
-    std::shared_ptr<Mesh> mesh = FBXImporter::Import("AssetsTest/plane.fbx");
+    std::shared_ptr<Mesh> mesh = FBXImporter::Import("assetstest/plane.fbx");
 
     EXPECT_TRUE(mesh.get() != nullptr);
     ASSERT_EQ(mesh->GetVertexCount(), 4);
@@ -22,7 +22,7 @@ TEST(FBXImporterTest, import_plane_vertex_positions)
 
 TEST(FBXImporterTest, import_vertex_normals)
 {
-    std::shared_ptr<Mesh> mesh = FBXImporter::Import("AssetsTest/plane.fbx");
+    std::shared_ptr<Mesh> mesh = FBXImporter::Import("assetstest/plane.fbx");
 
     EXPECT_TRUE(mesh.get() != nullptr);
     ASSERT_EQ(mesh->GetVertexCount(), 4);
@@ -34,7 +34,7 @@ TEST(FBXImporterTest, import_vertex_normals)
 
 TEST(FBXImporterTest, import_vertex_uvs)
 {
-    std::shared_ptr<Mesh> mesh = FBXImporter::Import("AssetsTest/plane.fbx");
+    std::shared_ptr<Mesh> mesh = FBXImporter::Import("assetstest/plane.fbx");
 
     EXPECT_TRUE(mesh.get() != nullptr);
     EXPECT_NEAR(mesh->GetVertexData()[0].texCoords.x, 1.0f, epsilon);
@@ -49,7 +49,7 @@ TEST(FBXImporterTest, import_vertex_uvs)
 
 TEST(FBXImporterTest, import_plane_triangles)
 {
-    std::shared_ptr<Mesh> mesh = FBXImporter::Import("AssetsTest/plane.fbx");
+    std::shared_ptr<Mesh> mesh = FBXImporter::Import("assetstest/plane.fbx");
 
     EXPECT_TRUE(mesh.get() != nullptr);
 }

@@ -11,7 +11,7 @@ namespace
     ID3DBlob* compile_shader_blob(const char* filepath, const char* target, const std::unordered_map<std::string, std::string>& defines)
     {
         std::wstring fullpath = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(filepath);
-        fullpath.insert(0, L"./Shader/");
+        fullpath.insert(0, L"./shaders/");
 
         const unsigned int compile_flags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL1;
 
