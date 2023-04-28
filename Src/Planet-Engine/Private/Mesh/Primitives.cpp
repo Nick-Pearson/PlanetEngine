@@ -1,8 +1,8 @@
 #include "Primitives.h"
 
+#include <math.h>
 #include <algorithm>
 #include <unordered_map>
-#include <math.h>
 
 std::shared_ptr<Mesh> Primitives::SubdivisionSurfacesElipsoid(const Elipsoid& elipsoid, int steps)
 {
