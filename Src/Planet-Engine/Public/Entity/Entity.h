@@ -65,7 +65,7 @@ template<class T, typename... Args>
 T* Entity::AddComponent(Args... args)
 {
     T* ptr = new T(args...);
-    components.push_back(ptr);
+    components_.push_back(ptr);
 
     ptr->parent = this;
     ptr->OnSpawned();

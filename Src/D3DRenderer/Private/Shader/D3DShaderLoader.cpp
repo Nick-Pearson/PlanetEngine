@@ -58,11 +58,11 @@ namespace
     }
 }  // namespace
 
-const D3DVertexShader* D3DShaderLoader::LoadVertex(const char* filepath)
+const D3DVertexShader* D3DShaderLoader::LoadVertex(const VertexShader* shader)
 {
-    P_LOG("Loading vertex shader {}", filepath);
+    P_LOG("Loading vertex shader {}", shader->GetShaderPath());
     std::unordered_map<std::string, std::string> defines;
-    ID3DBlob* blob = compile_shader_blob(filepath, "vs_5_1", defines);
+    ID3DBlob* blob = compile_shader_blob(shader->GetShaderPath().c_str(), "vs_5_1", defines);
     if (!blob)
     {
         return nullptr;

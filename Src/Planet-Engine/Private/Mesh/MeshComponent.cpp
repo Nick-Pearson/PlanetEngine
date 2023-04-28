@@ -5,9 +5,15 @@
 #include "Mesh/Mesh.h"
 #include "Entity/Entity.h"
 #include "Material/Material.h"
+#include "Shader/VertexShader.h"
 
 MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material) :
     mesh_(mesh), material_(material)
+{
+}
+
+MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material, const VertexShader* vertex_shader) :
+    mesh_(mesh), material_(material), vertex_shader_(vertex_shader)
 {
 }
 

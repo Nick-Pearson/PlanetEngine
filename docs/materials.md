@@ -1,7 +1,8 @@
 # Materials 
 
 Engine public
- - [ ] `PixelShader`: shader string and metadata about inputs
+ - [x] `VertexShader`: shader string and metadata about inputs
+ - [x] `PixelShader`: shader string and metadata about inputs
  - [x] `Material`: shader bound to input variables
 
 Engine private

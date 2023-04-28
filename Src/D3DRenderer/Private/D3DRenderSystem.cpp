@@ -23,6 +23,8 @@
 #include "D3DAssert.h"
 #include "D3DCommandQueue.h"
 #include "BaseRootSignature.h"
+#include "D3DRootSignature.h"
+#include "D3DPipelineState.h"
 #include "imgui.h"
 
 namespace
@@ -117,7 +119,6 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     d3dAssert(draw_command_list_->Reset(draw_command_allocator_, nullptr));
 
     // Compile Shaders
-    const D3DVertexShader* vertex_shader = D3DShaderLoader::LoadVertex("VertexShader.hlsl");
     root_signature_ = new BaseRootSignature{ device_ };
     root_signature_->Bind(draw_command_list_);
 
@@ -187,9 +188,16 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
         auto d3d_mesh = resource_manager_->LoadMesh(mesh->GetMesh());
         auto d3d_material = resource_manager_->LoadMaterial(mesh->GetMaterial());
 
+        auto vs = mesh->GetVertexShader();
+        auto ps = mesh->GetMaterial()->GetPixelShader();
+        auto root_signature = new D3DRootSignature{ps, device_};
+        auto pipeline_state = resource_manager_->CompilePipelineState(vs, ps, root_signature);
+
         RenderState render_state{
             d3d_mesh,
             d3d_material,
+            root_signature,
+            pipeline_state,
             mesh->GetWorldTransform(),
             mesh->render_config_.use_depth_buffer_,
             mesh->render_config_.use_world_matrix_

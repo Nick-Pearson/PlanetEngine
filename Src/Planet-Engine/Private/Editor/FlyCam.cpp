@@ -67,7 +67,7 @@ void FlyCam::OnUpdate(float deltaSeconds)
         rotation_y += mouse_sensitivity_ * mouse_delta.y_;
     }
 
-    Quaternion rotation = transform.rotation;
+    Quaternion rotation = transform_.rotation;
     rotation = Quaternion{rotation_x * deltaSeconds * look_speed_, Vector{0.0f, 1.0f, 0.0f}} * rotation;
     rotation = rotation * Quaternion{rotation_y * deltaSeconds * look_speed_, Vector{1.0f, 0.0f, 0.0f}};
     SetRotation(rotation);
@@ -76,7 +76,7 @@ void FlyCam::OnUpdate(float deltaSeconds)
     ImGui::Begin("Camera");
     if (ImGui::Button("Reset Camera"))
     {
-        transform = Transform();
+        transform_ = Transform();
         Translate(Vector{ 0.0f, 4.0f, 10.0f });
         Rotate(Vector{ 0.0f, 180.0f, 0.0f });
     }

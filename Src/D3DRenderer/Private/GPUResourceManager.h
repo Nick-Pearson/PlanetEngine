@@ -16,6 +16,10 @@
 
 class Mesh;
 class Material;
+class VertexShader;
+class PixelShader;
+class D3DPipelineState;
+class D3DRootSignature;
 class D3DTexture;
 class D3DCommandQueue;
 
@@ -48,6 +52,11 @@ class GPUResourceManager
 
     D3DMaterial* LoadMaterial(const Material* material);
 
+    D3DPipelineState* CompilePipelineState(
+        const VertexShader* vertex_shader,
+        const PixelShader* pixel_shader,
+        const D3DRootSignature* root_signature);
+
     std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
 
     void RenderDebugUI();
@@ -78,5 +87,5 @@ class GPUResourceManager
 
     D3DTextureLoader* texture_loader_;
 
-    const D3DVertexShader* vertex_shader_;
+    const D3DVertexShader* default_d3d_vertex_shader_;
 };

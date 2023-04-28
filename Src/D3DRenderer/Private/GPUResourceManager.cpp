@@ -14,8 +14,6 @@
 #include "Compute/ComputeShader.h"
 #include "D3DCommandQueue.h"
 #include "D3DRenderSystem.h"
-#include "D3DRootSignature.h"
-#include "D3DPipelineState.h"
 #include "PlanetEngine.h"
 
 #include "imgui.h"
@@ -63,7 +61,8 @@ GPUResourceManager::GPUResourceManager(ID3D12Device2* device, SRVHeap* srv_heap)
 
     texture_loader_ = new D3DTextureLoader{command_list_, device_};
 
-    vertex_shader_ = D3DShaderLoader::LoadVertex("VertexShader.hlsl");
+    const VertexShader default_vert_shader{"VertexShader.hlsl"};
+    default_d3d_vertex_shader_ = D3DShaderLoader::LoadVertex(&default_vert_shader);
 }
 
 GPUResourceManager::~GPUResourceManager()
@@ -122,8 +121,6 @@ D3DMaterial* GPUResourceManager::LoadMaterial(const Material* material)
 {
     ResourceLoadBatch* batch = PrepareBatch();
 
-    auto pixel_shader = D3DShaderLoader::LoadPixel(material->GetPixelShader());
-
     std::vector<const D3DTexture*> textures;
     int num_textures = material->GetNumTextures();
     for (int i = 0; i < num_textures; ++i)
@@ -141,25 +138,32 @@ D3DMaterial* GPUResourceManager::LoadMaterial(const Material* material)
         }
     }
 
-    auto root_signature = new D3DRootSignature{material->GetPixelShader(), device_};
-    auto pipeline_state = new D3DPipelineState{device_,
-        root_signature->GetRootSignature(),
-        vertex_shader_,
-        pixel_shader};
-    pipeline_state->Compile();
-
     D3DDescriptorTable* descriptor_table = nullptr;
     if (!textures.empty())
         descriptor_table = srv_heap_->CreateDescriptorTable(textures.size(), textures.data());
 
     auto d3d_material = new D3DMaterial{
-        root_signature,
-        pipeline_state,
         descriptor_table,
         textures
     };
     batch->pending_materials_.push_back(d3d_material);
     return d3d_material;
+}
+
+D3DPipelineState* GPUResourceManager::CompilePipelineState(
+    const VertexShader* vertex_shader,
+    const PixelShader* pixel_shader,
+    const D3DRootSignature* root_signature)
+{
+    auto d3d_pixel_shader = D3DShaderLoader::LoadPixel(pixel_shader);
+    auto d3d_vertex_shader = vertex_shader == nullptr ? default_d3d_vertex_shader_ : D3DShaderLoader::LoadVertex(vertex_shader);
+
+    auto pipeline_state = new D3DPipelineState{device_,
+            root_signature->GetRootSignature(),
+            d3d_vertex_shader,
+            d3d_pixel_shader};
+    pipeline_state->Compile();
+    return pipeline_state;
 }
 
 void GPUResourceManager::ReloadAllShaders()

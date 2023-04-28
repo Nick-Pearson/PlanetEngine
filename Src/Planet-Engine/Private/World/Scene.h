@@ -24,7 +24,7 @@ std::shared_ptr<T> Scene::SpawnEntity(const char* name, Args... args)
     std::shared_ptr<T> newEntity = std::shared_ptr<T>(ptr);
     entities.push_back(newEntity);
 
-    newEntity->scene = this;
+    newEntity->scene_ = this;
     newEntity->SetName(name);
     newEntity->OnSpawned();
     return newEntity;

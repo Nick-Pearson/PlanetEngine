@@ -133,7 +133,7 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
 {
     if (!state.IsValid()) return;
 
-    state.material_->GetRootSignature()->Bind(command_list_);
+    state.root_signature_->Bind(command_list_);
 
     UpdateWorldMatrix(camera, state.use_world_matrix_);
 
@@ -148,6 +148,7 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     command_list_->IASetIndexBuffer(state.mesh_->GetTriangleBuffer());
 
     state.material_->Bind(command_list_);
+    state.pipeline_state_->Bind(command_list_);
 
     const auto instance_count = 1u;
     const auto start_index = 0u;
