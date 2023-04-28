@@ -18,17 +18,17 @@ class MeshComponent : public Component
  public:
     MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material);
 
-    void SetVisibility(bool newVisibility);
+    void SetVisibility(bool new_visibility);
 
     void OnSpawned() override;
     void OnDestroyed() override;
 
-    inline const Mesh* GetMesh() const { return mMesh.get(); }
-    inline const Material* GetMaterial() const { return mMaterial.get(); }
+    inline const Mesh* GetMesh() const { return mesh_.get(); }
+    inline const Material* GetMaterial() const { return material_.get(); }
 
     RenderConfig render_config_;
  private:
-    bool mVisible = false;
-    std::shared_ptr<Mesh> mMesh;
-    std::shared_ptr<Material> mMaterial;
+    bool visible_ = false;
+    std::shared_ptr<Mesh> mesh_;
+    std::shared_ptr<Material> material_;
 };

@@ -62,7 +62,6 @@ class D3DRenderer : public Renderer
     void PostRender();
 
     void UpdateWorldMatrix(const CameraComponent& camera, bool use_world_matrix);
-    // void UpdateBuffer(wrl::ComPtr<ID3D11Buffer> buffer, void* bufferData, size_t bufferSize);
 
  private:
     bool render_solid_ = true;
@@ -75,8 +74,6 @@ class D3DRenderer : public Renderer
 
     const RenderTarget* render_target_ = nullptr;
 
-int count = 0;
-
     D3DSlowVSConstants::Data slow_constants_;
     D3DFastVSConstants::Data fast_constants_;
 
@@ -88,6 +85,4 @@ int count = 0;
     std::vector<RenderState> render_states_;
 
     float aspect_ratio_ = 1.0f;
-
-    // std::shared_ptr<GPUMaterialHandle> wireframe_shader_;
 };

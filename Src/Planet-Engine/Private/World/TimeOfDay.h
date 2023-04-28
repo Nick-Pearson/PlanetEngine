@@ -32,9 +32,6 @@ class TimeOfDay
     // London
     const float latitude_ = 51.5f;
     const float longtitude_ = -0.1278f;
-    // Reykjavik
-    // const float mLatitude = 64.1f;
-    // const float mLongtitude = -21.9426f;
 
     int year_ = 2021;
     int ordinal_date_ = 172;

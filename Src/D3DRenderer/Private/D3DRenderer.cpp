@@ -20,64 +20,6 @@ D3DRenderer::D3DRenderer(ID3D12Device2* device, ID3D12GraphicsCommandList* comma
 {
     device_->AddRef();
     command_list_->AddRef();
-
-    // // apply depth buffer
-    // D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-    // dsDesc.DepthEnable = TRUE;
-    // dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    // dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    // d3dAssert(mDevice->CreateDepthStencilState(&dsDesc, use_depth_stencil_state_.GetAddressOf()));
-    // dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-    // dsDesc.DepthFunc = D3D11_COMPARISON_ALWAYS;
-    // d3dAssert(mDevice->CreateDepthStencilState(&dsDesc, no_depth_stencil_state_.GetAddressOf()));
-
-    // // bind depth state
-    // mContext->OMSetDepthStencilState(use_depth_stencil_state_.Get(), 1u);
-
-    // vertexShader->Use(mContext.Get());
-
-    // CreateConstantBuffer(&mSlowConstantBuffer, &mSlowConstantBufferData, sizeof(mSlowConstantBufferData));
-    // CreateConstantBuffer(&mFastConstantBuffer, &mFastConstantBufferData, sizeof(mFastConstantBufferData));
-
-    // ID3D11Buffer* VertBuffers[2] = { mSlowConstantBuffer.Get(), mFastConstantBuffer.Get() };
-    // mContext->VSSetConstantBuffers(0u, 2u, VertBuffers);
-
-    // CreateConstantBuffer(&mWorldPixelBuffer, &mWorldPixelBufferData, sizeof(mWorldPixelBufferData));
-
-    // ID3D11Buffer* PixBuffers[1] = { mWorldPixelBuffer.Get() };
-    // mContext->PSSetConstantBuffers(0u, 1u, PixBuffers);
-
-    // {
-    //     D3D11_BLEND_DESC blendDesc = CD3D11_BLEND_DESC{ CD3D11_DEFAULT{} };
-    //     auto& brt = blendDesc.RenderTarget[0];
-    //     brt.BlendEnable = TRUE;
-    //     brt.SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    //     brt.DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    //     brt.BlendOp = D3D11_BLEND_OP_ADD;
-    //     brt.SrcBlendAlpha = D3D11_BLEND_ZERO;
-    //     brt.DestBlendAlpha = D3D11_BLEND_ZERO;
-    //     brt.BlendOpAlpha = D3D11_BLEND_OP_ADD;
-    //     brt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    //     d3dAssert(mDevice->CreateBlendState(&blendDesc, &mAlphaBlendState));
-    // }
-    // {
-    //     D3D11_BLEND_DESC blendDesc = CD3D11_BLEND_DESC{ CD3D11_DEFAULT{} };
-    //     auto& brt = blendDesc.RenderTarget[0];
-    //     brt.BlendEnable = FALSE;
-    //     brt.RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-    //     d3dAssert(mDevice->CreateBlendState(&blendDesc, &mNoAlphaBlendState));
-    // }
-    // mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
-
-    // D3D11_RASTERIZER_DESC state_desc = {};
-    // state_desc.FillMode = D3D11_FILL_SOLID;
-    // state_desc.CullMode = D3D11_CULL_BACK;
-    // state_desc.DepthClipEnable = true;
-    // d3dAssert(mDevice->CreateRasterizerState(&state_desc, &solid_state_));
-    // state_desc.CullMode = D3D11_CULL_NONE;
-    // state_desc.FillMode = D3D11_FILL_WIREFRAME;
-    // state_desc.DepthClipEnable = false;
-    // d3dAssert(mDevice->CreateRasterizerState(&state_desc, &wire_frame_state_));
 }
 
 D3DRenderer::~D3DRenderer()
@@ -116,34 +58,14 @@ void D3DRenderer::Render(const CameraComponent& camera)
 {
     PreRender(camera);
 
-    // sort render states
-    // use array sort for better cache performance in the sort and the subsequent loop
-    // std::sort(render_states_.begin(), render_states_.end());
-
     if (render_solid_)
     {
-        // mContext->RSSetState(solid_state_);
         // draw each state
         for (const RenderState& state : render_states_)
         {
             Draw(camera, state, true);
         }
     }
-
-    // if (render_wireframe_)
-    // {
-    //     mContext->RSSetState(wire_frame_state_);
-
-    //     currentRenderState.material = wireframe_shader_;
-    //     wireframe_shader_->shader->Use(mContext.Get());
-    //     mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
-
-    //     // draw each state
-    //     for (const RenderState& state : sortedStates)
-    //     {
-    //         Draw(camera, state, false);
-    //     }
-    // }
 
     PostRender();
 }
@@ -160,7 +82,7 @@ void D3DRenderer::PreRender(const CameraComponent& camera)
         D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
     command_list_->ResourceBarrier(1, &barrier);
     const int period = 10000;
-    const float colour[4] = { ((count++ % period) / static_cast<float>(period)), 0.5f, 0.5f, 1.0f };
+    const float colour[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
     command_list_->ClearRenderTargetView(back_buffer->cpu_handle_, colour, 0, nullptr);
 
     auto depth_stencil = render_target_->GetDepthStencil();
@@ -211,20 +133,6 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
 {
     if (!state.IsValid()) return;
 
-    // // apply the render state
-    // if (currentRenderState.UseDepthBuffer != state.UseDepthBuffer)
-    // {
-    //     if (state.UseDepthBuffer)
-    //     {
-    //         mContext->OMSetDepthStencilState(use_depth_stencil_state_.Get(), 1u);
-    //     }
-    //     else
-    //     {
-    //         mContext->OMSetDepthStencilState(no_depth_stencil_state_.Get(), 1u);
-    //     }
-    // }
-
-
     state.material_->GetRootSignature()->Bind(command_list_);
 
     UpdateWorldMatrix(camera, state.use_world_matrix_);
@@ -240,28 +148,6 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     command_list_->IASetIndexBuffer(state.mesh_->GetTriangleBuffer());
 
     state.material_->Bind(command_list_);
-
-    // command_list_->SetGraphicsRootShaderResourceView()
-
-    // if (use_materials && currentRenderState.material != state.material)
-    // {
-    //     state.material->shader->Use(mContext.Get());
-    //     unsigned int num_textures = state.material->textures.size();
-    //     for (unsigned int i = 0; i < num_textures; ++i)
-    //     {
-    //         state.material->textures[i]->Use(mContext.Get(), i);
-    //     }
-    //     used_texture_slots_ = num_textures > used_texture_slots_ ? num_textures : used_texture_slots_;
-
-    //     if (state.material->alpha)
-    //     {
-    //         mContext->OMSetBlendState(mAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
-    //     }
-    //     else
-    //     {
-    //         mContext->OMSetBlendState(mNoAlphaBlendState.Get(), nullptr, 0xFFFFFFFFu);
-    //     }
-    // }
 
     const auto instance_count = 1u;
     const auto start_index = 0u;

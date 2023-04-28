@@ -26,17 +26,17 @@ class Texture2D : public Texture
  public:
     Texture2D(int width, int height);
 
-    inline Colour GetPixel(int x, int y) const { return mData[x + (y * mWidth)]; }
+    inline Colour GetPixel(int x, int y) const { return data_[x + (y * width_)]; }
     void SetPixel(int x, int y, Colour value);
     void Fill(Colour value);
 
-    inline Colour* GetData() const { return mData.get(); }
+    inline Colour* GetData() const { return data_.get(); }
 
-    inline int GetWidth() const { return mWidth; }
-    inline int GetHeight() const { return mHeight; }
+    inline int GetWidth() const { return width_; }
+    inline int GetHeight() const { return height_; }
 
  private:
-    int mWidth;
-    int mHeight;
-    std::unique_ptr<Colour[]> mData;
+    int width_;
+    int height_;
+    std::unique_ptr<Colour[]> data_;
 };

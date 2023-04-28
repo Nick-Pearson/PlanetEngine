@@ -3,7 +3,7 @@
 #include "PlanetEngine.h"
 
 Window::Window(int sizeX, int sizeY) :
-    width(sizeX), height(sizeY)
+    width_(sizeX), height_(sizeY)
 {
 #if PLATFORM_WIN
     const auto ClassName = "PlanetEngWindowClass";
@@ -27,9 +27,9 @@ Window::Window(int sizeX, int sizeY) :
     RegisterClassEx(&wc);
 
     const DWORD WindowStyles = WS_CAPTION | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU;
-    mWindowHandle = CreateWindowEx(0, ClassName, TEXT(""), WindowStyles, 200, 200, sizeX, sizeY, nullptr, nullptr, hInstance, (LPVOID)this);
-    assert(mWindowHandle != nullptr);
-    ShowWindow(mWindowHandle, SW_SHOW);
+    window_handle_ = CreateWindowEx(0, ClassName, TEXT(""), WindowStyles, 200, 200, sizeX, sizeY, nullptr, nullptr, hInstance, (LPVOID)this);
+    assert(window_handle_ != nullptr);
+    ShowWindow(window_handle_, SW_SHOW);
 #else
     #error "Window construction not implemented on this platform"
 #endif
@@ -38,7 +38,7 @@ Window::Window(int sizeX, int sizeY) :
 Window::~Window()
 {
 #if PLATFORM_WIN
-    DestroyWindow(mWindowHandle);
+    DestroyWindow(window_handle_);
 #else
 #error "Window destruction not implemented on this platform"
 #endif

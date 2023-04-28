@@ -7,18 +7,18 @@
 #include "Material/Material.h"
 
 MeshComponent::MeshComponent(std::shared_ptr<Mesh> mesh, std::shared_ptr<Material> material) :
-    mMesh(mesh), mMaterial(material)
+    mesh_(mesh), material_(material)
 {
 }
 
-void MeshComponent::SetVisibility(bool newVisibility)
+void MeshComponent::SetVisibility(bool new_visibility)
 {
-    if (mVisible == newVisibility) return;
+    if (visible_ == new_visibility) return;
 
     RenderQueue* queue = PlanetEngine::Get()->GetRenderQueue();
 
-    mVisible = newVisibility;
-    if (mVisible)
+    visible_ = new_visibility;
+    if (visible_)
     {
         queue->AddMesh(this);
     }

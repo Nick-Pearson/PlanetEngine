@@ -36,29 +36,29 @@ class Entity
     virtual void OnDestroyed();
     virtual void OnUpdate(float deltaSeconds);
 
-    inline Scene* GetScene() const { return scene; }
+    inline Scene* GetScene() const { return scene_; }
 
-    inline Transform GetTransform() const { return transform; }
+    inline Transform GetTransform() const { return transform_; }
 
-    inline const char* GetName() { return mName; }
-    inline void SetName(const char* name) { mName = name; }
+    inline const char* GetName() { return name_; }
+    inline void SetName(const char* name) { name_ = name; }
 
     void Translate(Vector translation);
     void Rotate(Vector rotation);
 
-    inline Quaternion GetRotation() const { return transform.rotation; }
+    inline Quaternion GetRotation() const { return transform_.rotation; }
     void SetRotation(Quaternion rotation);
 
  public:
-    Transform transform;
+    Transform transform_;
 
-    std::vector<Component*> components;
+    std::vector<Component*> components_;
 
  private:
     void OnTransformChanged();
 
-    const char* mName = nullptr;
-    Scene* scene = nullptr;
+    const char* name_ = nullptr;
+    Scene* scene_ = nullptr;
 };
 
 template<class T, typename... Args>

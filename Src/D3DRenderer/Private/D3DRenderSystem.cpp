@@ -125,8 +125,6 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     resource_manager_ = new GPUResourceManager{ device_, srv_heap_ };
     window_events_ = new D3DWindowEvents{ this };
 
-    // Material wireframe_material{"WireframeShader.hlsl"};
-    // auto wireframe_shader = mResourceManager->LoadMaterial(&wireframe_material);
     renderer_ = new D3DRenderer{ device_, draw_command_list_, root_signature_, srv_heap_ };
     window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, dsv_descriptor_heap_, draw_command_queue_};
     renderer_->BindRenderTarget(window_render_target_);
