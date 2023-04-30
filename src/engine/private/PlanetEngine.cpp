@@ -73,8 +73,8 @@ void PlanetEngine::Run()
     std::shared_ptr<Mesh> bunny = OBJImporter::Import("assets/models/bunny.obj", 20.0f);
     // std::shared_ptr<Mesh> tree = FBXImporter::Import("assets/models/tree/Aset_wood_root_M_rkswd_LOD0.fbx", 1.0f);
 
-    PixelShader* pixel_shader = new PixelShader{ "PixelShader.hlsl" };
-    PixelShader* textured_shader = new PixelShader{ "TexturedShader.hlsl" };
+    PixelShader* pixel_shader = new PixelShader{ "ps/PixelShader.hlsl" };
+    PixelShader* textured_shader = new PixelShader{ "ps/TexturedShader.hlsl" };
     textured_shader->AddInput(ShaderParameterType::TEXTURE_2D);
     // PixelShader* tree_shader = new PixelShader{ "TreeShader.hlsl" };
     // tree_shader->AddInput(ShaderParameterType::TEXTURE_2D);

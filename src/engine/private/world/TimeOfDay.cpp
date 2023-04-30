@@ -77,8 +77,6 @@ void TimeOfDay::Update(float deltaSeconds)
 
 Vector TimeOfDay::CalculateSunDirection() const
 {
-    // float altitude
-    // Quaternion sunRotation{ Vector(Math::RadToDeg(mElevation), 0.0f, Math::RadToDeg(mAzimuth)) };
     float elvSin, elvCos, aziSin, aziCos;
     Math::SinAndCos(sun_angles_.elevation, &elvSin, &elvCos);
     Math::SinAndCos(sun_angles_.azimuth, &aziSin, &aziCos);

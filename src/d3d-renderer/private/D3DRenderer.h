@@ -75,9 +75,7 @@ class D3DRenderer : public Renderer
     const RenderTarget* render_target_ = nullptr;
 
     D3DSlowVSConstants::Data slow_constants_;
-    D3DFastVSConstants::Data fast_constants_;
-
-    D3DWorldPSConstants::Data world_constants_;
+    D3DFastConstants::Data fast_constants_;
 
  private:
     // list of render commands

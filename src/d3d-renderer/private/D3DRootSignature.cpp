@@ -22,11 +22,10 @@ D3DRootSignature::D3DRootSignature(const PixelShader* pixel_shader, ID3D12Device
         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-    CD3DX12_ROOT_PARAMETER1 params[4];
-    uint32_t num_params = 3;
+    CD3DX12_ROOT_PARAMETER1 params[3];
+    uint32_t num_params = 2;
     params[0].InitAsConstants(D3DSlowVSConstants::size_32_bit_, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-    params[1].InitAsConstants(D3DFastVSConstants::size_32_bit_, 1, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-    params[2].InitAsConstants(D3DWorldPSConstants::size_32_bit_, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+    params[1].InitAsConstants(D3DFastConstants::size_32_bit_, 1, 0, D3D12_SHADER_VISIBILITY_ALL);
 
     auto num_inputs = pixel_shader->GetNumInputs();
     if (num_inputs > 0)
@@ -35,7 +34,7 @@ D3DRootSignature::D3DRootSignature(const PixelShader* pixel_shader, ID3D12Device
 
         uint32_t t = static_cast<uint32_t>(num_inputs);
         CD3DX12_DESCRIPTOR_RANGE1 desc_range{D3D12_DESCRIPTOR_RANGE_TYPE::D3D12_DESCRIPTOR_RANGE_TYPE_SRV, t, 0};
-        params[3].InitAsDescriptorTable(1U, &desc_range, D3D12_SHADER_VISIBILITY_PIXEL);
+        params[2].InitAsDescriptorTable(1U, &desc_range, D3D12_SHADER_VISIBILITY_PIXEL);
     }
 
     // create a static sampler

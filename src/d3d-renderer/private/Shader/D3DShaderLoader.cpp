@@ -4,6 +4,7 @@
 #include <codecvt>
 #include <locale>
 
+#include "D3DShaderIncludeHandler.h"
 #include "D3DAssert.h"
 
 namespace
@@ -26,9 +27,10 @@ namespace
         macros[i].Name = nullptr;
         macros[i].Definition = nullptr;
 
+        D3DShaderIncludeHandler include_handler{ fullpath };
         ID3DBlob* shader_blob = nullptr;
         ID3DBlob* error_blob = nullptr;
-        D3DCompileFromFile(fullpath.c_str(), &macros[0], nullptr, "main", target, compile_flags, 0u, &shader_blob, &error_blob);
+        D3DCompileFromFile(fullpath.c_str(), &macros[0], &include_handler, "main", target, compile_flags, 0u, &shader_blob, &error_blob);
 
         delete[] macros;
 

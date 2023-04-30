@@ -30,8 +30,6 @@ class SkyDome: public Entity
 
     uint64_t gen_time_ms_ = 0;
 
-    MeshComponent *sun_mesh_component_;
-
     // static std::unique_ptr<Texture3D> sScatteringTexture;
     // static std::unique_ptr<Texture2D> sTransmitanceTexture;
     // static std::unique_ptr<Texture2D> sPhaseTexture;

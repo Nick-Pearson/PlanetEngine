@@ -118,9 +118,9 @@ void D3DRenderer::AddRenderState(const RenderState& state)
 
 void D3DRenderer::UpdateWorldBuffer(const WorldBufferData& data)
 {
-    world_constants_.sun_dir_ = data.sunDir.ToVector3Reg();
-    world_constants_.sun_sky_strength_ = data.sunSkyStrength;
-    world_constants_.sun_col_ = data.sunCol.ToVector3Reg();
+    fast_constants_.sun_dir_ = data.sunDir.ToVector3Reg();
+    fast_constants_.sun_sky_strength_ = data.sunSkyStrength;
+    fast_constants_.sun_col_ = data.sunCol.ToVector3Reg();
 }
 
 void D3DRenderer::RenderDebugUI()
@@ -139,9 +139,7 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
 
     DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(state.model_.GetMatrix());
     fast_constants_.model_ = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model_.GetMatrix()));
-    command_list_->SetGraphicsRoot32BitConstants(1, D3DFastVSConstants::size_32_bit_, &fast_constants_, 0);
-
-    command_list_->SetGraphicsRoot32BitConstants(2, D3DWorldPSConstants::size_32_bit_, &world_constants_, 0);
+    command_list_->SetGraphicsRoot32BitConstants(1, D3DFastConstants::size_32_bit_, &fast_constants_, 0);
 
     command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     command_list_->IASetVertexBuffers(0u, 1u, state.mesh_->GetVertexBuffer());

@@ -1,3 +1,5 @@
+#include "PSCommon.hlsl"
+
 // atmosphere radius (in m)
 #define RA 6420000.0f
 #define RE 6360000.0f
@@ -15,14 +17,6 @@
 
 #define BETA_R float3(3.8e-6f, 13.5e-6f, 33.1e-6f)
 #define BETA_M float3(21e-6f, 21e-6f, 21e-6f)
-
-cbuffer CBuff_World
-{
-	float3 sunDir;
-	float sunSkyStrength;
-
-	float3 sunCol;
-};
 
 Texture3D low_freq_tex : register(t0);
 SamplerState low_freq_splr : register(s0);
@@ -82,7 +76,7 @@ float3 sky_col(float3 dir)
 	t0 = max(t0, 0);
 
 	const float segmentLen = (t1 - t0) / float(NUM_SAMPLES);
-	const float mu = dot(dir, sunDir);
+	const float mu = dot(dir, fast.sunDir);
 	
 	const float phaseR = rayleigh_phase(mu);
 	const float phaseM = mie_phase(mu);
@@ -108,7 +102,7 @@ float3 sky_col(float3 dir)
 
 		// calculate sun light
 		float t0Light, t1Light;
-		if (!intersect_atmosphere(samplePosition, sunDir, t0Light, t1Light))
+		if (!intersect_atmosphere(samplePosition, fast.sunDir, t0Light, t1Light))
 		{
 			return float3(0.0f, 1.0f, 0.0f);
 		}
@@ -122,7 +116,7 @@ float3 sky_col(float3 dir)
 		[loop]
 		for (; j < NUM_SAMPLES_LIGHT; ++j)
 		{
-			float3 samplePositionLight = samplePosition + (tCurrentLight + segmentLengthLight * 0.5f) * sunDir;
+			float3 samplePositionLight = samplePosition + (tCurrentLight + segmentLengthLight * 0.5f) * fast.sunDir;
 			float heightLight = length(samplePositionLight) - RE;
 
 			if (heightLight < 0.0f) break;
@@ -149,7 +143,7 @@ float3 sky_col(float3 dir)
 	float3 col = float3(0.0f, 0.0f, 0.0f);
 	col += sumR * phaseR * BETA_R;
 	col += sumM * phaseM * BETA_M;
-	return col * sunSkyStrength;
+	return col * fast.sunSkyStrength;
 }
 
 /*
@@ -229,7 +223,7 @@ float sample_cloud_density(float3 position)
 
 float henyey_greenstein(float3 userToCloud)
 {
-    float cosAngle = dot(sunDir, userToCloud);
+    float cosAngle = dot(fast.sunDir, userToCloud);
     float g2 = G * G;
     float threeOverTwo = 3.0f / 2.0f;
     float v = (1.0f + g2 - pow(abs(2.0f * G * cosAngle), threeOverTwo)) * 4.0f * 3.1415f;
@@ -257,7 +251,7 @@ static float3 noise_kernel [] =
 
 float raymarch_cloud_light(float3 position)
 {
-	const float3 dir = -sunDir;
+	const float3 dir = -fast.sunDir;
     const float depth = get_cloud_depth(position, dir);
 	const float cone_spread_multiplier = 1.0f;
 
@@ -321,7 +315,7 @@ float4 cloud_col(float3 dir)
         dist_travelled += StepSize;
     }
 
-	float3 colour = light_energy * sunCol;
+	float3 colour = light_energy * fast.sunCol;
 	// float3 colour = float3(1.0f, 1.0f, 1.0f);
 
     return float4(colour.r, colour.g, colour.b, 1.0f - transmittance);

@@ -15,22 +15,12 @@ static_assert(sizeof(Data) % sizeof(uint32_t) == 0, "Must be multiple of 32");
 constexpr unsigned int size_32_bit_ = sizeof(Data) / sizeof(uint32_t);
 }  // namespace D3DSlowVSConstants
 
-namespace D3DFastVSConstants
+namespace D3DFastConstants
 {
 
 struct Data
 {
     DirectX::XMMATRIX model_;
-};
-
-static_assert(sizeof(Data) % sizeof(uint32_t) == 0, "Must be multiple of 32");
-constexpr unsigned int size_32_bit_ = sizeof(Data) / sizeof(uint32_t);
-}  // namespace D3DFastVSConstants
-
-namespace D3DWorldPSConstants
-{
-struct Data
-{
     DirectX::XMFLOAT3 sun_dir_;
     float sun_sky_strength_;
     DirectX::XMFLOAT3 sun_col_;
@@ -38,4 +28,4 @@ struct Data
 
 static_assert(sizeof(Data) % sizeof(uint32_t) == 0, "Must be multiple of 32");
 constexpr unsigned int size_32_bit_ = sizeof(Data) / sizeof(uint32_t);
-}  // namespace D3DWorldPSConstants
+}  // namespace D3DFastConstants

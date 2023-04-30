@@ -27,7 +27,7 @@ void D3DMaterial::Bind(ID3D12GraphicsCommandList* command_list)
 
     if (descriptor_table_ != nullptr)
     {
-        descriptor_table_->Bind(command_list, 3U);
+        descriptor_table_->Bind(command_list, 2U);
     }
 }
 

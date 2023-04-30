@@ -61,7 +61,7 @@ GPUResourceManager::GPUResourceManager(ID3D12Device2* device, SRVHeap* srv_heap)
 
     texture_loader_ = new D3DTextureLoader{command_list_, device_};
 
-    const VertexShader default_vert_shader{"VertexShader.hlsl"};
+    const VertexShader default_vert_shader{"vs/VertexShader.hlsl"};
     default_d3d_vertex_shader_ = D3DShaderLoader::LoadVertex(&default_vert_shader);
 }
 
