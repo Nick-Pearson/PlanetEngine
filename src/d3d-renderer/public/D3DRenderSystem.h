@@ -28,7 +28,7 @@ class D3DRenderSystem : public RenderSystem
     void RenderFrame(const CameraComponent& camera) final;
     void RenderToTexture(Texture2D* texture, const CameraComponent& camera) final;
 
-    void InvokeCompute(const ComputeShader& shader) final;
+    void InvokeCompute(const ComputeShader* shader) final;
 
     void UpdateWindowSize();
 
@@ -60,15 +60,20 @@ class D3DRenderSystem : public RenderSystem
     ID3D12CommandAllocator* draw_command_allocator_ = nullptr;
 
     class D3DCommandQueue* compute_command_queue_ = nullptr;
+    ID3D12GraphicsCommandList* compute_command_list_ = nullptr;
+    ID3D12CommandAllocator* compute_command_allocator_ = nullptr;
 
     ID3D12DescriptorHeap* rtv_descriptor_heap_ = nullptr;
     ID3D12DescriptorHeap* dsv_descriptor_heap_ = nullptr;
     class SRVHeap* srv_heap_ = nullptr;
+    class SRVHeap* compute_srv_heap_ = nullptr;
 
     class D3DRenderer* renderer_;
     class ImGUIRenderer* ui_renderer_;
     class GPUResourceManager* resource_manager_;
     class D3DWindowEvents* window_events_;
+    
+    class D3DComputeDispatch* compute_dispatch_;
 
     class WindowRenderTarget* window_render_target_;
 

@@ -85,10 +85,10 @@ const D3DPixelShader* D3DShaderLoader::LoadPixel(const PixelShader* shader)
     return new D3DPixelShader{ blob };
 }
 
-std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const ComputeShader& shader)
+const D3DComputeShader* D3DShaderLoader::LoadCompute(const ComputeShader* shader)
 {
-    P_LOG("Loading compute shader {}", shader.GetShaderName());
-    ID3DBlob* blob = compile_shader_blob(shader.GetShaderName().c_str(), "cs_5_1", shader.GetDefines());
+    P_LOG("Loading compute shader {}", shader->GetShaderPath());
+    ID3DBlob* blob = compile_shader_blob(shader->GetShaderPath().c_str(), "cs_5_1", shader->GetDefines());
     if (!blob)
     {
         return nullptr;
@@ -96,5 +96,5 @@ std::shared_ptr<D3DComputeShader> D3DShaderLoader::LoadCompute(const ComputeShad
     // ID3D11ComputeShader* handle;
     // d3dAssert(device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
     // return std::make_shared<D3DComputeShader>(blob, handle, shader.GetNumThreads());
-    return nullptr;
+    return new D3DComputeShader{ blob };
 }

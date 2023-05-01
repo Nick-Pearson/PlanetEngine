@@ -19,7 +19,7 @@ class RenderSystem
     virtual void RenderFrame(const CameraComponent& camera) = 0;
     virtual void RenderToTexture(Texture2D* texture, const CameraComponent& camera) = 0;
 
-    virtual void InvokeCompute(const ComputeShader& shader) = 0;
+    virtual void InvokeCompute(const ComputeShader* shader) = 0;
 
     virtual Renderer* GetRenderer() const = 0;
 };

@@ -23,6 +23,26 @@ namespace
             P_FATAL("invalid texture for use in SRV");
         }
     }
+
+    D3D12_UAV_DIMENSION get_uav_dimension(const D3DTexture* texture)
+    {
+        if (texture->dimensions_ == 1)
+        {
+            return D3D12_UAV_DIMENSION_TEXTURE1D;
+        }
+        else if (texture->dimensions_ == 2)
+        {
+            return D3D12_UAV_DIMENSION_TEXTURE2D;
+        }
+        else if (texture->dimensions_ == 3)
+        {
+            return D3D12_UAV_DIMENSION_TEXTURE3D;
+        }
+        else
+        {
+            P_FATAL("invalid texture for use in UAV");
+        }
+    }
 }  // namespace
 
 SRVHeap::SRVHeap(ID3D12Device2* device) :
@@ -64,6 +84,31 @@ D3DDescriptorTable* SRVHeap::CreateDescriptorTable(size_t num_textures, const D3
         srv_desc.Texture2D.MipLevels = 1;
 
         device_->CreateShaderResourceView(texture->resource_, &srv_desc, cpu_handle_);
+
+        cpu_handle_.ptr += descriptor_size;
+        gpu_handle_.ptr += descriptor_size;
+    }
+
+    return new D3DDescriptorTable{root_handle, num_textures};
+}
+
+D3DDescriptorTable* SRVHeap::CreateUAVDescriptorTable(size_t num_textures, const D3DTexture** textures)
+{
+    DescriptorHandle root_handle;
+    root_handle.cpu_ = cpu_handle_;
+    root_handle.gpu_ = gpu_handle_;
+
+    auto descriptor_size = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    for (auto i = 0; i < num_textures; ++i)
+    {
+        const D3DTexture* texture = textures[i];
+
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc = {};
+        uav_desc.Format = texture->format_;
+        uav_desc.ViewDimension = get_uav_dimension(texture);
+
+        device_->CreateUnorderedAccessView(texture->resource_, nullptr, &uav_desc, cpu_handle_);
 
         cpu_handle_.ptr += descriptor_size;
         gpu_handle_.ptr += descriptor_size;

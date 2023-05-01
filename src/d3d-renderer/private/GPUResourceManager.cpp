@@ -11,7 +11,6 @@
 #include "Material/Material.h"
 #include "Material/D3DMaterial.h"
 #include "Texture/Texture2D.h"
-#include "Compute/ComputeShader.h"
 #include "D3DCommandQueue.h"
 #include "D3DRenderSystem.h"
 #include "PlanetEngine.h"
@@ -209,47 +208,6 @@ void GPUResourceManager::ProcessCompletedBatches()
             batch.OnLoadingComplete();
         }
     }
-}
-
-std::shared_ptr<D3DComputeShader> GPUResourceManager::LoadCompute(const ComputeShader& shader)
-{
-    std::shared_ptr<D3DComputeShader> program = D3DShaderLoader::LoadCompute(shader);
-    if (!program)
-    {
-        return nullptr;
-    }
-
-    // for (int slot = 0; slot < shader.GetNumTextureOutputs(); ++slot)
-    // {
-    //     const Texture* tex = shader.GetTextureOutput(slot);
-    //     ID3D11UnorderedAccessView* uav = texture_loader_->LoadForCompute(tex);
-    //     program->AddUAV(uav);
-    // }
-
-    // for (int slot = 0; slot < shader.GetNumDataInputs(); ++slot)
-    // {
-    //     const DataBuffer* data = shader.GetDataInput(slot);
-
-    //     ID3D11Buffer* buff = nullptr;
-    //     CreateBuffer(data->data_,
-    //         data->count_,
-    //         data->stride_,
-    //         D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE,
-    //         D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
-    //         &buff);
-
-    //     D3D11_SHADER_RESOURCE_VIEW_DESC desc = {};
-    //     desc.ViewDimension = D3D11_SRV_DIMENSION_BUFFEREX;
-    //     desc.BufferEx.FirstElement = 0;
-    //     desc.Format = DXGI_FORMAT_UNKNOWN;
-    //     desc.BufferEx.NumElements = data->count_;
-    //     ID3D11ShaderResourceView* res;
-    //     d3dAssert(mDevice->CreateShaderResourceView(buff, &desc, &res));
-    //     buff->Release();
-
-    //     program->AddResource(res);
-    // }
-    return program;
 }
 
 void GPUResourceManager::RenderDebugUI()

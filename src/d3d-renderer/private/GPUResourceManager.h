@@ -57,8 +57,6 @@ class GPUResourceManager
         const PixelShader* pixel_shader,
         const D3DRootSignature* root_signature);
 
-    std::shared_ptr<D3DComputeShader> LoadCompute(const class ComputeShader& shader);
-
     void RenderDebugUI();
 
     void ExecuteResourceLoads();

@@ -38,7 +38,7 @@ void Worley::RegenerateTexture()
 
     unsigned int thread_group_size = 8u;
     unsigned int num_thread_groups = worley_texture_->GetWidth() / thread_group_size;
-    ComputeShader* worley_compute = new ComputeShader{"Worley.hlsl", NumThreads{num_thread_groups, num_thread_groups, num_thread_groups}};
+    ComputeShader* worley_compute = new ComputeShader{"cs/Worley.hlsl", NumThreads{num_thread_groups, num_thread_groups, num_thread_groups}};
     worley_compute->AddTextureOutput(worley_texture_);
     worley_compute->AddDataInput(std::make_shared<DataBuffer>(points_.data(), sizeof(WorleyPoint), total_cells));
     worley_compute->AddDefine("NUM_CELLS", std::to_string(num_cells));
@@ -49,6 +49,6 @@ void Worley::RegenerateTexture()
     worley_compute->AddDefine("TEXTURE_WIDTH", std::to_string(worley_texture_->GetWidth()));
     worley_compute->AddDefine("INCLUDE_SIMPLEX", std::to_string(static_cast<int>(params_.include_simplex_)));
 
-    PlanetEngine::Get()->GetRenderSystem()->InvokeCompute(*worley_compute);
+    PlanetEngine::Get()->GetRenderSystem()->InvokeCompute(worley_compute);
     delete worley_compute;
 }

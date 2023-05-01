@@ -1,8 +1,8 @@
 #include "Compute/ComputeShader.h"
 #include "PlanetLogging.h"
 
-ComputeShader::ComputeShader(const char* shader_name, const NumThreads& num_threads) :
-    shader_name_(shader_name), num_threads_(num_threads)
+ComputeShader::ComputeShader(const char* shader_path, const NumThreads& num_threads) :
+    shader_path_(shader_path), num_threads_(num_threads)
 {
 }
 

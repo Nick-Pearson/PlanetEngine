@@ -25,6 +25,7 @@
 #include "BaseRootSignature.h"
 #include "D3DRootSignature.h"
 #include "D3DPipelineState.h"
+#include "compute/D3DComputeDispatch.h"
 #include "imgui.h"
 
 namespace
@@ -130,6 +131,8 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, dsv_descriptor_heap_, draw_command_queue_};
     renderer_->BindRenderTarget(window_render_target_);
 
+    compute_dispatch_ = new D3DComputeDispatch{ device_, compute_command_queue_, compute_command_list_, compute_command_allocator_ };
+
 #if defined(DX_DEBUG)
     FlushDebugMessages();
 #endif
@@ -149,10 +152,14 @@ D3DRenderSystem::~D3DRenderSystem()
     delete renderer_;
     delete window_render_target_;
 
+    delete compute_dispatch_;
+
     delete draw_command_queue_;
     draw_command_allocator_->Release();
     draw_command_list_->Release();
     delete compute_command_queue_;
+    compute_command_allocator_->Release();
+    compute_command_list_->Release();
 
     rtv_descriptor_heap_->Release();
     dsv_descriptor_heap_->Release();
@@ -209,13 +216,9 @@ void D3DRenderSystem::ApplyQueue(const RenderQueueItems& items)
     resource_manager_->ExecuteResourceLoads();
 }
 
-void D3DRenderSystem::InvokeCompute(const ComputeShader& shader)
+void D3DRenderSystem::InvokeCompute(const ComputeShader* shader)
 {
-    // std::shared_ptr<D3DComputeShader> loaded_shader = mResourceManager->LoadCompute(shader);
-    // if (loaded_shader)
-    // {
-        // loaded_shader->Invoke(mContext.Get());
-    // }
+    compute_dispatch_->Dispatch(shader);
 }
 
 void D3DRenderSystem::UpdateWindowSize()
@@ -347,7 +350,13 @@ void D3DRenderSystem::InitDevice(HWND window)
     d3dAssert(draw_command_list_->Close());
 
     compute_command_queue_ = new D3DCommandQueue{device_, D3D12_COMMAND_LIST_TYPE_COMPUTE, D3D12_COMMAND_QUEUE_PRIORITY_NORMAL};
-    SET_NAME(draw_command_queue_, "Compute Command Queue")
+    SET_NAME(compute_command_queue_, "Compute Command Queue")
+    d3dAssert(device_->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_COMPUTE, IID_PPV_ARGS(&compute_command_allocator_)));
+    SET_NAME(compute_command_allocator_, "Compute Command Allocator")
+    d3dAssert(device_->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_COMPUTE,
+        compute_command_allocator_, nullptr, IID_PPV_ARGS(&compute_command_list_)));
+    SET_NAME(compute_command_list_, "Compute Command List")
+    d3dAssert(compute_command_list_->Close());
 
     swap_chain_ = CreateSwapChain(window);
 
@@ -355,6 +364,7 @@ void D3DRenderSystem::InitDevice(HWND window)
     dsv_descriptor_heap_ = CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
 
     srv_heap_ = new SRVHeap{device_};
+    compute_srv_heap_ = new SRVHeap{device_};
 }
 
 ID3D12Device2* D3DRenderSystem::CreateDevice()

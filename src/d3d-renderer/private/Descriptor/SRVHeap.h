@@ -14,6 +14,7 @@ class SRVHeap
     inline ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptor_heap_; }
 
     D3DDescriptorTable* CreateDescriptorTable(size_t num_textures, const D3DTexture** textures);
+    D3DDescriptorTable* CreateUAVDescriptorTable(size_t num_textures, const D3DTexture** textures);
     DescriptorHandle CreateDescriptorHandle();
 
     void Bind(ID3D12GraphicsCommandList* command_list);

@@ -17,5 +17,5 @@ namespace D3DShaderLoader
 {
     const D3DVertexShader* LoadVertex(const VertexShader* shader);
     const D3DPixelShader* LoadPixel(const PixelShader* shader);
-    std::shared_ptr<D3DComputeShader> LoadCompute(const ComputeShader& shader);
+    const D3DComputeShader* LoadCompute(const ComputeShader* shader);
 };

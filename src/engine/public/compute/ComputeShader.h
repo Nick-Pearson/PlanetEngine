@@ -26,9 +26,9 @@ struct DataBuffer
 class ComputeShader
 {
  public:
-    explicit ComputeShader(const char* shader_name, const NumThreads& num_threads);
+    explicit ComputeShader(const char* shader_path, const NumThreads& num_threads);
 
-    inline std::string GetShaderName() const { return shader_name_; }
+    inline std::string GetShaderPath() const { return shader_path_; }
     inline NumThreads GetNumThreads() const { return num_threads_; }
 
     inline int GetNumTextureOutputs() const { return static_cast<int>(texture_outputs_.size()); }
@@ -44,7 +44,7 @@ class ComputeShader
     void AddDefine(const std::string& key, const std::string& val);
     inline const std::unordered_map<std::string, std::string> GetDefines() const { return defines_; }
  private:
-    std::string shader_name_;
+    std::string shader_path_;
     NumThreads num_threads_;
     std::vector<std::shared_ptr<Texture>> texture_outputs_;
     std::vector<std::shared_ptr<DataBuffer>> data_outputs_;
