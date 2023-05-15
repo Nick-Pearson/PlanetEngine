@@ -1,3 +1,6 @@
+mod renderer;
+
+use renderer::Renderer;
 use windows::{
     core::*,
     Win32::Foundation::*,
@@ -84,5 +87,8 @@ extern "system" fn wndproc(
 }
 
 fn main() {
+    let r = renderer::default_renderer();
+    r.render_frame();
+    
     run_engine().unwrap();
 }

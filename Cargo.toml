@@ -6,7 +6,7 @@ edition = "2018"
 
 [[bin]]
 name = "engine"
-path = "src/engine.rs"
+path = "src/main.rs"
 
 [dependencies]
 
