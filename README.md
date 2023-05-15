@@ -4,12 +4,10 @@
 
 Run these commands in the project root
 ```bash
-conan install . --install-folder build -s build_type=Debug --build=missing
-conan build . --build-folder build
+cargo build
 ```
 
 ## Compiling a release build
 ```bash
-conan install . --install-folder build --build=missing
-conan build . --build-folder build
+cargo build --release
 ```

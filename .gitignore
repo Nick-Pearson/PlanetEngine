@@ -1,6 +1,5 @@
-[Bb]uild/
-[Ss]creenshots/
+target/
+screenshots/
 .vs/
-imgui.ini
 
 assets/models/tree
