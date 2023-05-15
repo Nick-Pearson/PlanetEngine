@@ -131,7 +131,7 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
     window_render_target_ = new WindowRenderTarget{device_, swap_chain_, rtv_descriptor_heap_, dsv_descriptor_heap_, draw_command_queue_};
     renderer_->BindRenderTarget(window_render_target_);
 
-    compute_dispatch_ = new D3DComputeDispatch{ device_, compute_command_queue_, compute_command_list_, compute_command_allocator_ };
+    compute_dispatch_ = new D3DComputeDispatch{ device_, srv_heap_, compute_command_queue_, compute_command_list_, compute_command_allocator_ };
 
 #if defined(DX_DEBUG)
     FlushDebugMessages();
@@ -146,6 +146,9 @@ D3DRenderSystem::D3DRenderSystem(HWND window)
 
 D3DRenderSystem::~D3DRenderSystem()
 {
+    draw_command_queue_->WaitForSignal(draw_command_queue_->Signal());
+    compute_command_queue_->WaitForSignal(compute_command_queue_->Signal());
+
     delete ui_renderer_;
     delete resource_manager_;
     delete window_events_;
@@ -231,7 +234,7 @@ void D3DRenderSystem::UpdateWindowSize()
 #if defined(DX_DEBUG)
 void D3DRenderSystem::FlushDebugMessages()
 {
-    // const auto len = debug_->GetNumStoredMessages(DXGI_DEBUG_D3D12); \
+    // const auto len = debug_->GetNumStoredMessages(DXGI_DEBUG_D3D12);
     // for (auto i = 0; i < len; ++i)
     // {
     //     SIZE_T msg_len;

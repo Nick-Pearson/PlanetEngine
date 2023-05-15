@@ -9,7 +9,12 @@ D3DDescriptorTable::~D3DDescriptorTable()
 {
 }
 
-void D3DDescriptorTable::Bind(ID3D12GraphicsCommandList* command_list, uint32_t slot)
+void D3DDescriptorTable::BindGraphics(ID3D12GraphicsCommandList* command_list, uint32_t slot)
 {
     command_list->SetGraphicsRootDescriptorTable(slot, handle_.gpu_);
+}
+
+void D3DDescriptorTable::BindCompute(ID3D12GraphicsCommandList* command_list, uint32_t slot)
+{
+    command_list->SetComputeRootDescriptorTable(slot, handle_.gpu_);
 }

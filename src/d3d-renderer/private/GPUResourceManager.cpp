@@ -139,7 +139,7 @@ D3DMaterial* GPUResourceManager::LoadMaterial(const Material* material)
 
     D3DDescriptorTable* descriptor_table = nullptr;
     if (!textures.empty())
-        descriptor_table = srv_heap_->CreateDescriptorTable(textures.size(), textures.data());
+        descriptor_table = srv_heap_->CreateSRVDescriptorTable(textures.size(), textures.data());
 
     auto d3d_material = new D3DMaterial{
         descriptor_table,
@@ -259,17 +259,4 @@ void GPUResourceManager::CreateBuffer(const void* data,
     subresource_data.RowPitch = buffer_size;
     subresource_data.SlicePitch = stride;
     UpdateSubresources(command_list_, *resource, *intermediate_resource, 0, 0, 1, &subresource_data);
-
-    // D3D11_BUFFER_DESC bufferDesc = {};
-    // bufferDesc.BindFlags = flags;
-    // bufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    // bufferDesc.CPUAccessFlags = 0u;
-    // bufferDesc.MiscFlags = miscflags;
-    // bufferDesc.StructureByteStride = stride;
-    // bufferDesc.ByteWidth = length * bufferDesc.StructureByteStride;
-
-    // D3D11_SUBRESOURCE_DATA resourceData = {};
-    // resourceData.pSysMem = data;
-
-    // d3dAssert(mDevice->CreateBuffer(&bufferDesc, &resourceData, outBuffer));
 }

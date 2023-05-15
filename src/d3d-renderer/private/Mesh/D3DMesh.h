@@ -14,17 +14,16 @@ class D3DMesh
             ID3D12Resource* triangle_intermediate_buffer);
     virtual ~D3DMesh();
 
-    inline const D3D12_VERTEX_BUFFER_VIEW* GetVertexBuffer() const { return &vertex_buffer_view_; }
-    inline const D3D12_INDEX_BUFFER_VIEW* GetTriangleBuffer() const { return &triangle_buffer_view_; }
-    inline size_t GetTriangleCount() const { return mesh_->GetTriangleCount(); }
     inline bool IsLoaded() const { return loaded_; }
 
     void OnLoadingComplete();
+    void Draw(ID3D12GraphicsCommandList* command_list);
 
  private:
     const Mesh* mesh_;
 
     bool loaded_ = false;
+    bool first_bind_ = true;
 
     ID3D12Resource* vertex_buffer_;
     ID3D12Resource* vertex_intermediate_buffer_;

@@ -3,28 +3,20 @@
 #include <cstdint>
 #include <string>
 
-enum class TextureDataType : uint8_t
-{
-    STATIC,
-    DYNAMIC,
-    COMPUTE
-};
-
-enum class TextureDimensions : uint8_t
-{
-    _1D,
-    _2D,
-    _3D
-};
-
 class Texture
 {
  public:
-    Texture(TextureDimensions dimensions, TextureDataType data_type);
+    explicit Texture(unsigned int width, unsigned int height = 0, unsigned int depth = 0);
 
-    inline TextureDimensions GetDimensions() const { return dimensions_; }
-    inline TextureDataType GetDataType() const { return data_type_; }
+    unsigned int GetDimensions() const;
+    inline unsigned int GetWidth() const { return width_; }
+    inline unsigned int GetHeight() const { return height_; }
+    inline unsigned int GetDepth() const { return depth_; }
+
+    boolean gpu_write_ = false;
+    boolean cpu_read_ = false;
  private:
-    TextureDimensions dimensions_;
-    TextureDataType data_type_;
+    unsigned int width_ = 0;
+    unsigned int height_ = 0;
+    unsigned int depth_ = 0;
 };

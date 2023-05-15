@@ -1,5 +1,7 @@
 #include "D3DMesh.h"
 
+#include "d3dx12.h"
+
 D3DMesh::D3DMesh(const Mesh* mesh,
         ID3D12Resource* vertex_buffer, ID3D12Resource* vertex_intermediate_buffer,
         ID3D12Resource* triangle_buffer, ID3D12Resource* triangle_intermediate_buffer) :
@@ -37,4 +39,25 @@ D3DMesh::~D3DMesh()
 void D3DMesh::OnLoadingComplete()
 {
     loaded_ = true;
+}
+
+void D3DMesh::Draw(ID3D12GraphicsCommandList* command_list)
+{
+    if (first_bind_)
+    {
+        first_bind_ = false;
+
+        CD3DX12_RESOURCE_BARRIER b[2];
+        b[0] = CD3DX12_RESOURCE_BARRIER::Transition(vertex_buffer_, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        b[1] = CD3DX12_RESOURCE_BARRIER::Transition(triangle_buffer_, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        command_list->ResourceBarrier(2, b);
+    }
+
+    command_list->IASetVertexBuffers(0u, 1u, &vertex_buffer_view_);
+    command_list->IASetIndexBuffer(&triangle_buffer_view_);
+    const auto instance_count = 1u;
+    const auto start_index = 0u;
+    const auto start_vertex = 0u;
+    const auto start_instance = 0u;
+    command_list->DrawIndexedInstanced(mesh_->GetTriangleCount(), instance_count, start_index, start_vertex, start_instance);
 }

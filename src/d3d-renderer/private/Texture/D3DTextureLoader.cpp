@@ -3,9 +3,7 @@
 #include "d3dx12.h"
 
 #include "PlanetLogging.h"
-#include "Texture/Texture2D.h"
-#include "Texture/ComputeTexture2D.h"
-#include "Texture/ComputeTexture3D.h"
+#include "Texture/Texture.h"
 #include "D3DAssert.h"
 
 D3DTextureLoader::D3DTextureLoader(ID3D12GraphicsCommandList* copy_command_list, ID3D12Device2* device) :
@@ -22,6 +20,21 @@ D3DTextureLoader::~D3DTextureLoader()
 }
 
 D3DTexture* D3DTextureLoader::Load(const Texture* texture)
+{
+    auto found = loaded_textures_.find(texture);
+    if (found != loaded_textures_.end())
+    {
+        return found->second;
+    }
+    auto loaded = DoLoadTexture(texture);
+    if (loaded)
+    {
+        loaded_textures_.emplace(texture, loaded);
+    }
+    return loaded;
+}
+
+D3DTexture* D3DTextureLoader::DoLoadTexture(const Texture* texture)
 {
     TextureDimensions dimensions = texture->GetDimensions();
     TextureDataType data_type = texture->GetDataType();
@@ -42,36 +55,6 @@ D3DTexture* D3DTextureLoader::Load(const Texture* texture)
     P_FATAL("unsupported texture data type {} {}", data_type, dimensions);
     return nullptr;
 }
-
-
-// ID3D11UnorderedAccessView* D3DTextureLoader::LoadForCompute(const Texture* texture)
-// {
-    // LoadedTexture texture_resource = GetOrLoadTexture(texture);
-
-    // D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-    // uavDesc.Format = texture_resource.format_;
-
-    // auto dimensions = texture->GetDimensions();
-    // if (dimensions == TextureDimensions::_1D)
-    // {
-    //     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1D;
-    // }
-    // else if (dimensions == TextureDimensions::_2D)
-    // {
-    //     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-    // }
-    // else if (dimensions == TextureDimensions::_3D)
-    // {
-    //     uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-    //     uavDesc.Texture3D.MipSlice = 0;
-    //     uavDesc.Texture3D.FirstWSlice = 0;
-    //     uavDesc.Texture3D.WSize = -1;
-    // }
-
-    // ID3D11UnorderedAccessView* uav_view = nullptr;
-    // d3dAssert(device_->CreateUnorderedAccessView(texture_resource.resource_, &uavDesc, &uav_view));
-//     return nullptr;
-// }
 
 D3DTexture* D3DTextureLoader::LoadTexture2D(const class Texture2D* texture)
 {
@@ -153,13 +136,13 @@ D3DTexture* D3DTextureLoader::LoadComputeTexture3D(const ComputeTexture3D* textu
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &resource_desc,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COMMON,
         nullptr,
         IID_PPV_ARGS(&resource)));
     SET_NAME(resource, "3D Texture Buffer Resource Heap");
 
     return new D3DTexture{resource,
-        D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+        D3D12_RESOURCE_STATE_COMMON,
         nullptr,
         resource_desc.Format,
         3};

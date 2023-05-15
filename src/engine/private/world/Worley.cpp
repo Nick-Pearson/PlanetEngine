@@ -4,9 +4,10 @@
 #include "Render/RenderSystem.h"
 #include "PlanetEngine.h"
 
-Worley::Worley(const std::shared_ptr<ComputeTexture3D>& worley_texture) :
+Worley::Worley(const std::shared_ptr<Texture>& worley_texture) :
     worley_texture_(worley_texture)
 {
+    P_ASSERT(worley_texture->GetDimensions() == 3, "Worley must apply to a 3d texture")
 }
 
 void Worley::SetParams(const WorleyParams& params)

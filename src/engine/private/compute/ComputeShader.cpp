@@ -6,12 +6,7 @@ ComputeShader::ComputeShader(const char* shader_path, const NumThreads& num_thre
 {
 }
 
-void ComputeShader::AddTextureOutput(const std::shared_ptr<ComputeTexture2D>& texture)
-{
-    texture_outputs_.push_back(texture);
-}
-
-void ComputeShader::AddTextureOutput(const std::shared_ptr<ComputeTexture3D>& texture)
+void ComputeShader::AddTextureOutput(const std::shared_ptr<Texture>& texture)
 {
     texture_outputs_.push_back(texture);
 }

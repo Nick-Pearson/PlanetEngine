@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "Texture.h"
-
 struct Colour
 {
  public:
@@ -21,11 +19,8 @@ struct Colour
     uint8_t a;
 };
 
-class Texture2D : public Texture
+struct TextureData
 {
- public:
-    Texture2D(int width, int height);
-
     inline Colour GetPixel(int x, int y) const { return data_[x + (y * width_)]; }
     void SetPixel(int x, int y, Colour value);
     void Fill(Colour value);

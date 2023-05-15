@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "Entity/Entity.h"
-#include "Texture/ComputeTexture3D.h"
+#include "Texture/Texture.h"
 
 struct WorleyPoint
 {
@@ -27,13 +27,13 @@ struct WorleyParams
 class Worley
 {
  public:
-    explicit Worley(const std::shared_ptr<ComputeTexture3D>& worley_texture);
+    explicit Worley(const std::shared_ptr<Texture>& worley_texture);
 
     void SetParams(const WorleyParams& params);
     void RegenerateTexture();
 
  private:
     WorleyParams params_;
-    std::shared_ptr<ComputeTexture3D> worley_texture_;
+    std::shared_ptr<Texture> worley_texture_;
     std::vector<WorleyPoint> points_;
 };

@@ -93,8 +93,5 @@ const D3DComputeShader* D3DShaderLoader::LoadCompute(const ComputeShader* shader
     {
         return nullptr;
     }
-    // ID3D11ComputeShader* handle;
-    // d3dAssert(device_->CreateComputeShader(blob->GetBufferPointer(), blob->GetBufferSize(), nullptr, &handle));
-    // return std::make_shared<D3DComputeShader>(blob, handle, shader.GetNumThreads());
     return new D3DComputeShader{ blob };
 }

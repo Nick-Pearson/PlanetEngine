@@ -65,7 +65,7 @@ SRVHeap::~SRVHeap()
     device_->Release();
 }
 
-D3DDescriptorTable* SRVHeap::CreateDescriptorTable(size_t num_textures, const D3DTexture** textures)
+D3DDescriptorTable* SRVHeap::CreateSRVDescriptorTable(size_t num_textures, const D3DTexture** textures)
 {
     DescriptorHandle root_handle;
     root_handle.cpu_ = cpu_handle_;
@@ -92,6 +92,36 @@ D3DDescriptorTable* SRVHeap::CreateDescriptorTable(size_t num_textures, const D3
     return new D3DDescriptorTable{root_handle, num_textures};
 }
 
+D3DDescriptorTable* SRVHeap::CreateSRVDescriptorTable(size_t num_buffers, const D3DDataBuffer** buffers)
+{
+    DescriptorHandle root_handle;
+    root_handle.cpu_ = cpu_handle_;
+    root_handle.gpu_ = gpu_handle_;
+
+    auto descriptor_size = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    for (auto i = 0; i < num_buffers; ++i)
+    {
+        const D3DDataBuffer* buffer = buffers[i];
+
+        D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = {};
+        srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srv_desc.Format = DXGI_FORMAT_UNKNOWN;
+        srv_desc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+        srv_desc.Buffer.FirstElement = 0;
+        srv_desc.Buffer.NumElements = buffer->count_;
+        srv_desc.Buffer.StructureByteStride = buffer->stride_;
+        srv_desc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+        device_->CreateShaderResourceView(buffer->GetResource(), &srv_desc, cpu_handle_);
+
+        cpu_handle_.ptr += descriptor_size;
+        gpu_handle_.ptr += descriptor_size;
+    }
+
+    return new D3DDescriptorTable{root_handle, num_buffers};
+}
+
 D3DDescriptorTable* SRVHeap::CreateUAVDescriptorTable(size_t num_textures, const D3DTexture** textures)
 {
     DescriptorHandle root_handle;
@@ -107,6 +137,9 @@ D3DDescriptorTable* SRVHeap::CreateUAVDescriptorTable(size_t num_textures, const
         D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc = {};
         uav_desc.Format = texture->format_;
         uav_desc.ViewDimension = get_uav_dimension(texture);
+        uav_desc.Texture3D.MipSlice = 0;
+        uav_desc.Texture3D.FirstWSlice = 0;
+        uav_desc.Texture3D.WSize = -1;
 
         device_->CreateUnorderedAccessView(texture->resource_, nullptr, &uav_desc, cpu_handle_);
 

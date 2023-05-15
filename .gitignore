@@ -1,5 +1,6 @@
 [Bb]uild/
 [Ss]creenshots/
+.vs/
 imgui.ini
 
 assets/models/tree

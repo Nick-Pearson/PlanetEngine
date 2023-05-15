@@ -15,7 +15,8 @@ class D3DDescriptorTable
     explicit D3DDescriptorTable(const DescriptorHandle& handle, size_t size);
     ~D3DDescriptorTable();
 
-    void Bind(ID3D12GraphicsCommandList* command_list, uint32_t slot);
+    void BindGraphics(ID3D12GraphicsCommandList* command_list, uint32_t slot);
+    void BindCompute(ID3D12GraphicsCommandList* command_list, uint32_t slot);
 
  private:
     const size_t size_;

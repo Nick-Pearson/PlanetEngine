@@ -142,17 +142,10 @@ void D3DRenderer::Draw(const CameraComponent& camera, const RenderState& state, 
     command_list_->SetGraphicsRoot32BitConstants(1, D3DFastConstants::size_32_bit_, &fast_constants_, 0);
 
     command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    command_list_->IASetVertexBuffers(0u, 1u, state.mesh_->GetVertexBuffer());
-    command_list_->IASetIndexBuffer(state.mesh_->GetTriangleBuffer());
 
     state.material_->Bind(command_list_);
     state.pipeline_state_->Bind(command_list_);
-
-    const auto instance_count = 1u;
-    const auto start_index = 0u;
-    const auto start_vertex = 0u;
-    const auto start_instance = 0u;
-    command_list_->DrawIndexedInstanced(state.mesh_->GetTriangleCount(), instance_count, start_index, start_vertex, start_instance);
+    state.mesh_->Draw(command_list_);
 }
 
 void D3DRenderer::UpdateWorldMatrix(const CameraComponent& camera, bool use_world_matrix)

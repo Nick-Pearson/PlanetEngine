@@ -2,17 +2,13 @@
 
 #include <d3d12.h>
 
+#include "Texture/Texture.h"
 #include "TextureResource.h"
 
 class D3DTexture : public TextureResource
 {
  public:
-    explicit D3DTexture(
-         ID3D12Resource* resource,
-         D3D12_RESOURCE_STATES initial_state,
-         ID3D12Resource* intermediate_resource,
-         DXGI_FORMAT format,
-         int dimensions);
+    D3DTexture(ID3D12Device2* device, const Texture* texture);
 
     virtual ~D3DTexture();
 

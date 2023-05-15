@@ -8,7 +8,7 @@
             "name": "Launch",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/bin/planet-editor",
+            "program": "${workspaceFolder}/build/bin/planet-game",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

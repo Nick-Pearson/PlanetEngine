@@ -3,6 +3,7 @@
 #include <d3d12.h>
 
 #include "../Texture/D3DTexture.h"
+#include "../compute/D3DDataBuffer.h"
 #include "D3DDescriptorTable.h"
 
 class SRVHeap
@@ -13,7 +14,8 @@ class SRVHeap
 
     inline ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptor_heap_; }
 
-    D3DDescriptorTable* CreateDescriptorTable(size_t num_textures, const D3DTexture** textures);
+    D3DDescriptorTable* CreateSRVDescriptorTable(size_t num_textures, const D3DTexture** textures);
+    D3DDescriptorTable* CreateSRVDescriptorTable(size_t num_buffers, const D3DDataBuffer** buffers);
     D3DDescriptorTable* CreateUAVDescriptorTable(size_t num_textures, const D3DTexture** textures);
     DescriptorHandle CreateDescriptorHandle();
 

@@ -6,8 +6,7 @@
 #include <memory>
 
 #include "NumThreads.h"
-#include "Texture/ComputeTexture2D.h"
-#include "Texture/ComputeTexture3D.h"
+#include "Texture/Texture.h"
 #include "PlanetLogging.h"
 
 struct DataBuffer
@@ -34,8 +33,7 @@ class ComputeShader
     inline int GetNumTextureOutputs() const { return static_cast<int>(texture_outputs_.size()); }
     inline const Texture* GetTextureOutput(int slot) const { return texture_outputs_[slot].get(); }
 
-    void AddTextureOutput(const std::shared_ptr<ComputeTexture2D>& texture);
-    void AddTextureOutput(const std::shared_ptr<ComputeTexture3D>& texture);
+    void AddTextureOutput(const std::shared_ptr<Texture>& texture);
 
     inline int GetNumDataInputs() const { return static_cast<int>(data_outputs_.size()); }
     inline const DataBuffer* GetDataInput(int slot) const { return data_outputs_[slot].get(); }

@@ -28,8 +28,8 @@ SkyDome::SkyDome()
     auto domeMesh = AddComponent<MeshComponent>(mesh, sky_material);
     domeMesh->render_config_.use_world_matrix_ = false;
 
-    auto low_freq_texture = std::make_shared<ComputeTexture3D>(128, 128, 128);
-    auto high_freq_texture = std::make_shared<ComputeTexture3D>(32, 32, 32);
+    auto low_freq_texture = std::make_shared<Texture>(128, 128, 128);
+    auto high_freq_texture = std::make_shared<Texture>(32, 32, 32);
 
     sky_material->AddTexture(low_freq_texture);
     sky_material->AddTexture(high_freq_texture);
@@ -40,7 +40,7 @@ SkyDome::SkyDome()
     low_freq_worley_params_.include_simplex_ = true;
     high_freq_worley_params_.num_cells_ = 10;
     high_freq_worley_params_.octaves_ = 1;
-    GenerateTextures();
+    // GenerateTextures();
 }
 
 SkyDome::~SkyDome()
