@@ -2,56 +2,19 @@ name: Build
 
 on: [push]
 
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: .
-
-  # Configuration type to build.
-  # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Release
-
 jobs:
-  build:
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
-      
-    - name: Download Conan package manager
-      run: |
-           pwd
-           pip3 install wheel setuptools
-           pip3 install conan==1.56.0
-           conan --version
-           conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
-           conan config set general.revisions_enabled=1
-
-    - name: Conan install
-      run: conan install . --install-folder build --build=missing
-      
-    - name: Conan build
-      run: conan build . --build-folder build
-      
-    - name: Run unit tests
-      run: ./build/bin/planet-test.exe
-  lint:
+  build_windows:
+    name: Windows
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Install cpplint
-      run: |
-           pwd
-           echo "/home/runner/.local/bin" >> $GITHUB_PATH
-           export PATH=$PATH:/home/runner/.local/bin
-           pip3 install cpplint
-           cpplint --version
-           ls
-
-    - name: Run cpplint
-      run: cpplint --quiet --recursive Src
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: stable-x86_64-pc-windows-msvc
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target stable-x86_64-pc-windows-msvc
