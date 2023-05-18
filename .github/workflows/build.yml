@@ -11,10 +11,10 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
-          target: stable-x86_64-pc-windows-msvc
+          target: i686-pc-windows-msvc
           override: true
       - uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
-          args: --target stable-x86_64-pc-windows-msvc
+          args: --target i686-pc-windows-msvc
