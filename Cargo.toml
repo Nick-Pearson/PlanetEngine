@@ -10,6 +10,7 @@ path = "src/main.rs"
 
 [dependencies]
 arrayvec = "0.7.0"
+glam = "0.24"
 
 [dependencies.windows]
 version = "0.48"
