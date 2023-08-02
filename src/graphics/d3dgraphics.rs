@@ -223,6 +223,7 @@ impl<'a> WindowRenderTarget <'a> {
         unsafe { swap_chain.GetDesc(&mut swap_chain_desc) }.unwrap();
         let width = swap_chain_desc.BufferDesc.Width;
         let height = swap_chain_desc.BufferDesc.Height;
+        println!("Initialising window resolution to [{}x{}]", width, height);
 
         let rtv_descriptor_heap = create_descriptor_heap(&device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3)?;
         let dsv_descriptor_heap = create_descriptor_heap(&device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)?;
@@ -269,6 +270,7 @@ impl<'a> WindowRenderTarget <'a> {
         unsafe { self.swap_chain.GetDesc(&mut swap_chain_desc) }.unwrap();
         self.width = swap_chain_desc.BufferDesc.Width;
         self.height = swap_chain_desc.BufferDesc.Height;
+        println!("Updating window resolution to [{}x{}]", self.width, self.height);        
 
         self.target_views = WindowRenderTarget::create_target_views(device, &self.swap_chain, &self.rtv_heap);
         self.depth_stencil_view = WindowRenderTarget::create_depth_stencil_resource(device, &self.dsv_heap, self.width, self.height);        
@@ -306,16 +308,18 @@ impl<'a> WindowRenderTarget <'a> {
         // Update the depth-stencil view.
         let desc = D3D12_RESOURCE_DESC {
             Dimension: D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+            Alignment: 0,
             Width: width as u64,
             Height: height,
             DepthOrArraySize: 1,
             MipLevels: 0,
+            Format: DXGI_FORMAT_D32_FLOAT,
             SampleDesc: DXGI_SAMPLE_DESC {
                 Count: 1,
                 Quality: 0,
             },
+            Layout: D3D12_TEXTURE_LAYOUT_UNKNOWN,
             Flags: D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL | D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE,
-            ..Default::default()
         };
 
         let mut depth_buffer_opt: Option<ID3D12Resource> = None;
