@@ -1,6 +1,7 @@
 
-use crate::{graphics::*, Window};
-use std::{cell::Cell, convert::TryInto};
+use crate::graphics::*;
+use std::cell::Cell;
+use arrayvec::ArrayVec;
 
 use windows::{
     core::*,
@@ -11,7 +12,6 @@ use windows::{
     Win32::Graphics::Dxgi::*,
     Win32::System::Threading::*,
 };
-
 
 struct D3DCommandQueue
 {
@@ -45,7 +45,7 @@ impl D3DCommandQueue {
     }
 
     pub fn execute_command_list(&self, command_list: &ID3D12GraphicsCommandList) {
-        unsafe { command_list.Close() };
+        unsafe { command_list.Close() }.unwrap();
 
         let command_list = Some(command_list.can_clone_into());
         unsafe { self.command_queue.ExecuteCommandLists(&[command_list]) }
@@ -55,7 +55,7 @@ impl D3DCommandQueue {
         self.next_signal = self.next_signal + 1;
         let signal = self.next_signal;
 
-        unsafe { self.command_queue.Signal(&self.fence, signal) };
+        unsafe { self.command_queue.Signal(&self.fence, signal) }.unwrap();
         return signal;
     }
     
@@ -75,7 +75,7 @@ impl D3DCommandQueue {
         }
          
         unsafe{
-            self.fence.SetEventOnCompletion(signal, self.event);
+            self.fence.SetEventOnCompletion(signal, self.event).unwrap();
             WaitForSingleObjectEx(self.event, INFINITE, false);
         }
         self.last_completed.replace(signal);
@@ -189,7 +189,7 @@ impl D3DGraphics {
     }
 }
 
-
+#[derive(Debug)]
 struct D3DResource {
     resource: ID3D12Resource,
     cpu_handle: D3D12_CPU_DESCRIPTOR_HANDLE
@@ -209,15 +209,26 @@ pub struct WindowRenderTarget <'a>
     width: u32,
     height: u32,
 
+    target_views: [D3DResource; NUM_BUFFERS],
     depth_stencil_view: D3DResource,
 }
 
 impl<'a> WindowRenderTarget <'a> {
     fn new(device: &ID3D12Device2, swap_chain: IDXGISwapChain4, command_queue: &'a D3DCommandQueue) -> Result<WindowRenderTarget<'a>> {
+        unsafe {
+            swap_chain.ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0) 
+        }.unwrap();
+
+        let mut swap_chain_desc: DXGI_SWAP_CHAIN_DESC = Default::default();
+        unsafe { swap_chain.GetDesc(&mut swap_chain_desc) }.unwrap();
+        let width = swap_chain_desc.BufferDesc.Width;
+        let height = swap_chain_desc.BufferDesc.Height;
+
         let rtv_descriptor_heap = create_descriptor_heap(&device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3)?;
         let dsv_descriptor_heap = create_descriptor_heap(&device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)?;
 
-        let depth_stencil_view = WindowRenderTarget::create_depth_stencil_resource(device, 0, 0);
+        let target_views = WindowRenderTarget::create_target_views(device, &swap_chain, &rtv_descriptor_heap);
+        let depth_stencil_view = WindowRenderTarget::create_depth_stencil_resource(device, &dsv_descriptor_heap, width, height);
 
         return Ok(WindowRenderTarget{
             swap_chain: swap_chain,
@@ -227,8 +238,9 @@ impl<'a> WindowRenderTarget <'a> {
 
             current_buffer: 0,
             frame_signals: [0; NUM_BUFFERS],
-            width:0,
-            height:0,
+            width: width,
+            height: height,
+            target_views: target_views,
             depth_stencil_view: depth_stencil_view
          });
     }
@@ -241,50 +253,51 @@ impl<'a> WindowRenderTarget <'a> {
     fn present(&mut self) {
         let sync_interval:u32 = 1;
         let present_flags:u32 = 0;
-        unsafe { self.swap_chain.Present(sync_interval, present_flags) };
+        unsafe { self.swap_chain.Present(sync_interval, present_flags) }.unwrap();
 
-        self.frame_signals[self.current_buffer] = self.command_queue.signal();
+        // self.frame_signals[self.current_buffer] = self.command_queue.signal();
     }
 
     fn update_window_size(&mut self, device: &ID3D12Device2) {
-        for i in 0..NUM_BUFFERS {
-            self.command_queue.wait_for_signal(self.frame_signals_[i]);
+        //dealloc buffers by hand?
 
-            if (self.target_view[i].resource_) {
-                self.target_view[i].resource_->Release();
-            }
+        unsafe {
+            self.swap_chain.ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0) 
+        }.unwrap();
 
-            self.target_view_[i].resource_ = nullptr;
-        }
-
-        unsafe { self.swap_chain.ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0) };
-
-        let swap_chain_desc: DXGI_SWAP_CHAIN_DESC;
-        unsafe { self.swap_chain.GetDesc(&mut swap_chain_desc) };
+        let mut swap_chain_desc: DXGI_SWAP_CHAIN_DESC = Default::default();
+        unsafe { self.swap_chain.GetDesc(&mut swap_chain_desc) }.unwrap();
         self.width = swap_chain_desc.BufferDesc.Width;
         self.height = swap_chain_desc.BufferDesc.Height;
 
-        
-        let rtv_descriptor_size = unsafe { device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)} as usize;
-        let mut rtv_handle: D3D12_CPU_DESCRIPTOR_HANDLE = unsafe{ self.rtv_heap.GetCPUDescriptorHandleForHeapStart() };
+        self.target_views = WindowRenderTarget::create_target_views(device, &self.swap_chain, &self.rtv_heap);
+        self.depth_stencil_view = WindowRenderTarget::create_depth_stencil_resource(device, &self.dsv_heap, self.width, self.height);        
+        self.current_buffer = unsafe { self.swap_chain.GetCurrentBackBufferIndex() } as usize;
+    }
 
+    fn create_target_views(device: &ID3D12Device2, swap_chain: &IDXGISwapChain4, rtv_heap: &ID3D12DescriptorHeap) -> [D3DResource; NUM_BUFFERS] {
+        let rtv_descriptor_size = unsafe { device.GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV)} as usize;
+        let mut rtv_handle: D3D12_CPU_DESCRIPTOR_HANDLE = unsafe{ rtv_heap.GetCPUDescriptorHandleForHeapStart() };
+
+        let mut target_views = ArrayVec::<D3DResource, NUM_BUFFERS>::new();
         for i in 0..NUM_BUFFERS {
-            let back_buffer:ID3D12Resource = unsafe { self.swap_chain.GetBuffer(i as u32) }
+            let back_buffer:ID3D12Resource = unsafe { swap_chain.GetBuffer(i as u32) }
                 .unwrap();
 
             unsafe { device.CreateRenderTargetView(&back_buffer, None, rtv_handle) };
 
-            self.target_view_[i].resource_ = back_buffer;
-            self.target_view_[i].cpu_handle_ = rtv_handle;
+            target_views.push(D3DResource {
+                resource: back_buffer,
+                cpu_handle: rtv_handle
+            });
 
             rtv_handle = D3D12_CPU_DESCRIPTOR_HANDLE{ptr: rtv_handle.ptr + rtv_descriptor_size};
         }
 
-        self.depth_stencil_view = WindowRenderTarget::create_depth_stencil_resource(device, self.width, self.height);        
-        self.current_buffer = unsafe { self.swap_chain.GetCurrentBackBufferIndex() };
+        return target_views.into_inner().unwrap();
     }
 
-    fn create_depth_stencil_resource(device: &ID3D12Device2, width: u32, height: u32) -> D3DResource {
+    fn create_depth_stencil_resource(device: &ID3D12Device2, dsv_heap: &ID3D12DescriptorHeap, width: u32, height: u32) -> D3DResource {
         let clear_value: D3D12_CLEAR_VALUE = D3D12_CLEAR_VALUE{
             Format: DXGI_FORMAT_D32_FLOAT,
             Anonymous: D3D12_CLEAR_VALUE_0{DepthStencil: D3D12_DEPTH_STENCIL_VALUE{ Depth: 1.0, Stencil: 0 }}
@@ -305,8 +318,8 @@ impl<'a> WindowRenderTarget <'a> {
             ..Default::default()
         };
 
-        let depth_buffer_opt: Option<ID3D12Resource>;
-        unsafe { 
+        let mut depth_buffer_opt: Option<ID3D12Resource> = None;
+        unsafe {
             device.CreateCommittedResource(
                 &D3D12_HEAP_PROPERTIES {
                     Type: D3D12_HEAP_TYPE_DEFAULT,
@@ -318,10 +331,10 @@ impl<'a> WindowRenderTarget <'a> {
                 Some(&clear_value), 
                 &mut depth_buffer_opt
             ) 
-        };
+        }.unwrap();
         let depth_buffer: ID3D12Resource = depth_buffer_opt.expect("failed to allocate depth buffer resource");
 
-        let cpu_handle = unsafe { self.dsv_heap.GetCPUDescriptorHandleForHeapStart() };
+        let cpu_handle = unsafe { dsv_heap.GetCPUDescriptorHandleForHeapStart() };
         let dsv = D3D12_DEPTH_STENCIL_VIEW_DESC{
             Format: DXGI_FORMAT_D32_FLOAT,
             ViewDimension: D3D12_DSV_DIMENSION_TEXTURE2D,
