@@ -367,6 +367,10 @@ pub struct D3DRenderer<'a>
 }
 
 impl<'a> Renderer for D3DRenderer<'a> {
+    fn apply(&self, items: RenderQueueItems) {
+
+    }
+
     fn render_frame(&self) {
 
     }

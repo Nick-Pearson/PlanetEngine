@@ -4,10 +4,7 @@ mod mesh;
 use mesh::Mesh;
 use crate::graphics::CreateRenderer;
 #[cfg(windows)]
-use crate::graphics::d3dgraphics::{
-    D3DGraphics,
-    D3DRenderer
-};
+use crate::graphics::d3dgraphics::D3DGraphics;
 use graphics::Renderer;
 use windows::{
     core::*,
@@ -16,7 +13,7 @@ use windows::{
     Win32::UI::WindowsAndMessaging::*,
 };
 
-use std::{mem::transmute};
+use std::mem::transmute;
 
 struct Window
 {
@@ -130,8 +127,6 @@ fn main() {
     let window = Window::new(1280, 720)
         .unwrap();
     window.show();
-
-    let a = Mesh{};
 
     let graphics = D3DGraphics::new()
         .unwrap();
