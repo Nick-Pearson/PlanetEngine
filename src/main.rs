@@ -130,7 +130,7 @@ fn main() {
 
     let graphics = D3DGraphics::new()
         .unwrap();
-    let renderer = graphics.create_renderer(&window.hwnd)
+    let mut renderer = graphics.create_renderer(&window.hwnd)
         .unwrap();
     renderer.render_frame();
     

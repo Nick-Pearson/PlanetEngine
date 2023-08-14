@@ -11,9 +11,9 @@ pub struct RenderQueueItems<'a> {
 
 pub trait Renderer
 {
-    fn apply(&self, items: RenderQueueItems);
+    fn apply(&mut self, items: RenderQueueItems);
 
-    fn render_frame(&self);
+    fn render_frame(&mut self);
 }
 
 pub trait CreateRenderer<'a>

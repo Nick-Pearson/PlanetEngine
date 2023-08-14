@@ -1,6 +1,6 @@
 
 use crate::graphics::*;
-use std::cell::Cell;
+use std::{cell::Cell, mem::ManuallyDrop};
 use arrayvec::ArrayVec;
 
 use windows::{
@@ -15,7 +15,7 @@ use windows::{
 
 struct D3DCommandQueue
 {
-    next_signal: u64,
+    next_signal: Cell<u64>,
     last_completed: Cell<u64>,
     fence: ID3D12Fence,
     command_queue: ID3D12CommandQueue,
@@ -36,7 +36,7 @@ impl D3DCommandQueue {
         let event = unsafe { CreateEventW(None, false, false, None)? };
 
         return Ok(D3DCommandQueue {
-            next_signal: 16,
+            next_signal: Cell::new(16),
             last_completed: Cell::new(0),
             fence,
             command_queue,
@@ -51,9 +51,9 @@ impl D3DCommandQueue {
         unsafe { self.command_queue.ExecuteCommandLists(&[command_list]) }
     }
     
-    pub fn signal(&mut self) -> u64 {
-        self.next_signal = self.next_signal + 1;
-        let signal = self.next_signal;
+    pub fn signal(&self) -> u64 {
+        let signal = self.next_signal.get();
+        self.next_signal.replace(signal + 1);
 
         unsafe { self.command_queue.Signal(&self.fence, signal) }.unwrap();
         return signal;
@@ -92,10 +92,6 @@ pub struct D3DGraphics
 {
     adapter: IDXGIAdapter4,
     device: ID3D12Device2,
-
-    draw_command_queue: D3DCommandQueue,
-    draw_command_list: ID3D12GraphicsCommandList,
-    draw_command_allocator: ID3D12CommandAllocator,
 
     compute_command_queue: D3DCommandQueue,
     compute_command_list: ID3D12GraphicsCommandList,
@@ -173,15 +169,11 @@ impl D3DGraphics {
         let adapter = create_adapter()?;
         let device = create_device(&adapter)?;
 
-        let draw_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_DIRECT)?;
         let compute_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_COMPUTE)?;
 
         return Ok(D3DGraphics {
             adapter,
             device,
-            draw_command_list: draw_commands.0,
-            draw_command_allocator: draw_commands.1,
-            draw_command_queue: draw_commands.2,
             compute_command_list: compute_commands.0,
             compute_command_allocator: compute_commands.1,
             compute_command_queue: compute_commands.2
@@ -189,17 +181,17 @@ impl D3DGraphics {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct D3DResource {
     resource: ID3D12Resource,
     cpu_handle: D3D12_CPU_DESCRIPTOR_HANDLE
 }
 
 const NUM_BUFFERS:usize = 3;
-pub struct WindowRenderTarget <'a>
+pub struct WindowRenderTarget
 {
     swap_chain: IDXGISwapChain4,
-    command_queue: &'a D3DCommandQueue,
+    command_queue: D3DCommandQueue,
     rtv_heap: ID3D12DescriptorHeap,
     dsv_heap: ID3D12DescriptorHeap,
     
@@ -213,8 +205,8 @@ pub struct WindowRenderTarget <'a>
     depth_stencil_view: D3DResource,
 }
 
-impl<'a> WindowRenderTarget <'a> {
-    fn new(device: &ID3D12Device2, swap_chain: IDXGISwapChain4, command_queue: &'a D3DCommandQueue) -> Result<WindowRenderTarget<'a>> {
+impl WindowRenderTarget {
+    fn new(device: &ID3D12Device2, swap_chain: IDXGISwapChain4, command_queue: D3DCommandQueue) -> Result<WindowRenderTarget> {
         unsafe {
             swap_chain.ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0) 
         }.unwrap();
@@ -246,17 +238,68 @@ impl<'a> WindowRenderTarget <'a> {
          });
     }
 
-    fn pre_render(&mut self) {
+    fn pre_render(&mut self, command_list: &ID3D12GraphicsCommandList) {
         self.current_buffer = unsafe { self.swap_chain.GetCurrentBackBufferIndex() } as usize;
         self.command_queue.wait_for_signal(self.frame_signals[self.current_buffer]);
+
+        self.clear_resources(command_list);
+    }
+
+    fn clear_resources(&self, command_list: &ID3D12GraphicsCommandList) {
+        let rtv = self.target_views[self.current_buffer].clone();
+        let barrier = D3D12_RESOURCE_BARRIER {
+            Type: D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+            Flags: D3D12_RESOURCE_BARRIER_FLAG_NONE,
+            Anonymous: D3D12_RESOURCE_BARRIER_0 {
+                Transition: ManuallyDrop::new(D3D12_RESOURCE_TRANSITION_BARRIER {
+                    pResource: ManuallyDrop::new(Some(rtv.resource)),
+                    Subresource: D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+                    StateBefore: D3D12_RESOURCE_STATE_PRESENT,
+                    StateAfter: D3D12_RESOURCE_STATE_RENDER_TARGET
+                })
+            }.abi()
+        };
+        unsafe { 
+            command_list.ResourceBarrier(&[barrier]);
+        }   
+
+        unsafe {
+            const COLOUR:[f32; 4] = [0.0, 0.0, 0.0, 1.0];
+            command_list.ClearRenderTargetView(rtv.cpu_handle, COLOUR.as_ptr(), None)
+        }
+
+        let dsv = self.depth_stencil_view.clone();
+        unsafe {
+            command_list.ClearDepthStencilView(dsv.cpu_handle,
+                D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, &[]);
+        }
     }
     
-    fn present(&mut self) {
+    fn present(&mut self, command_list: &ID3D12GraphicsCommandList) {
+        let rtv = self.target_views[self.current_buffer].clone();
+        let barrier = D3D12_RESOURCE_BARRIER {
+            Type: D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+            Flags: D3D12_RESOURCE_BARRIER_FLAG_NONE,
+            Anonymous: D3D12_RESOURCE_BARRIER_0 {
+                Transition: ManuallyDrop::new(D3D12_RESOURCE_TRANSITION_BARRIER {
+                    pResource: ManuallyDrop::new(Some(rtv.resource)),
+                    Subresource: D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
+                    StateBefore: D3D12_RESOURCE_STATE_RENDER_TARGET,
+                    StateAfter: D3D12_RESOURCE_STATE_PRESENT
+                })
+            }.abi()
+        };
+        unsafe { 
+            command_list.ResourceBarrier(&[barrier]);
+        }
+
+        self.command_queue.execute_command_list(command_list);
+
         let sync_interval:u32 = 1;
         let present_flags:u32 = 0;
         unsafe { self.swap_chain.Present(sync_interval, present_flags) }.unwrap();
 
-        // self.frame_signals[self.current_buffer] = self.command_queue.signal();
+        self.frame_signals[self.current_buffer] = self.command_queue.signal();
     }
 
     fn update_window_size(&mut self, device: &ID3D12Device2) {
@@ -361,32 +404,59 @@ impl<'a> WindowRenderTarget <'a> {
 
 }
 
-pub struct D3DRenderer<'a>
+pub struct D3DRenderer
 {
-    render_target: WindowRenderTarget<'a>
+    draw_command_list: ID3D12GraphicsCommandList,
+    draw_command_allocator: ID3D12CommandAllocator,
+
+    render_target: WindowRenderTarget
 }
 
-impl<'a> Renderer for D3DRenderer<'a> {
-    fn apply(&self, items: RenderQueueItems) {
+impl<'a> Renderer for D3DRenderer {
+    fn apply(&mut self, items: RenderQueueItems) {
 
     }
 
-    fn render_frame(&self) {
+    fn render_frame(&mut self) {
+        self.pre_render();
+        self.present();
+    }
+}
 
+impl D3DRenderer {
+    fn pre_render(&mut self) {
+        unsafe { self.draw_command_allocator.Reset() }
+            .unwrap();
+        unsafe {self.draw_command_list.Reset(&self.draw_command_allocator, None) }
+            .unwrap();
+
+        self.render_target.pre_render(&self.draw_command_list);       
+
+        // OMSetRenderTargets
+        // SetViewports
+        // SetRects
+    }
+
+    fn present(&mut self) {
+        self.render_target.present(&self.draw_command_list);
     }
 }
 
 impl<'a> CreateRenderer<'a> for D3DGraphics {
     type Canvas = HWND;
-    type Output = D3DRenderer<'a>;
+    type Output = D3DRenderer;
     type Err = Error;
 
     fn create_renderer(&'a self, canvas: &HWND) -> Result<D3DRenderer> {
-        let swap_chain = create_swap_chain(&self.draw_command_queue, canvas)?;
-        let render_target: WindowRenderTarget<'a> = WindowRenderTarget::new(&self.device, swap_chain, &self.draw_command_queue)
+        let draw_commands = create_command_resource(&self.device, D3D12_COMMAND_LIST_TYPE_DIRECT)?;
+
+        let swap_chain = create_swap_chain(&draw_commands.2, canvas)?;
+        let render_target: WindowRenderTarget = WindowRenderTarget::new(&self.device, swap_chain, draw_commands.2)
             .unwrap();
 
         return Ok(D3DRenderer{
+            draw_command_list: draw_commands.0,
+            draw_command_allocator: draw_commands.1,
             render_target
         });
     }
