@@ -273,6 +273,22 @@ impl WindowRenderTarget {
             command_list.ClearDepthStencilView(dsv.cpu_handle,
                 D3D12_CLEAR_FLAG_DEPTH, 1.0, 0, &[]);
         }
+
+        unsafe { command_list.OMSetRenderTargets(
+            1,
+            Some(&rtv.cpu_handle),
+            false,
+            Some(&dsv.cpu_handle)); }
+            
+        let viewport = D3D12_VIEWPORT{
+            Width: self.width as f32,
+            Height: self.height as f32,
+            MinDepth: 0.0,
+            MaxDepth: 1.0,
+            TopLeftX: 0.0,
+            TopLeftY: 0.0
+        };
+        unsafe { command_list.RSSetViewports(&[viewport]); }
     }
     
     fn present(&mut self, command_list: &ID3D12GraphicsCommandList) {
@@ -430,11 +446,7 @@ impl D3DRenderer {
         unsafe {self.draw_command_list.Reset(&self.draw_command_allocator, None) }
             .unwrap();
 
-        self.render_target.pre_render(&self.draw_command_list);       
-
-        // OMSetRenderTargets
-        // SetViewports
-        // SetRects
+        self.render_target.pre_render(&self.draw_command_list);
     }
 
     fn present(&mut self) {
