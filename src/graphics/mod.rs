@@ -1,24 +1,21 @@
-use crate::mesh::MeshComponent;
+use crate::instance::MeshInstance;
 
 #[cfg(windows)]
 pub mod d3dgraphics;
 
-pub struct RenderQueueItems<'a> 
-{
-    new_meshes: Vec<&'a MeshComponent<'a>>,
-    updated_meshes: Vec<&'a MeshComponent<'a>>,
-    removed_meshes: Vec<&'a MeshComponent<'a>>
+pub struct RenderQueueItems<'a> {
+    new_meshes: Vec<&'a MeshInstance<'a>>,
+    updated_meshes: Vec<&'a MeshInstance<'a>>,
+    removed_meshes: Vec<&'a MeshInstance<'a>>,
 }
 
-pub trait Renderer
-{
+pub trait Renderer {
     fn apply(&mut self, items: RenderQueueItems);
 
     fn render_frame(&mut self);
 }
 
-pub trait CreateRenderer<'a>
-{
+pub trait CreateRenderer<'a> {
     type Canvas;
     type Output;
     type Err;

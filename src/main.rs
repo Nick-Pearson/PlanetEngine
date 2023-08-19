@@ -1,29 +1,27 @@
 mod graphics;
+mod instance;
+mod material;
 mod mesh;
 
-use mesh::Mesh;
-use crate::graphics::CreateRenderer;
 #[cfg(windows)]
 use crate::graphics::d3dgraphics::D3DGraphics;
+use crate::graphics::CreateRenderer;
 use graphics::Renderer;
 use windows::{
-    core::*,
-    Win32::Foundation::*,
-    Win32::System::LibraryLoader::*,
+    core::*, Win32::Foundation::*, Win32::System::LibraryLoader::*,
     Win32::UI::WindowsAndMessaging::*,
 };
 
 use std::mem::transmute;
 
-struct Window
-{
-    hwnd: HWND
+struct Window {
+    hwnd: HWND,
 }
 
 impl Window {
     pub fn new(size_x: i32, size_y: i32) -> Result<Window> {
         let instance = unsafe { GetModuleHandleA(None)? };
-    
+
         let wc: WNDCLASSEXA = WNDCLASSEXA {
             cbSize: std::mem::size_of::<WNDCLASSEXA>() as u32,
             style: CS_OWNDC,
@@ -32,10 +30,10 @@ impl Window {
             lpszClassName: s!("EngWindowClass"),
             ..Default::default()
         };
-    
+
         let atom = unsafe { RegisterClassExA(&wc) };
         debug_assert_ne!(atom, 0);
-    
+
         let hwnd: HWND = unsafe {
             CreateWindowExA(
                 WINDOW_EX_STYLE::default(),
@@ -61,8 +59,7 @@ impl Window {
     }
 }
 
-struct Engine<'a>
-{
+struct Engine<'a> {
     window: Window,
     renderer: &'a dyn Renderer,
     running: bool,
@@ -73,7 +70,7 @@ impl<'a> Engine<'a> {
         return Engine {
             window: window,
             renderer: renderer,
-            running: true
+            running: true,
         };
     }
 
@@ -99,12 +96,7 @@ impl<'a> Engine<'a> {
     }
 }
 
-extern "system" fn wndproc(
-    window: HWND,
-    message: u32,
-    wparam: WPARAM,
-    lparam: LPARAM,
-) -> LRESULT {
+extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
     match message {
         WM_CREATE => {
             unsafe {
@@ -117,22 +109,17 @@ extern "system" fn wndproc(
             unsafe { PostQuitMessage(0) };
             LRESULT::default()
         }
-        _ => {
-            unsafe { DefWindowProcA(window, message, wparam, lparam) }
-        }
+        _ => unsafe { DefWindowProcA(window, message, wparam, lparam) },
     }
 }
 
 fn main() {
-    let window = Window::new(1280, 720)
-        .unwrap();
+    let window = Window::new(1280, 720).unwrap();
     window.show();
 
-    let graphics = D3DGraphics::new()
-        .unwrap();
-    let mut renderer = graphics.create_renderer(&window.hwnd)
-        .unwrap();
+    let graphics = D3DGraphics::new().unwrap();
+    let mut renderer = graphics.create_renderer(&window.hwnd).unwrap();
     renderer.render_frame();
-    
+
     Engine::new(window, &renderer).run();
 }
