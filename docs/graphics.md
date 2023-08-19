@@ -1,0 +1,39 @@
+# Graphics Objects
+
+```mermaid
+graph GRAPHICS;
+    MeshInstance-->Mesh;
+    MeshInstance-->Material;
+    Mesh-->Vertex;
+    Material-->PixelShader;
+    Material-->Texture(s);
+```
+
+## Instance
+
+Actual instances of a renderable type, with all the position, material and geometry required to render
+Full description required to render that item
+
+Types:
+ - [ ] `MeshInstace`: mesh placed in the world to be rendered (could be extended to support gpu instancing?)
+ - [ ] `LineInstance`: for perfect anti aliased line rendering
+ - [ ] `UIInstance`: for game style ui rendering
+
+## Mesh
+
+ - [ ] `Mesh`: description of verticies and triangles to join
+ - [ ] `Vertex`: description of kind of vertex, can include addional info for the shader
+
+## Shading
+
+ - [ ] `Material`: shader bound to a set of input variables
+ - [ ] `PixelShader`: shader program and metadata such as required input variables
+
+## Textures
+
+Each texture dimension has its own class
+Each texture can be marked as GPU writable
+
+ - [ ] `Texture1D`
+ - [ ] `Texture2D`
+ - [ ] `Texture3D`
