@@ -6,7 +6,7 @@ graph GRAPHICS;
     MeshInstance-->Material;
     Mesh-->Vertex;
     Material-->PixelShader;
-    Material-->Texture(s);
+    Material-->Textures;
 ```
 
 ## Instance
