@@ -115,8 +115,8 @@ impl Mesh {
     }
 
     pub fn new_ico_hemisphere(scale: f32, order: usize) -> Mesh {
-        let rootFive: f32 = 5.0_f32.sqrt();
-        let f: f32 = (1.0 + rootFive) / 2.0;
+        let root_five: f32 = 5.0_f32.sqrt();
+        let f: f32 = (1.0 + root_five) / 2.0;
 
         let mut verts = vec![
             Vertex::new([-1.0, f, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0]),

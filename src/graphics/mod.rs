@@ -4,9 +4,19 @@ use crate::instance::MeshInstance;
 pub mod d3dgraphics;
 
 pub struct RenderQueueItems<'a> {
-    new_meshes: Vec<&'a MeshInstance<'a>>,
-    updated_meshes: Vec<&'a MeshInstance<'a>>,
-    removed_meshes: Vec<&'a MeshInstance<'a>>,
+    pub new_meshes: Vec<&'a MeshInstance<'a>>,
+    pub updated_meshes: Vec<&'a MeshInstance<'a>>,
+    pub removed_meshes: Vec<&'a MeshInstance<'a>>,
+}
+
+impl<'a> RenderQueueItems<'a> {
+    pub fn empty() -> RenderQueueItems<'a> {
+        return RenderQueueItems {
+            new_meshes: Vec::new(),
+            updated_meshes: Vec::new(),
+            removed_meshes: Vec::new(),
+        };
+    }
 }
 
 pub trait Renderer {

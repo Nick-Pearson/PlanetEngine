@@ -27,3 +27,9 @@ impl PixelShader {
 pub struct Material<'a> {
     shader: &'a PixelShader,
 }
+
+impl<'a> Material<'a> {
+    pub fn new(shader: &'a PixelShader) -> Material<'a> {
+        return Material { shader };
+    }
+}
