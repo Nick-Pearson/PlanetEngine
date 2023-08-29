@@ -93,14 +93,13 @@ mod tests {
 
     #[test]
     fn rotate_moves_position() {
-        let mut a = MatTransform::from_position([50.0, 100.0, 200.0]);
+        let mut a = MatTransform::from_position([5.0, 1.0, 2.0]);
 
         a.rotate(Quat::from_rotation_x(FRAC_PI_2));
 
         let actual:Vec3 = a.get_position().into();
-        dbg!(actual);
-        assert_approx_eq!(50.0, actual[0]);
-        assert_approx_eq!(-200.0, actual[1]);
-        assert_approx_eq!(100.0, actual[2]);
+        assert_approx_eq!(5.0, actual.x);
+        assert_approx_eq!(-2.0, actual.y);
+        assert_approx_eq!(1.0, actual.z);
     }
 }
