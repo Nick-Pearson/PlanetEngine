@@ -1,6 +1,6 @@
 use crate::material::Material;
 use crate::mesh::Mesh;
-use glam::{Vec3A, Vec3, Vec4, Mat4, Quat};
+use glam::{Mat4, Quat, Vec3, Vec3A, Vec4};
 
 pub trait Transform {
     fn translate<P: Into<Vec3>>(&mut self, delta: P);
@@ -20,8 +20,8 @@ impl MatTransform {
 
     pub fn from_position<P: Into<Vec3>>(position: P) -> MatTransform {
         return Self {
-            matrix: Mat4::from_translation(position.into())
-        }
+            matrix: Mat4::from_translation(position.into()),
+        };
     }
 
     pub fn get_position(&self) -> Vec3A {
@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn construct_from_position() {
         let a = MatTransform::from_position([50.0, 100.0, 200.0]);
-        
+
         let expected = Vec3A::new(50.0, 100.0, 200.0);
         assert_eq!(expected, a.get_position());
     }
@@ -84,7 +84,7 @@ mod tests {
     #[test]
     fn translate_moves_position() {
         let mut a = MatTransform::IDENTITY;
-        
+
         a.translate([100.0, 200.0, 300.0]);
 
         let expected = Vec3A::new(100.0, 200.0, 300.0);
@@ -97,7 +97,7 @@ mod tests {
 
         a.rotate(Quat::from_rotation_x(FRAC_PI_2));
 
-        let actual:Vec3 = a.get_position().into();
+        let actual: Vec3 = a.get_position().into();
         assert_approx_eq!(5.0, actual.x);
         assert_approx_eq!(-2.0, actual.y);
         assert_approx_eq!(1.0, actual.z);

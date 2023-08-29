@@ -124,7 +124,12 @@ fn setup_scene<'a>(renderer: &mut dyn Renderer) {
 
     let floor_plane = Mesh::new_plane(100000.0);
     let mut floor = MeshInstance::new(&floor_plane, &standard_material);
-    floor.rotate(Quat::from_euler(glam::EulerRot::XYZ, FRAC_PI_2, FRAC_PI_2, -FRAC_PI_2));
+    floor.rotate(Quat::from_euler(
+        glam::EulerRot::XYZ,
+        FRAC_PI_2,
+        FRAC_PI_2,
+        -FRAC_PI_2,
+    ));
 
     // std::shared_ptr<Entity> planeEntity = scene_->SpawnEntity("wall");
     // planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
