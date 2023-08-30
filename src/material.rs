@@ -9,9 +9,9 @@ pub struct ShaderInput {
 }
 
 pub struct PixelShader {
-    shader_path: String,
-    alpha_blending: bool,
-    inputs: Vec<ShaderInput>,
+    pub shader_path: String,
+    pub alpha_blending: bool,
+    pub inputs: Vec<ShaderInput>,
 }
 
 impl PixelShader {
@@ -25,7 +25,7 @@ impl PixelShader {
 }
 
 pub struct Material<'a> {
-    shader: &'a PixelShader,
+    pub shader: &'a PixelShader,
 }
 
 impl<'a> Material<'a> {

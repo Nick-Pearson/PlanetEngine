@@ -42,9 +42,9 @@ impl Transform for MatTransform {
 }
 
 pub struct MeshInstance<'a> {
-    transform: MatTransform,
-    mesh: &'a Mesh,
-    material: &'a Material<'a>,
+    pub transform: MatTransform,
+    pub mesh: &'a Mesh,
+    pub material: &'a Material<'a>,
 }
 
 impl<'a> MeshInstance<'a> {
