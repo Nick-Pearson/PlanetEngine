@@ -1,5 +1,5 @@
-mod d3drootsignature;
 mod d3dcommandqueue;
+mod d3drootsignature;
 
 use crate::graphics::*;
 use arrayvec::ArrayVec;
@@ -10,8 +10,8 @@ use windows::{
     Win32::Graphics::Dxgi::Common::*, Win32::Graphics::Dxgi::*,
 };
 
-use self::d3drootsignature::D3DRootSignature;
 use self::d3dcommandqueue::D3DCommandQueue;
+use self::d3drootsignature::D3DRootSignature;
 
 pub struct D3DGraphics {
     adapter: IDXGIAdapter4,

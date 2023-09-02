@@ -1,8 +1,7 @@
 use std::cell::Cell;
 
 use windows::{
-    core::*, Win32::Foundation::*, Win32::Graphics::Direct3D12::*,
-    Win32::System::Threading::*,
+    core::*, Win32::Foundation::*, Win32::Graphics::Direct3D12::*, Win32::System::Threading::*,
 };
 
 pub struct D3DCommandQueue {
