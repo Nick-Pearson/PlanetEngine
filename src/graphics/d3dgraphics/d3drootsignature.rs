@@ -185,4 +185,8 @@ impl D3DRootSignature {
             root_signature: signature,
         };
     }
+
+    pub fn get_signature(&self) -> ID3D12RootSignature {
+        return self.root_signature.clone();
+    }
 }

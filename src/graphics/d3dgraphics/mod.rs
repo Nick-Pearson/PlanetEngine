@@ -1,5 +1,7 @@
 mod d3dcommandqueue;
+mod d3dpipelinestate;
 mod d3drootsignature;
+mod d3dshader;
 
 use crate::graphics::*;
 use arrayvec::ArrayVec;
@@ -11,6 +13,7 @@ use windows::{
 };
 
 use self::d3dcommandqueue::D3DCommandQueue;
+use self::d3dpipelinestate::D3DPipelineState;
 use self::d3drootsignature::D3DRootSignature;
 
 pub struct D3DGraphics {
@@ -420,6 +423,9 @@ impl<'a> Renderer for D3DRenderer<'a> {
 
             let ps = instance.material.shader;
             let root_signature = D3DRootSignature::from_pixel_shader(ps, &self.graphics.device);
+            let pipeline_state =
+                D3DPipelineState::compile_for_mesh(&self.graphics.device, ps, &root_signature)
+                    .unwrap();
         }
     }
 
