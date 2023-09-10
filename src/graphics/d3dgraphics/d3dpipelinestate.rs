@@ -11,6 +11,32 @@ pub struct D3DPipelineState {
     pipeline_state: ID3D12PipelineState,
 }
 
+#[repr(C)]
+struct StreamSubobject<T: Sized> {
+    kind: D3D12_PIPELINE_STATE_SUBOBJECT_TYPE,
+    payload: T
+}
+
+impl StreamSubobject<ID3D12RootSignature> {
+    fn new(payload: ID3D12RootSignature) -> Self {
+        Self{kind: D3D12_PIPELINE_STATE_SUBOBJECT_TYPE_ROOT_SIGNATURE, payload}
+    }
+}
+
+#[repr(C)]
+struct PipelineStateStream
+{
+    root_signature: StreamSubobject<ID3D12RootSignature>,
+    input_layout: StreamSubobject<D3D12_INPUT_LAYOUT_DESC>,
+    primitive_topology_type: StreamSubobject<D3D12_PRIMITIVE_TOPOLOGY_TYPE>,
+    rasertizer: StreamSubobject<D3D12_RASTERIZER_DESC>,
+    vs: StreamSubobject<D3D12_SHADER_BYTECODE>,
+    ps: StreamSubobject<D3D12_SHADER_BYTECODE>,
+    depth_stencil: StreamSubobject<D3D12_DEPTH_STENCIL_DESC>,
+    dsv_format: StreamSubobject<DXGI_FORMAT>,
+    rtv_formats: StreamSubobject<D3D12_RT_FORMAT_ARRAY>
+};
+
 impl D3DPipelineState {
     pub fn compile_for_mesh(
         device: &ID3D12Device2,
@@ -19,9 +45,6 @@ impl D3DPipelineState {
     ) -> std::result::Result<D3DPipelineState, String> {
         let pixel_shader = D3DPixelShader::compile(&ps.shader_path)?;
         let vertex_shader = D3DVertexShader::compile("vs/VertexShader.hlsl")?;
-
-        let mut rtv_formats = [DXGI_FORMAT_UNKNOWN; 8];
-        rtv_formats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 
         let depth_stencil = D3D12_DEPTH_STENCIL_DESC {
             DepthEnable: true.into(),
@@ -37,20 +60,20 @@ impl D3DPipelineState {
         };
 
         let signature = root_signature.get_signature();
-        let desc = D3D12_GRAPHICS_PIPELINE_STATE_DESC {
+        let desc = D3D12_PIPELINE_STATE_STREAM_DESC {
             pRootSignature: ManuallyDrop::new(Some(signature)),
-            VS: pixel_shader.get_bytecode(),
-            PS: vertex_shader.get_bytecode(),
+            VS: *pixel_shader.get_bytecode(),
+            PS: *vertex_shader.get_bytecode(),
             RasterizerState: rasterizer,
             DepthStencilState: depth_stencil,
-            InputLayout: vertex_shader.get_input_layout(),
+            InputLayout: *vertex_shader.get_input_layout(),
             PrimitiveTopologyType: D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
             NumRenderTargets: 3,
-            RTVFormats: rtv_formats,
+            RTVFormats: [DXGI_FORMAT_R8G8B8A8_UNORM; 8],
             DSVFormat: DXGI_FORMAT_D32_FLOAT,
             ..Default::default()
         };
-        let pipeline_state = unsafe { device.CreateGraphicsPipelineState(&desc) }.unwrap();
+        let pipeline_state = unsafe { device.CreatePipelineState(&desc) }.unwrap();
         return Ok(D3DPipelineState { pipeline_state });
     }
 }

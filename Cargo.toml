@@ -15,6 +15,7 @@ glam = "0.24"
 [dependencies.windows]
 version = "0.48"
 features = [
+    "implement",
     "Win32_Foundation",
     "Win32_Graphics_Direct3D_Fxc",
     "Win32_Graphics_Direct3D12",

@@ -1,4 +1,12 @@
-use std::{collections::HashMap, ffi::CStr};
+use std::{
+    alloc::Layout,
+    alloc::{alloc_zeroed, dealloc},
+    collections::HashMap,
+    ffi::{c_void, CStr},
+    fs::File,
+    io::Read,
+    path::PathBuf,
+};
 
 use windows::{
     core::*,
@@ -17,25 +25,78 @@ fn extract_compile_error(blob: Option<ID3DBlob>) -> String {
     }
 }
 
-// #[implement(ID3DInclude)]
-// struct D3DIncludeHandler {}
+#[allow(overflowing_literals)]
+pub const E_FAIL: HRESULT = HRESULT(0x80004005_i32);
+#[allow(overflowing_literals)]
+pub const E_NOTIMPL: HRESULT = HRESULT(0x80004001_i32);
 
-// impl ID3DInclude_Impl for D3DIncludeHandler {
-//     fn Open(
-//         &self,
-//         includetype: D3D_INCLUDE_TYPE,
-//         pfilename: &::windows::core::PCSTR,
-//         pparentdata: *const ::core::ffi::c_void,
-//         ppdata: *mut *mut ::core::ffi::c_void,
-//         pbytes: *mut u32,
-//     ) -> ::windows::core::Result<()> {
-//         todo!()
-//     }
+struct D3DIncludeHandler {
+    base_directory: PathBuf,
+}
 
-//     fn Close(&self, pdata: *const ::core::ffi::c_void) -> ::windows::core::Result<()> {
-//         todo!()
-//     }
-// }
+impl D3DIncludeHandler {
+    const BUFFER_SIZE: usize = 1024 * 1024;
+    const MEM_LAYOUT: Layout = Layout::new::<[u8; Self::BUFFER_SIZE]>();
+
+    fn new<S: Into<String>>(shader_path: S) -> D3DIncludeHandler {
+        let mut dir = PathBuf::from(shader_path.into());
+        dir.pop();
+        D3DIncludeHandler {
+            base_directory: dir,
+        }
+    }
+}
+
+#[allow(non_snake_case)]
+impl ID3DInclude_Impl for D3DIncludeHandler {
+    fn Open(
+        &self,
+        includetype: D3D_INCLUDE_TYPE,
+        pfilename: &::windows::core::PCSTR,
+        pparentdata: *const c_void,
+        ppdata: *mut *mut c_void,
+        pbytes: *mut u32,
+    ) -> ::windows::core::Result<()> {
+        if let D3D_INCLUDE_LOCAL = includetype {
+            let filename = unsafe { pfilename.to_string() }.unwrap_or_default();
+            let mut path = self.base_directory.clone();
+            path.push(&filename);
+
+            let data_result = File::open(path.as_path());
+            match data_result {
+                Ok(mut file) => {
+                    let file_size = file.metadata().unwrap().len();
+                    if file_size > Self::BUFFER_SIZE as u64 {
+                        return Err(Error::new(E_FAIL, "File size too large".into()));
+                    }
+
+                    let ptr = unsafe { alloc_zeroed(Self::MEM_LAYOUT) };
+                    let slice = unsafe { std::slice::from_raw_parts_mut(ptr, Self::BUFFER_SIZE) };
+                    let result = file.read(slice);
+
+                    return match result {
+                        Ok(_) => {
+                            unsafe {
+                                *ppdata = ptr as *mut c_void;
+                                *pbytes = file_size as u32;
+                            }
+                            Ok(())
+                        }
+                        Err(_) => Err(Error::new(E_FAIL, "Failed to read from file".into())),
+                    };
+                }
+                Err(error) => Err(Error::new(E_FAIL, "Failed to open file".into())),
+            }
+        } else {
+            Err(Error::new(E_NOTIMPL, "Unsupported include type".into()))
+        }
+    }
+
+    fn Close(&self, pdata: *const c_void) -> ::windows::core::Result<()> {
+        unsafe { dealloc(pdata as *mut u8, Self::MEM_LAYOUT) };
+        Ok(())
+    }
+}
 
 fn compile_shader_blob(
     filepath: &String,
@@ -54,18 +115,19 @@ fn compile_shader_blob(
         Definition: PCSTR::null(),
     });
 
-    let fullpath: HSTRING = (String::from("./shaders/") + filepath).into();
+    let fullpath = String::from("./shaders/") + filepath;
     let compile_flags = D3DCOMPILE_DEBUG | D3DCOMPILE_OPTIMIZATION_LEVEL1;
+    let include_handler = D3DIncludeHandler::new(&fullpath);
+    let include_interface = ID3DInclude::new(&include_handler);
 
     let mut shader_blob = None;
     let mut error_blob = None;
 
     let _result = unsafe {
         D3DCompileFromFile(
-            &fullpath,
+            &fullpath.into(),
             Some(macros.as_ptr()),
-            // ID3DInclude::new(&D3DIncludeHandler {}),
-            None,
+            &*include_interface,
             s!("main"),
             target,
             compile_flags,
@@ -85,29 +147,43 @@ fn compile_shader_blob(
     };
 }
 
-pub struct D3DPixelShader {
-    blob: ID3DBlob,
+fn get_bytecode(blob: &ID3DBlob) -> D3D12_SHADER_BYTECODE {
+    unsafe {
+        D3D12_SHADER_BYTECODE {
+            pShaderBytecode: blob.GetBufferPointer(),
+            BytecodeLength: blob.GetBufferSize(),
+        }
+    }
 }
 
-impl D3DPixelShader {
+pub struct D3DPixelShader {
+    blob: ID3DBlob,
+    bytecode: D3D12_SHADER_BYTECODE,
+}
+
+impl<'a> D3DPixelShader {
     pub fn compile<S: Into<String>>(filepath: S) -> std::result::Result<D3DPixelShader, String> {
         let blob = compile_shader_blob(&filepath.into(), s!("ps_5_1"), &HashMap::new())?;
-        return Ok(D3DPixelShader { blob });
+        let bytecode = get_bytecode(&blob);
+        return Ok(D3DPixelShader { blob, bytecode });
     }
 
-    pub(crate) fn get_bytecode(&self) -> D3D12_SHADER_BYTECODE {
-        todo!()
+    pub(crate) fn get_bytecode(&'a self) -> &'a D3D12_SHADER_BYTECODE {
+        return &self.bytecode;
     }
 }
 
 pub struct D3DVertexShader {
     blob: ID3DBlob,
+    bytecode: D3D12_SHADER_BYTECODE,
     ied: [D3D12_INPUT_ELEMENT_DESC; 3],
+    input_layout: D3D12_INPUT_LAYOUT_DESC,
 }
 
-impl D3DVertexShader {
+impl<'a> D3DVertexShader {
     pub fn compile<S: Into<String>>(filepath: S) -> std::result::Result<D3DVertexShader, String> {
         let blob = compile_shader_blob(&filepath.into(), s!("vs_5_1"), &HashMap::new())?;
+        let bytecode = get_bytecode(&blob);
         let ied = [
             D3D12_INPUT_ELEMENT_DESC {
                 SemanticName: s!("POSITION"),
@@ -137,14 +213,43 @@ impl D3DVertexShader {
                 InstanceDataStepRate: 0,
             },
         ];
-        return Ok(D3DVertexShader { blob, ied });
+        let input_layout = D3D12_INPUT_LAYOUT_DESC {
+            pInputElementDescs: ied.as_ptr(),
+            NumElements: ied.len() as u32,
+        };
+        return Ok(D3DVertexShader {
+            blob,
+            bytecode,
+            ied,
+            input_layout,
+        });
     }
 
-    pub(crate) fn get_bytecode(&self) -> D3D12_SHADER_BYTECODE {
-        todo!()
+    pub(crate) fn get_bytecode(&'a self) -> &'a D3D12_SHADER_BYTECODE {
+        return &self.bytecode;
     }
 
-    pub(crate) fn get_input_layout(&self) -> D3D12_INPUT_LAYOUT_DESC {
-        todo!()
+    pub(crate) fn get_input_layout(&'a self) -> &'a D3D12_INPUT_LAYOUT_DESC {
+        return &self.input_layout;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_pixel_shaders_compile() {
+        let _ = D3DPixelShader::compile("ps/FallbackShader.hlsl");
+        let _ = D3DPixelShader::compile("ps/PixelShader.hlsl");
+        let _ = D3DPixelShader::compile("ps/SkySphere.hlsl");
+        let _ = D3DPixelShader::compile("ps/TexturedShader.hlsl");
+        let _ = D3DPixelShader::compile("ps/TreeShader.hlsl");
+        let _ = D3DPixelShader::compile("ps/WireframeShader.hlsl");
+    }
+
+    #[test]
+    fn all_vertex_shaders_compile() {
+        let _ = D3DPixelShader::compile("vs/VertexShader.hlsl");
     }
 }
