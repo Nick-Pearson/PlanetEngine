@@ -7,6 +7,7 @@ use super::{
     d3dshader::{D3DPixelShader, D3DVertexShader},
 };
 
+#[derive(Debug)]
 pub struct D3DPipelineState {
     pipeline_state: ID3D12PipelineState,
 }

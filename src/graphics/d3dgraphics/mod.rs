@@ -23,10 +23,12 @@ pub struct D3DGraphics {
     compute_command_queue: D3DCommandQueue,
     compute_command_list: ID3D12GraphicsCommandList,
     compute_command_allocator: ID3D12CommandAllocator,
+    debug: ID3D12Debug,
 }
 
 fn create_adapter() -> Result<IDXGIAdapter4> {
-    let factory6: IDXGIFactory6 = unsafe { CreateDXGIFactory1() }.unwrap();
+    let flags = DXGI_CREATE_FACTORY_DEBUG;
+    let factory6: IDXGIFactory6 = unsafe { CreateDXGIFactory2(flags) }.unwrap();
 
     return unsafe { factory6.EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE) };
 }
@@ -87,7 +89,8 @@ fn create_descriptor_heap(
 }
 
 fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapChain4> {
-    let factory6: IDXGIFactory6 = unsafe { CreateDXGIFactory1() }.unwrap();
+    let flags = DXGI_CREATE_FACTORY_DEBUG;
+    let factory6: IDXGIFactory6 = unsafe { CreateDXGIFactory2(flags) }.unwrap();
 
     let desc = DXGI_SWAP_CHAIN_DESC1 {
         Width: 1280,
@@ -110,8 +113,13 @@ fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapCh
     .cast();
 }
 
-impl D3DGraphics {
+impl<'a> D3DGraphics {
     pub fn new() -> Result<D3DGraphics> {
+        let mut debug_opt:Option<ID3D12Debug> = None;
+        unsafe { D3D12GetDebugInterface(&mut debug_opt) }.unwrap();
+        let debug:ID3D12Debug = debug_opt.unwrap();
+        unsafe { debug.EnableDebugLayer() };
+
         let adapter = create_adapter()?;
         let device = create_device(&adapter)?;
 
@@ -123,6 +131,7 @@ impl D3DGraphics {
             compute_command_list: compute_commands.0,
             compute_command_allocator: compute_commands.1,
             compute_command_queue: compute_commands.2,
+            debug: debug
         });
     }
 }
@@ -426,6 +435,8 @@ impl<'a> Renderer for D3DRenderer<'a> {
             let pipeline_state =
                 D3DPipelineState::compile_for_mesh(&self.graphics.device, ps, &root_signature)
                     .unwrap();
+            
+            dbg!(pipeline_state);
         }
     }
 
