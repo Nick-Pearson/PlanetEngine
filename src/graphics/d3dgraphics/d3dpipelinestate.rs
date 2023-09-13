@@ -14,16 +14,16 @@ pub struct D3DPipelineState {
 macro_rules! subobj {
     ($name:ident, $kind: expr, $typ: ty) => {
         #[allow(dead_code)]
-        #[repr(align(64))]
+        #[repr(C)]
         struct $name {
-            kind: D3D12_PIPELINE_STATE_SUBOBJECT_TYPE,
+            kind: u64,
             payload: $typ,
         }
 
         impl From<$typ> for $name {
             fn from(value: $typ) -> Self {
                 return Self {
-                    kind: $kind,
+                    kind: $kind.0 as u64,
                     payload: value,
                 };
             }
@@ -150,12 +150,18 @@ impl D3DPipelineState {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::mem::size_of;
 
     #[test]
     fn subobjects_have_correct_alignment() {
+        let item = PipelineStateRasterizer::from(D3D12_RASTERIZER_DESC::default());
+        let addr1 = &item.kind as * const _ as u64;
+        let addr2 = &item.payload as * const _ as u64;
+        assert_eq!(size_of::<*mut c_void>() as u64, addr2 - addr1);
+
+        assert_eq!(0, size_of::<PipelineStateRasterizer>() % size_of::<*mut c_void>());
     }
 }
