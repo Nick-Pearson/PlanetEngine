@@ -18,3 +18,13 @@ jobs:
           use-cross: true
           command: build
           args: --target i686-pc-windows-gnu
+
+  clippy:
+    name: Clippyv
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
