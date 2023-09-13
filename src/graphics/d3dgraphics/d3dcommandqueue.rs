@@ -29,13 +29,13 @@ impl D3DCommandQueue {
         let command_queue = unsafe { device.CreateCommandQueue(&desc)? };
         let event = unsafe { CreateEventW(None, false, false, None)? };
 
-        return Ok(D3DCommandQueue {
+        Ok(D3DCommandQueue {
             next_signal: Cell::new(16),
             last_completed: Cell::new(0),
             fence,
             command_queue,
             event,
-        });
+        })
     }
 
     pub fn execute_command_list(&self, command_list: &ID3D12GraphicsCommandList) {
@@ -50,13 +50,13 @@ impl D3DCommandQueue {
         self.next_signal.replace(signal + 1);
 
         unsafe { self.command_queue.Signal(&self.fence, signal) }.unwrap();
-        return signal;
+        signal
     }
 
     pub fn update_and_get_last_completed_signal(&self) -> u64 {
         let updated = unsafe { self.fence.GetCompletedValue() };
         self.last_completed.replace(updated);
-        return updated;
+        updated
     }
 
     pub fn wait_for_signal(&self, signal: u64) {

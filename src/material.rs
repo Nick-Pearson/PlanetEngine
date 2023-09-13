@@ -16,11 +16,11 @@ pub struct PixelShader {
 
 impl PixelShader {
     pub fn new<S: Into<String>>(shader_path: S) -> PixelShader {
-        return PixelShader {
+        PixelShader {
             shader_path: shader_path.into(),
             alpha_blending: false,
             inputs: Vec::new(),
-        };
+        }
     }
 }
 
@@ -30,6 +30,6 @@ pub struct Material<'a> {
 
 impl<'a> Material<'a> {
     pub fn new(shader: &'a PixelShader) -> Material<'a> {
-        return Material { shader };
+        Material { shader }
     }
 }

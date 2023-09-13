@@ -11,11 +11,11 @@ pub struct RenderQueueItems<'a> {
 
 impl<'a> RenderQueueItems<'a> {
     pub fn empty() -> RenderQueueItems<'a> {
-        return RenderQueueItems {
+        RenderQueueItems {
             new_meshes: Vec::new(),
             updated_meshes: Vec::new(),
             removed_meshes: Vec::new(),
-        };
+        }
     }
 }
 

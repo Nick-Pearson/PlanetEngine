@@ -1,4 +1,4 @@
-use std::{ffi::c_void, mem::ManuallyDrop};
+use std::{ffi::c_void};
 
 use windows::{Win32::Graphics::Direct3D12::*, Win32::Graphics::Dxgi::Common::*};
 
@@ -133,7 +133,7 @@ impl D3DPipelineState {
             SizeInBytes: std::mem::size_of::<PipelineStateStream>(),
             pPipelineStateSubobjectStream: &mut state as *mut _ as *mut c_void,
         };
-        return unsafe { device.CreatePipelineState(&desc) };
+        unsafe { device.CreatePipelineState(&desc) }
     }
 
     pub fn compile_for_mesh(
@@ -147,7 +147,7 @@ impl D3DPipelineState {
         let pipeline_state =
             Self::create_pipeline_state(device, &pixel_shader, &vertex_shader, root_signature)
                 .unwrap();
-        return Ok(D3DPipelineState { pipeline_state });
+        Ok(D3DPipelineState { pipeline_state })
     }
 }
 

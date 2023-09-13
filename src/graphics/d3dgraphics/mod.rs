@@ -30,7 +30,7 @@ fn create_adapter() -> Result<IDXGIAdapter4> {
     let flags = DXGI_CREATE_FACTORY_DEBUG;
     let factory6: IDXGIFactory6 = unsafe { CreateDXGIFactory2(flags) }.unwrap();
 
-    return unsafe { factory6.EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE) };
+    unsafe { factory6.EnumAdapterByGpuPreference(0, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE) }
 }
 
 fn get_adapter_description(adapter: &IDXGIAdapter4) -> Result<String> {
@@ -39,9 +39,9 @@ fn get_adapter_description(adapter: &IDXGIAdapter4) -> Result<String> {
 
     let description_len = desc.Description.iter().position(|&r| r == 0).unwrap();
 
-    return Ok(String::from_utf16_lossy(
+    Ok(String::from_utf16_lossy(
         &desc.Description[0..description_len],
-    ));
+    ))
 }
 
 fn create_device(adapter: &IDXGIAdapter4) -> Result<ID3D12Device2> {
@@ -52,7 +52,7 @@ fn create_device(adapter: &IDXGIAdapter4) -> Result<ID3D12Device2> {
     let mut device: Option<ID3D12Device2> = None;
     unsafe { D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, &mut device)? }
 
-    return Ok(device.unwrap());
+    Ok(device.unwrap())
 }
 
 fn create_command_resource(
@@ -71,7 +71,7 @@ fn create_command_resource(
 
     let queue = D3DCommandQueue::new(device, kind, D3D12_COMMAND_QUEUE_PRIORITY_HIGH)?;
 
-    return Ok((list, allocator, queue));
+    Ok((list, allocator, queue))
 }
 
 fn create_descriptor_heap(
@@ -85,7 +85,7 @@ fn create_descriptor_heap(
         Flags: D3D12_DESCRIPTOR_HEAP_FLAG_NONE,
         NodeMask: 0,
     };
-    return unsafe { device.CreateDescriptorHeap(&desc) };
+    unsafe { device.CreateDescriptorHeap(&desc) }
 }
 
 fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapChain4> {
@@ -107,10 +107,10 @@ fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapCh
         AlphaMode: DXGI_ALPHA_MODE_UNSPECIFIED,
         ..Default::default()
     };
-    return unsafe {
+    unsafe {
         factory6.CreateSwapChainForHwnd(&queue.command_queue, *hwnd, &desc, None, None)?
     }
-    .cast();
+    .cast()
 }
 
 impl<'a> D3DGraphics {
@@ -125,14 +125,14 @@ impl<'a> D3DGraphics {
 
         let compute_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_COMPUTE)?;
 
-        return Ok(D3DGraphics {
+        Ok(D3DGraphics {
             adapter,
             device,
             compute_command_list: compute_commands.0,
             compute_command_allocator: compute_commands.1,
             compute_command_queue: compute_commands.2,
-            debug: debug
-        });
+            debug
+        })
     }
 }
 
@@ -174,9 +174,9 @@ impl WindowRenderTarget {
         println!("Initialising window resolution to [{}x{}]", width, height);
 
         let rtv_descriptor_heap =
-            create_descriptor_heap(&device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3)?;
+            create_descriptor_heap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3)?;
         let dsv_descriptor_heap =
-            create_descriptor_heap(&device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)?;
+            create_descriptor_heap(device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)?;
 
         let target_views =
             WindowRenderTarget::create_target_views(device, &swap_chain, &rtv_descriptor_heap);
@@ -187,19 +187,19 @@ impl WindowRenderTarget {
             height,
         );
 
-        return Ok(WindowRenderTarget {
-            swap_chain: swap_chain,
-            command_queue: command_queue,
+        Ok(WindowRenderTarget {
+            swap_chain,
+            command_queue,
             rtv_heap: rtv_descriptor_heap,
             dsv_heap: dsv_descriptor_heap,
 
             current_buffer: 0,
             frame_signals: [0; NUM_BUFFERS],
-            width: width,
-            height: height,
-            target_views: target_views,
-            depth_stencil_view: depth_stencil_view,
-        });
+            width,
+            height,
+            target_views,
+            depth_stencil_view,
+        })
     }
 
     fn pre_render(&mut self, command_list: &ID3D12GraphicsCommandList) {
@@ -340,7 +340,7 @@ impl WindowRenderTarget {
             };
         }
 
-        return target_views.into_inner().unwrap();
+        target_views.into_inner().unwrap()
     }
 
     fn create_depth_stencil_resource(
@@ -408,10 +408,10 @@ impl WindowRenderTarget {
             device.CreateDepthStencilView(&depth_buffer, Some(&dsv), cpu_handle);
         }
 
-        return D3DResource {
+        D3DResource {
             resource: depth_buffer,
-            cpu_handle: cpu_handle,
-        };
+            cpu_handle,
+        }
     }
 }
 
@@ -475,12 +475,12 @@ impl<'a> CreateRenderer<'a> for D3DGraphics {
         let render_target: WindowRenderTarget =
             WindowRenderTarget::new(&self.device, swap_chain, draw_commands.2).unwrap();
 
-        return Ok(D3DRenderer {
+        Ok(D3DRenderer {
             graphics: self,
             draw_command_list: draw_commands.0,
             draw_command_allocator: draw_commands.1,
             render_target,
-        });
+        })
     }
 }
 

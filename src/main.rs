@@ -56,10 +56,10 @@ impl Window {
             )
         };
 
-        return Ok(Window { hwnd });
+        Ok(Window { hwnd })
     }
 
-    pub fn show(&self) -> () {
+    pub fn show(&self) {
         unsafe { ShowWindow(self.hwnd, SW_SHOW) };
     }
 }
@@ -72,14 +72,14 @@ struct Engine<'a> {
 
 impl<'a> Engine<'a> {
     pub fn new(window: Window, renderer: &'a dyn Renderer) -> Engine {
-        return Engine {
-            window: window,
-            renderer: renderer,
+        Engine {
+            window,
+            renderer,
             running: true,
-        };
+        }
     }
 
-    pub fn run(&mut self) -> () {
+    pub fn run(&mut self) {
         while self.running {
             self.pump_windows_messages();
         }

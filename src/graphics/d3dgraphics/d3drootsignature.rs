@@ -44,7 +44,7 @@ impl D3DRootSignature {
         if result.is_err() {
             feature_data.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
         }
-        return feature_data;
+        feature_data
     }
 
     fn init_as_constants(
@@ -58,13 +58,13 @@ impl D3DRootSignature {
             RegisterSpace: register_space,
             Num32BitValues: num_32bit_values,
         };
-        return D3D12_ROOT_PARAMETER1 {
+        D3D12_ROOT_PARAMETER1 {
             ParameterType: D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
             Anonymous: D3D12_ROOT_PARAMETER1_0 {
                 Constants: constants,
             },
             ShaderVisibility: visibility,
-        };
+        }
     }
 
     fn init_as_descriptor_table(
@@ -84,13 +84,13 @@ impl D3DRootSignature {
             NumDescriptorRanges: 1,
             pDescriptorRanges: ranges.as_ptr(),
         };
-        return D3D12_ROOT_PARAMETER1 {
+        D3D12_ROOT_PARAMETER1 {
             ParameterType: D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS,
             Anonymous: D3D12_ROOT_PARAMETER1_0 {
                 DescriptorTable: descriptor_table,
             },
             ShaderVisibility: shader_visibility,
-        };
+        }
     }
 
     fn serialize_blob(
@@ -114,14 +114,14 @@ impl D3DRootSignature {
         let mut blob_opt = None;
         let result =
             unsafe { D3D12SerializeVersionedRootSignature(&versioned_desc, &mut blob_opt, None) };
-        return result.map(|_| blob_opt.unwrap());
+        result.map(|_| blob_opt.unwrap())
     }
 
     pub fn from_pixel_shader(
         pixel_shader: &PixelShader,
         device: &ID3D12Device2,
     ) -> D3DRootSignature {
-        let feature_data: D3D12_FEATURE_DATA_ROOT_SIGNATURE =
+        let _feature_data: D3D12_FEATURE_DATA_ROOT_SIGNATURE =
             Self::check_root_signature_features(device);
 
         let mut params: Vec<D3D12_ROOT_PARAMETER1> = Vec::new();
@@ -180,12 +180,12 @@ impl D3DRootSignature {
         }
         .unwrap();
 
-        return D3DRootSignature {
+        D3DRootSignature {
             root_signature: signature,
-        };
+        }
     }
 
     pub fn get_signature(&self) -> ID3D12RootSignature {
-        return self.root_signature.clone();
+        self.root_signature.clone()
     }
 }

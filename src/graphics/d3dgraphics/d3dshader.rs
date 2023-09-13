@@ -53,7 +53,7 @@ impl ID3DInclude_Impl for D3DIncludeHandler {
         &self,
         includetype: D3D_INCLUDE_TYPE,
         pfilename: &::windows::core::PCSTR,
-        pparentdata: *const c_void,
+        _pparentdata: *const c_void,
         ppdata: *mut *mut c_void,
         pbytes: *mut u32,
     ) -> ::windows::core::Result<()> {
@@ -74,7 +74,7 @@ impl ID3DInclude_Impl for D3DIncludeHandler {
                     let slice = unsafe { std::slice::from_raw_parts_mut(ptr, Self::BUFFER_SIZE) };
                     let result = file.read(slice);
 
-                    return match result {
+                    match result {
                         Ok(_) => {
                             unsafe {
                                 *ppdata = ptr as *mut c_void;
@@ -83,9 +83,9 @@ impl ID3DInclude_Impl for D3DIncludeHandler {
                             Ok(())
                         }
                         Err(_) => Err(Error::new(E_FAIL, "Failed to read from file".into())),
-                    };
+                    }
                 }
-                Err(error) => Err(Error::new(E_FAIL, "Failed to open file".into())),
+                Err(_error) => Err(Error::new(E_FAIL, "Failed to open file".into())),
             }
         } else {
             Err(Error::new(E_NOTIMPL, "Unsupported include type".into()))
@@ -137,14 +137,14 @@ fn compile_shader_blob(
         )
     };
 
-    return match shader_blob {
+    match shader_blob {
         None => {
             let msg = extract_compile_error(error_blob);
             println!("Failed to compile shader file [{}]: [{}]", filepath, msg);
-            return Err(msg);
+            Err(msg)
         }
         Some(a) => Ok(a),
-    };
+    }
 }
 
 fn get_bytecode(blob: &ID3DBlob) -> D3D12_SHADER_BYTECODE {
@@ -165,11 +165,11 @@ impl<'a> D3DPixelShader {
     pub fn compile<S: Into<String>>(filepath: S) -> std::result::Result<D3DPixelShader, String> {
         let blob = compile_shader_blob(&filepath.into(), s!("ps_5_1"), &HashMap::new())?;
         let bytecode = get_bytecode(&blob);
-        return Ok(D3DPixelShader { blob, bytecode });
+        Ok(D3DPixelShader { blob, bytecode })
     }
 
     pub(crate) fn get_bytecode(&'a self) -> &'a D3D12_SHADER_BYTECODE {
-        return &self.bytecode;
+        &self.bytecode
     }
 }
 
@@ -217,20 +217,20 @@ impl<'a> D3DVertexShader {
             pInputElementDescs: ied.as_ptr(),
             NumElements: ied.len() as u32,
         };
-        return Ok(D3DVertexShader {
+        Ok(D3DVertexShader {
             blob,
             bytecode,
             ied,
             input_layout,
-        });
+        })
     }
 
     pub(crate) fn get_bytecode(&'a self) -> &'a D3D12_SHADER_BYTECODE {
-        return &self.bytecode;
+        &self.bytecode
     }
 
     pub(crate) fn get_input_layout(&'a self) -> &'a D3D12_INPUT_LAYOUT_DESC {
-        return &self.input_layout;
+        &self.input_layout
     }
 }
 

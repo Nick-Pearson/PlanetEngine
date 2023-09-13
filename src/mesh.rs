@@ -13,11 +13,11 @@ pub struct Vertex {
 
 impl Vertex {
     pub fn new(position: [f32; 3], normal: [f32; 3], tex_coords: [f32; 2]) -> Vertex {
-        return Vertex {
+        Vertex {
             position: Vec3A::from_array(position),
             normal: Vec3A::from_array(normal),
             tex_coords: Vec2::from_array(tex_coords),
-        };
+        }
     }
 }
 
@@ -34,7 +34,7 @@ impl Mesh {
     }
 
     pub fn num_triangles(&self) -> usize {
-        return self.indicies.len() / 3;
+        self.indicies.len() / 3
     }
 
     pub fn recalculate_normals(&mut self) {
@@ -96,7 +96,7 @@ impl Mesh {
         };
         cube.recalculate_normals();
         cube.scale([scale, scale, scale]);
-        return cube;
+        cube
     }
 
     pub fn new_plane(scale: f32) -> Mesh {
@@ -108,10 +108,10 @@ impl Mesh {
             Vertex::new([scale * -1.0, scale * -1.0, 0.0], norm, [0.0, 0.0]),
         ];
         let t = vec![0, 1, 2, 0, 3, 1];
-        return Mesh {
+        Mesh {
             verticies: v,
             indicies: t,
-        };
+        }
     }
 
     pub fn new_ico_hemisphere(scale: f32, order: usize) -> Mesh {
@@ -149,11 +149,11 @@ impl Mesh {
                     normal: Vec3A::ZERO,
                     tex_coords: Vec2::ZERO,
                 });
-                return v;
+                v
             });
             mid_cache.entry(inverse_key).or_insert(result);
 
-            return result;
+            result
         };
 
         for _i in 0..order {
@@ -162,7 +162,7 @@ impl Mesh {
             indicies = Vec::new();
 
             for k in (0..indicies_prev.len()).step_by(3) {
-                let v1 = indicies_prev[k + 0];
+                let v1 = indicies_prev[k];
                 let v2 = indicies_prev[k + 1];
                 let v3 = indicies_prev[k + 2];
                 let a = add_mid_point(v1, v2);
@@ -192,10 +192,10 @@ impl Mesh {
             vert.normal = vert.position;
             vert.position = vert.position.mul(scale);
         }
-        return Mesh {
+        Mesh {
             verticies: verts,
-            indicies: indicies,
-        };
+            indicies,
+        }
     }
 }
 

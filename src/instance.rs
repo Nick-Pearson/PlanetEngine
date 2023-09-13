@@ -19,20 +19,20 @@ impl MatTransform {
     };
 
     pub fn from_position<P: Into<Vec3>>(position: P) -> MatTransform {
-        return Self {
+        Self {
             matrix: Mat4::from_translation(position.into()),
-        };
+        }
     }
 
     pub fn get_position(&self) -> Vec3A {
-        return (self.matrix * Vec4::W).into();
+        (self.matrix * Vec4::W).into()
     }
 }
 
 impl Transform for MatTransform {
     fn translate<P: Into<Vec3>>(&mut self, delta: P) {
         let translation_matrix = Mat4::from_translation(delta.into());
-        self.matrix = self.matrix * translation_matrix;
+        self.matrix *= translation_matrix;
     }
 
     fn rotate<R: Into<Quat>>(&mut self, delta: R) {
@@ -49,11 +49,11 @@ pub struct MeshInstance<'a> {
 
 impl<'a> MeshInstance<'a> {
     pub fn new(mesh: &'a Mesh, material: &'a Material<'a>) -> MeshInstance<'a> {
-        return MeshInstance {
+        MeshInstance {
             transform: MatTransform::IDENTITY,
-            mesh: mesh,
-            material: material,
-        };
+            mesh,
+            material,
+        }
     }
 }
 
