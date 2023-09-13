@@ -2,7 +2,7 @@ use crate::material::PixelShader;
 use glam::{Mat4, Vec3A};
 use std::mem::size_of;
 
-use windows::Win32::Graphics::Direct3D12::*;
+use windows::Win32::Graphics::{Direct3D::ID3DBlob, Direct3D12::*};
 
 #[repr(C)]
 pub struct D3DSlowVSConstants {
@@ -93,11 +93,11 @@ impl D3DRootSignature {
         };
     }
 
-    fn init_1_1(
-        params: Vec<D3D12_ROOT_PARAMETER1>,
-        samplers: Vec<D3D12_STATIC_SAMPLER_DESC>,
+    fn serialize_blob(
+        params: &Vec<D3D12_ROOT_PARAMETER1>,
+        samplers: &Vec<D3D12_STATIC_SAMPLER_DESC>,
         flags: D3D12_ROOT_SIGNATURE_FLAGS,
-    ) -> D3D12_VERSIONED_ROOT_SIGNATURE_DESC {
+    ) -> ::windows::core::Result<ID3DBlob> {
         let desc = D3D12_ROOT_SIGNATURE_DESC1 {
             NumParameters: params.len() as u32,
             pParameters: params.as_ptr(),
@@ -106,17 +106,23 @@ impl D3DRootSignature {
             Flags: flags,
         };
 
-        return D3D12_VERSIONED_ROOT_SIGNATURE_DESC {
+        let versioned_desc = D3D12_VERSIONED_ROOT_SIGNATURE_DESC {
             Version: D3D_ROOT_SIGNATURE_VERSION_1_1,
             Anonymous: D3D12_VERSIONED_ROOT_SIGNATURE_DESC_0 { Desc_1_1: desc },
         };
+
+        let mut blob_opt = None;
+        let result =
+            unsafe { D3D12SerializeVersionedRootSignature(&versioned_desc, &mut blob_opt, None) };
+        return result.map(|_| blob_opt.unwrap());
     }
 
     pub fn from_pixel_shader(
         pixel_shader: &PixelShader,
         device: &ID3D12Device2,
     ) -> D3DRootSignature {
-        let feature_data = Self::check_root_signature_features(device);
+        let feature_data: D3D12_FEATURE_DATA_ROOT_SIGNATURE =
+            Self::check_root_signature_features(device);
 
         let mut params: Vec<D3D12_ROOT_PARAMETER1> = Vec::new();
         params.push(Self::init_as_constants(
@@ -164,15 +170,8 @@ impl D3DRootSignature {
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS
                 | D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
 
-        let desc = Self::init_1_1(params, vec![sampler], flags);
-
-        let mut blob_opt = None;
-        let mut error_blob = None;
-        unsafe {
-            D3D12SerializeVersionedRootSignature(&desc, &mut blob_opt, Some(&mut error_blob))
-        }
-        .unwrap();
-        let blob = blob_opt.unwrap();
+        let samplers = vec![sampler];
+        let blob = Self::serialize_blob(&params, &samplers, flags).unwrap();
         let signature = unsafe {
             device.CreateRootSignature(
                 0,
