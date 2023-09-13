@@ -20,7 +20,7 @@ jobs:
           args: --target i686-pc-windows-gnu
 
   clippy:
-    name: Clippyv
+    name: Clippy
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
