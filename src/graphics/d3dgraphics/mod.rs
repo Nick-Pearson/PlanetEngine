@@ -107,17 +107,15 @@ fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapCh
         AlphaMode: DXGI_ALPHA_MODE_UNSPECIFIED,
         ..Default::default()
     };
-    unsafe {
-        factory6.CreateSwapChainForHwnd(&queue.command_queue, *hwnd, &desc, None, None)?
-    }
-    .cast()
+    unsafe { factory6.CreateSwapChainForHwnd(&queue.command_queue, *hwnd, &desc, None, None)? }
+        .cast()
 }
 
 impl D3DGraphics {
     pub fn new() -> Result<D3DGraphics> {
-        let mut debug_opt:Option<ID3D12Debug> = None;
+        let mut debug_opt: Option<ID3D12Debug> = None;
         unsafe { D3D12GetDebugInterface(&mut debug_opt) }.unwrap();
-        let debug:ID3D12Debug = debug_opt.unwrap();
+        let debug: ID3D12Debug = debug_opt.unwrap();
         unsafe { debug.EnableDebugLayer() };
 
         let adapter = create_adapter()?;
@@ -131,7 +129,7 @@ impl D3DGraphics {
             compute_command_list: compute_commands.0,
             compute_command_allocator: compute_commands.1,
             compute_command_queue: compute_commands.2,
-            debug
+            debug,
         })
     }
 }
@@ -435,7 +433,7 @@ impl<'a> Renderer for D3DRenderer<'a> {
             let pipeline_state =
                 D3DPipelineState::compile_for_mesh(&self.graphics.device, ps, &root_signature)
                     .unwrap();
-            
+
             dbg!(pipeline_state);
         }
     }

@@ -1,4 +1,4 @@
-use std::{ffi::c_void};
+use std::ffi::c_void;
 
 use windows::{Win32::Graphics::Direct3D12::*, Win32::Graphics::Dxgi::Common::*};
 
@@ -159,10 +159,13 @@ mod tests {
     #[test]
     fn subobjects_have_correct_alignment() {
         let item = PipelineStateRasterizer::from(D3D12_RASTERIZER_DESC::default());
-        let addr1 = &item.kind as * const _ as u64;
-        let addr2 = &item.payload as * const _ as u64;
+        let addr1 = &item.kind as *const _ as u64;
+        let addr2 = &item.payload as *const _ as u64;
         assert_eq!(size_of::<*mut c_void>() as u64, addr2 - addr1);
 
-        assert_eq!(0, size_of::<PipelineStateRasterizer>() % size_of::<*mut c_void>());
+        assert_eq!(
+            0,
+            size_of::<PipelineStateRasterizer>() % size_of::<*mut c_void>()
+        );
     }
 }
