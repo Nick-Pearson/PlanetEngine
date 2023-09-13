@@ -118,7 +118,7 @@ extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: L
     }
 }
 
-fn setup_scene<'a>(renderer: &mut dyn Renderer) {
+fn setup_scene(renderer: &mut dyn Renderer) {
     let pixel_shader = PixelShader::new("ps/PixelShader.hlsl");
     let standard_material = Material::new(&pixel_shader);
 

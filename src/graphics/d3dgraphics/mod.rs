@@ -113,7 +113,7 @@ fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapCh
     .cast()
 }
 
-impl<'a> D3DGraphics {
+impl D3DGraphics {
     pub fn new() -> Result<D3DGraphics> {
         let mut debug_opt:Option<ID3D12Debug> = None;
         unsafe { D3D12GetDebugInterface(&mut debug_opt) }.unwrap();
