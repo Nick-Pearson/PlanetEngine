@@ -9,14 +9,14 @@ trait VertexLayout {
 
     fn encode_vert<F>(&self, vert: &crate::mesh::Vertex, consumer: F)
     where
-        F: FnMut(&[u8]) -> ();
+        F: FnMut(&[u8]);
 }
 
 struct PosNormUVVertexLayout;
 impl PosNormUVVertexLayout {
     fn encode_vec<F>(vec: &glam::Vec3, mut func: F)
     where
-        F: FnMut(&[u8]) -> (),
+        F: FnMut(&[u8]),
     {
         func(&vec.x.to_ne_bytes());
         func(&vec.y.to_ne_bytes());
@@ -25,7 +25,7 @@ impl PosNormUVVertexLayout {
 
     fn encode_vec2<F>(vec: &glam::Vec2, mut func: F)
     where
-        F: FnMut(&[u8]) -> (),
+        F: FnMut(&[u8]),
     {
         func(&vec.x.to_ne_bytes());
         func(&vec.y.to_ne_bytes());
@@ -35,7 +35,7 @@ impl PosNormUVVertexLayout {
 impl VertexLayout for PosNormUVVertexLayout {
     fn encode_vert<F>(&self, vert: &crate::mesh::Vertex, mut consumer: F)
     where
-        F: FnMut(&[u8]) -> (),
+        F: FnMut(&[u8]),
     {
         Self::encode_vec(&vert.position, &mut consumer);
         Self::encode_vec(&vert.normal, &mut consumer);
@@ -65,7 +65,7 @@ impl D3DMesh {
 
         let mut vert_data = Vec::with_capacity(vertex_format.len() * mesh.verticies.len());
         for vert in &mesh.verticies {
-            vertex_format.encode_vert(&vert, |b| vert_data.extend_from_slice(b))
+            vertex_format.encode_vert(vert, |b| vert_data.extend_from_slice(b))
         }
         let vert_desc = BufferDesc {
             data: vert_data,

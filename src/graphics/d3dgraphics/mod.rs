@@ -419,7 +419,7 @@ pub struct D3DRenderer<'a> {
 impl<'a> Renderer for D3DRenderer<'a> {
     fn apply(&mut self, items: RenderQueueItems) {
         for instance in items.new_meshes {
-            let d3d_mesh = self.graphics.load_mesh(instance.mesh);
+            let _d3d_mesh = self.graphics.load_mesh(instance.mesh);
             // let d3d_material = self.graphics.load_material(instance.material);
 
             let ps = instance.material.shader;

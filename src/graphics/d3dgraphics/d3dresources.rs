@@ -102,7 +102,7 @@ impl D3DResources {
         const SUBRESOURCE_SIZE: usize =
             size_of::<D3D12_PLACED_SUBRESOURCE_FOOTPRINT>() + size_of::<u32>() + size_of::<u64>();
 
-        let required_size = 0_u64;
+        let _required_size = 0_u64;
         let mem_to_alloc = SUBRESOURCE_SIZE * num_subresources as usize;
 
         let layout = Layout::from_size_align(mem_to_alloc, 1).unwrap();
@@ -141,7 +141,7 @@ impl D3DResources {
             );
 
             dealloc(ptr, layout);
-            return result;
+            result
         }
     }
 
@@ -229,7 +229,7 @@ impl D3DResources {
                 }
             }
         }
-        return Ok(required_size);
+        Ok(required_size)
     }
 
     pub fn initialise_buffer(&self, buffer: &BufferDesc) -> Result<D3DBuffer> {
