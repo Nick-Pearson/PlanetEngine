@@ -7,6 +7,8 @@ use windows::core::{Result, Type};
 use windows::Win32::Graphics::Direct3D12::*;
 use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT_UNKNOWN, DXGI_SAMPLE_DESC};
 
+use super::d3dcommandqueue::{create_command_resource, D3DCommandQueue};
+
 #[derive(Debug, Clone)]
 pub struct D3DBuffer {
     pub resource: ID3D12Resource,
@@ -53,14 +55,19 @@ pub struct BufferDesc {
 pub struct D3DResources {
     device: ID3D12Device2,
     command_list: ID3D12GraphicsCommandList,
+    command_allocator: ID3D12CommandAllocator,
+    command_queue: D3DCommandQueue,
 }
 
 impl D3DResources {
-    pub fn new(device: ID3D12Device2) -> D3DResources {
-        D3DResources {
+    pub fn new(device: ID3D12Device2) -> Result<D3DResources> {
+        let copy_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_COPY)?;
+        Ok(D3DResources {
             device,
-            command_list: todo!(),
-        }
+            command_list: copy_commands.0,
+            command_allocator: copy_commands.1,
+            command_queue: copy_commands.2,
+        })
     }
 
     fn create_resource(
@@ -68,7 +75,7 @@ impl D3DResources {
         heap_props: &D3D12_HEAP_PROPERTIES,
         desc: &D3D12_RESOURCE_DESC,
         initial_state: D3D12_RESOURCE_STATES,
-    ) -> ID3D12Resource {
+    ) -> Result<ID3D12Resource> {
         let mut resource_opt: Option<ID3D12Resource> = None;
         unsafe {
             self.device.CreateCommittedResource(
@@ -78,10 +85,9 @@ impl D3DResources {
                 initial_state,
                 None,
                 &mut resource_opt,
-            )
+            )?;
         }
-        .unwrap();
-        resource_opt.unwrap()
+        Ok(resource_opt.unwrap())
     }
 
     fn update_subresources(
@@ -227,7 +233,7 @@ impl D3DResources {
         return Ok(required_size);
     }
 
-    pub fn initialise_buffer(&self, buffer: &BufferDesc) -> D3DBuffer {
+    pub fn initialise_buffer(&self, buffer: &BufferDesc) -> Result<D3DBuffer> {
         let heap_props = D3D12_HEAP_PROPERTIES {
             Type: buffer.heap_type,
             CPUPageProperty: D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
@@ -254,21 +260,21 @@ impl D3DResources {
         };
 
         let state = D3D12_RESOURCE_STATE_COPY_DEST;
-        let resource = self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_COPY_DEST);
+        let resource = self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_COPY_DEST)?;
         let intermediate_resource =
-            self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_GENERIC_READ); // flags none, upload heap
+            self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_GENERIC_READ)?; // flags none, upload heap
 
         let data = D3D12_SUBRESOURCE_DATA {
             pData: buffer.data.as_ptr() as *const _ as *const c_void,
             RowPitch: buffer_size as isize,
             SlicePitch: buffer.element_size as isize,
         };
-        self.update_subresources(&resource, &intermediate_resource, 0, 0, 1, &data);
+        self.update_subresources(&resource, &intermediate_resource, 0, 0, 1, &data)?;
 
-        D3DBuffer {
+        Ok(D3DBuffer {
             resource,
             intermediate_resource,
             state: D3D12_RESOURCE_STATE_COPY_DEST,
-        }
+        })
     }
 }

@@ -45,8 +45,8 @@ impl Window {
                 s!("EngWindowClass"),
                 s!("Engine"),
                 WS_OVERLAPPEDWINDOW,
-                CW_USEDEFAULT,
-                CW_USEDEFAULT,
+                0,
+                0,
                 size_x,
                 size_y,
                 None, // no parent window

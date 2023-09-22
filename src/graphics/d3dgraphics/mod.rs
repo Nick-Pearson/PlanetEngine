@@ -110,7 +110,7 @@ impl D3DGraphics {
 
         let compute_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_COMPUTE)?;
 
-        let resources = D3DResources::new(device.clone());
+        let resources = D3DResources::new(device.clone())?;
 
         Ok(D3DGraphics {
             adapter,
@@ -124,7 +124,7 @@ impl D3DGraphics {
     }
 
     fn load_mesh(&self, mesh: &crate::mesh::Mesh) -> D3DMesh {
-        D3DMesh::load(mesh, &self.resources)
+        D3DMesh::load(mesh, &self.resources).unwrap()
     }
 }
 

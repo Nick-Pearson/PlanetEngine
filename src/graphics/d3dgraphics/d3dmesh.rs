@@ -1,6 +1,6 @@
 use std::mem::size_of;
 
-use windows::Win32::Graphics::{Direct3D12::*, Dxgi::Common::*};
+use windows::{Win32::Graphics::{Direct3D12::*, Dxgi::Common::*}, core::Result};
 
 use super::d3dresources::{BufferDesc, D3DBuffer, D3DResources};
 
@@ -60,7 +60,7 @@ pub struct D3DMesh {
 }
 
 impl D3DMesh {
-    pub fn load(mesh: &crate::mesh::Mesh, resources: &D3DResources) -> D3DMesh {
+    pub fn load(mesh: &crate::mesh::Mesh, resources: &D3DResources) -> Result<D3DMesh> {
         let vertex_format = PosNormUVVertexLayout;
 
         let mut vert_data = Vec::with_capacity(vertex_format.len() * mesh.verticies.len());
@@ -72,7 +72,7 @@ impl D3DMesh {
             element_size: vertex_format.len(),
             ..Default::default()
         };
-        let vertex_buffer = resources.initialise_buffer(&vert_desc);
+        let vertex_buffer = resources.initialise_buffer(&vert_desc)?;
         let vertex_buffer_view = D3D12_VERTEX_BUFFER_VIEW {
             BufferLocation: vertex_buffer.get_gpu_virtual_address(),
             SizeInBytes: (vert_desc.element_size * vert_desc.data.len()) as u32,
@@ -85,14 +85,14 @@ impl D3DMesh {
             element_size: size_of::<u16>(),
             ..Default::default()
         };
-        let triangle_buffer = resources.initialise_buffer(&tri_desc);
+        let triangle_buffer = resources.initialise_buffer(&tri_desc)?;
         let triangle_buffer_view = D3D12_INDEX_BUFFER_VIEW {
             BufferLocation: triangle_buffer.get_gpu_virtual_address(),
             SizeInBytes: (tri_desc.element_size * tri_desc.data.len()) as u32,
             Format: DXGI_FORMAT_R16_UINT,
         };
 
-        D3DMesh {
+        Ok(D3DMesh {
             loaded: false,
             first_bind: false,
 
@@ -102,7 +102,7 @@ impl D3DMesh {
             num_indicies: mesh.indicies.len(),
             triangle_buffer,
             triangle_buffer_view,
-        }
+        })
     }
 
     pub fn draw(&mut self, command_list: ID3D12GraphicsCommandList) {
