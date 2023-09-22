@@ -98,7 +98,7 @@ impl D3DResources {
         first_subresource: u32,
         num_subresources: u32,
         src_data: &D3D12_SUBRESOURCE_DATA,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         const SUBRESOURCE_SIZE: usize =
             size_of::<D3D12_PLACED_SUBRESOURCE_FOOTPRINT>() + size_of::<u32>() + size_of::<u64>();
 
@@ -128,7 +128,7 @@ impl D3DResources {
                 Some(&mut required_size),
             );
 
-            self.do_update_subresources(
+            let result = self.do_update_subresources(
                 destination_resource,
                 intermediate_resource,
                 first_subresource,
@@ -138,12 +138,11 @@ impl D3DResources {
                 pnumrows,
                 prowsizesinbytes,
                 src_data,
-            )
-            .unwrap();
+            );
 
             dealloc(ptr, layout);
+            return result;
         }
-        return Ok(());
     }
 
     unsafe fn do_update_subresources(
@@ -159,7 +158,7 @@ impl D3DResources {
         src_data: &D3D12_SUBRESOURCE_DATA,
     ) -> Result<u64> {
         // Minor validation
-        let intermediate_desc = unsafe { intermediate_resource.GetDesc() };
+        // let intermediate_desc = unsafe { intermediate_resource.GetDesc() };
         let destination_desc = unsafe { destination_resource.GetDesc() };
         // TODO:
         // if (intermediate_desc.Dimension != D3D12_RESOURCE_DIMENSION_BUFFER ||
@@ -259,7 +258,6 @@ impl D3DResources {
             Flags: buffer.flags,
         };
 
-        let state = D3D12_RESOURCE_STATE_COPY_DEST;
         let resource = self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_COPY_DEST)?;
         let intermediate_resource =
             self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_GENERIC_READ)?; // flags none, upload heap
