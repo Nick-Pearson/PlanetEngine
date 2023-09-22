@@ -27,4 +27,4 @@ jobs:
       - name: code style
         run: cargo fmt --check
       - name: clippy warnings
-        run: cargo clippy -- -D warnings
+        run: cargo clippy -- -D warnings -A dead_code

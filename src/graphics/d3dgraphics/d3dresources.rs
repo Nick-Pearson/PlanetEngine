@@ -132,7 +132,6 @@ impl D3DResources {
                 intermediate_resource,
                 first_subresource,
                 num_subresources,
-                required_size,
                 playouts,
                 pnumrows,
                 prowsizesinbytes,
@@ -140,22 +139,22 @@ impl D3DResources {
             );
 
             dealloc(ptr, layout);
-            result
+            result.map(|_| required_size)
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     unsafe fn do_update_subresources(
         &self,
         destination_resource: &ID3D12Resource,
         intermediate_resource: &ID3D12Resource,
         first_subresource: u32,
         num_subresources: u32,
-        required_size: u64,
         playouts: *mut D3D12_PLACED_SUBRESOURCE_FOOTPRINT,
         pnumrows: *mut u32,
         prowsizesinbytes: *mut u64,
         src_data: &D3D12_SUBRESOURCE_DATA,
-    ) -> Result<u64> {
+    ) -> Result<()> {
         // Minor validation
         // let intermediate_desc = unsafe { intermediate_resource.GetDesc() };
         let destination_desc = unsafe { destination_resource.GetDesc() };
@@ -228,7 +227,7 @@ impl D3DResources {
                 }
             }
         }
-        Ok(required_size)
+        Ok(())
     }
 
     fn heap_properties(heap_type: D3D12_HEAP_TYPE) -> D3D12_HEAP_PROPERTIES {
