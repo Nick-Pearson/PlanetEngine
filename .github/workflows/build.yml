@@ -8,13 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toolchain: [stable-i686-pc-windows-gnu]
+        toolchain: [i686-pc-windows-gnu]
     steps:
       - uses: actions/checkout@v3
-      - name: install toolchain
-        run: rustup toolchain install ${{ matrix.toolchain }}
-      - name: build
-        run: cross build --target =${{ matrix.toolchain }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.toolchain }}
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --target ${{ matrix.toolchain }}
       - name: clippy warnings
         run: cargo +${{ matrix.toolchain }} clippy -- -D warnings -A dead_code
 
