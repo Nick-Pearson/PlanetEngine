@@ -1,6 +1,9 @@
 use std::mem::size_of;
 
-use windows::{Win32::Graphics::{Direct3D12::*, Dxgi::Common::*}, core::Result};
+use windows::{
+    core::Result,
+    Win32::Graphics::{Direct3D12::*, Dxgi::Common::*},
+};
 
 use super::d3dresources::{BufferDesc, D3DBuffer, D3DResources};
 

@@ -48,8 +48,7 @@ impl D3DBuffer {
 pub struct BufferDesc {
     pub data: Vec<u8>,
     pub element_size: usize,
-    pub flags: D3D12_RESOURCE_FLAGS,
-    pub heap_type: D3D12_HEAP_TYPE,
+    pub flags: D3D12_RESOURCE_FLAGS
 }
 
 pub struct D3DResources {
@@ -232,15 +231,17 @@ impl D3DResources {
         Ok(required_size)
     }
 
-    pub fn initialise_buffer(&self, buffer: &BufferDesc) -> Result<D3DBuffer> {
-        let heap_props = D3D12_HEAP_PROPERTIES {
-            Type: buffer.heap_type,
+    fn heap_properties(heap_type: D3D12_HEAP_TYPE) -> D3D12_HEAP_PROPERTIES {
+        D3D12_HEAP_PROPERTIES {
+            Type: heap_type,
             CPUPageProperty: D3D12_CPU_PAGE_PROPERTY_UNKNOWN,
             MemoryPoolPreference: D3D12_MEMORY_POOL_UNKNOWN,
             CreationNodeMask: 1,
             VisibleNodeMask: 1,
-        };
+        }
+    }
 
+    pub fn initialise_buffer(&self, buffer: &BufferDesc) -> Result<D3DBuffer> {
         let buffer_size = buffer.data.len() * buffer.element_size;
         let desc = D3D12_RESOURCE_DESC {
             Dimension: D3D12_RESOURCE_DIMENSION_BUFFER,
@@ -258,9 +259,10 @@ impl D3DResources {
             Flags: buffer.flags,
         };
 
-        let resource = self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_COPY_DEST)?;
+        let resource = 
+            self.create_resource(&Self::heap_properties(D3D12_HEAP_TYPE_DEFAULT), &desc, D3D12_RESOURCE_STATE_COPY_DEST)?;
         let intermediate_resource =
-            self.create_resource(&heap_props, &desc, D3D12_RESOURCE_STATE_GENERIC_READ)?; // flags none, upload heap
+            self.create_resource(&Self::heap_properties(D3D12_HEAP_TYPE_UPLOAD), &desc, D3D12_RESOURCE_STATE_GENERIC_READ)?;
 
         let data = D3D12_SUBRESOURCE_DATA {
             pData: buffer.data.as_ptr() as *const _ as *const c_void,
