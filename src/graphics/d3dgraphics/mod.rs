@@ -1,5 +1,7 @@
 mod d3dcommandqueue;
+mod d3dmesh;
 mod d3dpipelinestate;
+mod d3dresources;
 mod d3drootsignature;
 mod d3dshader;
 
@@ -12,13 +14,17 @@ use windows::{
     Win32::Graphics::Dxgi::Common::*, Win32::Graphics::Dxgi::*,
 };
 
-use self::d3dcommandqueue::D3DCommandQueue;
+use self::d3dcommandqueue::{create_command_resource, D3DCommandQueue};
+use self::d3dmesh::D3DMesh;
 use self::d3dpipelinestate::D3DPipelineState;
+use self::d3dresources::D3DResources;
 use self::d3drootsignature::D3DRootSignature;
 
 pub struct D3DGraphics {
     adapter: IDXGIAdapter4,
     device: ID3D12Device2,
+
+    resources: D3DResources,
 
     compute_command_queue: D3DCommandQueue,
     compute_command_list: ID3D12GraphicsCommandList,
@@ -53,25 +59,6 @@ fn create_device(adapter: &IDXGIAdapter4) -> Result<ID3D12Device2> {
     unsafe { D3D12CreateDevice(adapter, D3D_FEATURE_LEVEL_11_0, &mut device)? }
 
     Ok(device.unwrap())
-}
-
-fn create_command_resource(
-    device: &ID3D12Device2,
-    kind: D3D12_COMMAND_LIST_TYPE,
-) -> Result<(
-    ID3D12GraphicsCommandList,
-    ID3D12CommandAllocator,
-    D3DCommandQueue,
-)> {
-    let allocator = unsafe { device.CreateCommandAllocator(kind)? };
-
-    let list: ID3D12GraphicsCommandList =
-        unsafe { device.CreateCommandList(0, kind, &allocator, None)? };
-    unsafe { list.Close() }?;
-
-    let queue = D3DCommandQueue::new(device, kind, D3D12_COMMAND_QUEUE_PRIORITY_HIGH)?;
-
-    Ok((list, allocator, queue))
 }
 
 fn create_descriptor_heap(
@@ -123,14 +110,21 @@ impl D3DGraphics {
 
         let compute_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_COMPUTE)?;
 
+        let resources = D3DResources::new(device.clone());
+
         Ok(D3DGraphics {
             adapter,
             device,
+            resources,
             compute_command_list: compute_commands.0,
             compute_command_allocator: compute_commands.1,
             compute_command_queue: compute_commands.2,
             debug,
         })
+    }
+
+    fn load_mesh(&self, mesh: &crate::mesh::Mesh) -> D3DMesh {
+        D3DMesh::load(mesh, &self.resources)
     }
 }
 
@@ -425,7 +419,7 @@ pub struct D3DRenderer<'a> {
 impl<'a> Renderer for D3DRenderer<'a> {
     fn apply(&mut self, items: RenderQueueItems) {
         for instance in items.new_meshes {
-            // let d3d_mesh = self.graphics.load_mesh(instance.mesh);
+            let d3d_mesh = self.graphics.load_mesh(instance.mesh);
             // let d3d_material = self.graphics.load_material(instance.material);
 
             let ps = instance.material.shader;

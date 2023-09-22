@@ -3,33 +3,33 @@ use std::{
     ops::{Mul, Sub},
 };
 
-use glam::{Vec2, Vec3A};
+use glam::{Vec2, Vec3};
 
 pub struct Vertex {
-    position: Vec3A,
-    normal: Vec3A,
-    tex_coords: Vec2,
+    pub position: Vec3,
+    pub normal: Vec3,
+    pub tex_coords: Vec2,
 }
 
 impl Vertex {
     pub fn new(position: [f32; 3], normal: [f32; 3], tex_coords: [f32; 2]) -> Vertex {
         Vertex {
-            position: Vec3A::from_array(position),
-            normal: Vec3A::from_array(normal),
+            position: Vec3::from_array(position),
+            normal: Vec3::from_array(normal),
             tex_coords: Vec2::from_array(tex_coords),
         }
     }
 }
 
 pub struct Mesh {
-    verticies: Vec<Vertex>,
-    indicies: Vec<u16>,
+    pub verticies: Vec<Vertex>,
+    pub indicies: Vec<u16>,
 }
 
 impl Mesh {
     pub fn scale(&mut self, scale: [f32; 3]) {
         for vert in self.verticies.iter_mut() {
-            vert.position = vert.position.mul(Vec3A::from_array(scale));
+            vert.position = vert.position.mul(Vec3::from_array(scale));
         }
     }
 
@@ -40,7 +40,7 @@ impl Mesh {
     pub fn recalculate_normals(&mut self) {
         // reset all normals
         for vert in self.verticies.iter_mut() {
-            vert.normal = Vec3A::ZERO;
+            vert.normal = Vec3::ZERO;
         }
 
         for i in (0..self.indicies.len()).step_by(3)
@@ -146,7 +146,7 @@ impl Mesh {
                 let v = verts.len() as u16;
                 verts.push(Vertex {
                     position: (verts[a as usize].position + verts[b as usize].position) / 2.0,
-                    normal: Vec3A::ZERO,
+                    normal: Vec3::ZERO,
                     tex_coords: Vec2::ZERO,
                 });
                 v

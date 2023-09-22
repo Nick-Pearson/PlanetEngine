@@ -4,6 +4,25 @@ use windows::{
     core::*, Win32::Foundation::*, Win32::Graphics::Direct3D12::*, Win32::System::Threading::*,
 };
 
+pub fn create_command_resource(
+    device: &ID3D12Device2,
+    kind: D3D12_COMMAND_LIST_TYPE,
+) -> Result<(
+    ID3D12GraphicsCommandList,
+    ID3D12CommandAllocator,
+    D3DCommandQueue,
+)> {
+    let allocator = unsafe { device.CreateCommandAllocator(kind)? };
+
+    let list: ID3D12GraphicsCommandList =
+        unsafe { device.CreateCommandList(0, kind, &allocator, None)? };
+    unsafe { list.Close() }?;
+
+    let queue = D3DCommandQueue::new(device, kind, D3D12_COMMAND_QUEUE_PRIORITY_HIGH)?;
+
+    Ok((list, allocator, queue))
+}
+
 pub struct D3DCommandQueue {
     next_signal: Cell<u64>,
     last_completed: Cell<u64>,
