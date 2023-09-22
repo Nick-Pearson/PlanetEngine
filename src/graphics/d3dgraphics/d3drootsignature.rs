@@ -72,7 +72,7 @@ impl D3DRootSignature {
         num_descriptors: usize,
         shader_visibility: D3D12_SHADER_VISIBILITY,
     ) -> D3D12_ROOT_PARAMETER1 {
-        let ranges = vec![D3D12_DESCRIPTOR_RANGE1 {
+        let ranges = [D3D12_DESCRIPTOR_RANGE1 {
             RangeType: range_type,
             NumDescriptors: num_descriptors as u32,
             BaseShaderRegister: 0,
