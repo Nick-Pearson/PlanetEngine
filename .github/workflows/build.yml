@@ -14,7 +14,7 @@ jobs:
       - name: install toolchain
         run: rustup toolchain install ${{ matrix.toolchain }}
       - name: build
-        run: cargo build --target=${{ matrix.toolchain }}
+        run: cross build --target =${{ matrix.toolchain }}
       - name: clippy warnings
         run: cargo +${{ matrix.toolchain }} clippy -- -D warnings -A dead_code
 
