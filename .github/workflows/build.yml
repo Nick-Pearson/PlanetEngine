@@ -3,28 +3,20 @@ name: Build
 on: [push]
 
 jobs:
-  build_windows:
-    name: Windows
+  build:
+    name: Build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toolchain: [stable-i686-pc-windows-gnu]
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: i686-pc-windows-gnu
-          override: true
+      - name: install toolchain
+        run: rustup toolchain install ${{ matrix.toolchain }}
       - name: clippy warnings
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: clippy
-          args: -- -D warnings -A dead_code
+        run: cargo +${{ matrix.toolchain }} clippy -- -D warnings -A dead_code
       - name: build
-        uses: actions-rs/cargo@v1
-        with:
-          use-cross: true
-          command: build
-          args: --target i686-pc-windows-gnu
+        run: cargo build --target=${{ matrix.toolchain }}
 
   code_style:
     name: Code Style
