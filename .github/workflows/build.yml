@@ -22,7 +22,7 @@ jobs:
           command: build
           args: --target ${{ matrix.toolchain }}
       - name: clippy warnings
-        run: cross +stable clippy --tests --target ${{ matrix.toolchain }} -D warnings -A dead_code
+        run: cross +stable clippy --tests --target ${{ matrix.toolchain }} -- -D warnings -A dead_code
 
   code_style:
     name: Code Style
