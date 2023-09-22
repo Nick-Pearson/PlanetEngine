@@ -13,18 +13,19 @@ jobs:
           toolchain: stable
           target: i686-pc-windows-gnu
           override: true
-      - uses: actions-rs/cargo@v1
+      - name: clippy warnings
+        run: cargo clippy -- -D warnings -A dead_code
+      - name: build
+        uses: actions-rs/cargo@v1
         with:
           use-cross: true
           command: build
           args: --target i686-pc-windows-gnu
 
-  static_analysis:
-    name: Static Analysis
+  code_style:
+    name: Code Style
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: code style
+      - name: fmt
         run: cargo fmt --check
-      - name: clippy warnings
-        run: cargo clippy -- -D warnings -A dead_code
