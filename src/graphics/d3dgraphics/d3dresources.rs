@@ -274,7 +274,7 @@ impl D3DResources {
             RowPitch: buffer_size as isize,
             SlicePitch: buffer.element_size as isize,
         };
-        self.update_subresources(&resource, &intermediate_resource, 0, 0, 1, &data)?;
+        // self.update_subresources(&resource, &intermediate_resource, 0, 0, 1, &data)?;
 
         Ok(D3DBuffer {
             resource,

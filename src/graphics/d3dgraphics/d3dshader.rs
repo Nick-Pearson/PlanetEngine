@@ -158,32 +158,27 @@ fn get_bytecode(blob: &ID3DBlob) -> D3D12_SHADER_BYTECODE {
 
 pub struct D3DPixelShader {
     blob: ID3DBlob,
-    bytecode: D3D12_SHADER_BYTECODE,
 }
 
 impl<'a> D3DPixelShader {
     pub fn compile<S: Into<String>>(filepath: S) -> std::result::Result<D3DPixelShader, String> {
         let blob = compile_shader_blob(&filepath.into(), s!("ps_5_1"), &HashMap::new())?;
-        let bytecode = get_bytecode(&blob);
-        Ok(D3DPixelShader { blob, bytecode })
+        Ok(D3DPixelShader { blob })
     }
 
-    pub(crate) fn get_bytecode(&'a self) -> &'a D3D12_SHADER_BYTECODE {
-        &self.bytecode
+    pub(crate) fn get_bytecode(&'a self) -> D3D12_SHADER_BYTECODE {
+        get_bytecode(&self.blob)
     }
 }
 
 pub struct D3DVertexShader {
     blob: ID3DBlob,
-    bytecode: D3D12_SHADER_BYTECODE,
     ied: [D3D12_INPUT_ELEMENT_DESC; 3],
-    input_layout: D3D12_INPUT_LAYOUT_DESC,
 }
 
 impl<'a> D3DVertexShader {
     pub fn compile<S: Into<String>>(filepath: S) -> std::result::Result<D3DVertexShader, String> {
         let blob = compile_shader_blob(&filepath.into(), s!("vs_5_1"), &HashMap::new())?;
-        let bytecode = get_bytecode(&blob);
         let ied = [
             D3D12_INPUT_ELEMENT_DESC {
                 SemanticName: s!("POSITION"),
@@ -213,24 +208,21 @@ impl<'a> D3DVertexShader {
                 InstanceDataStepRate: 0,
             },
         ];
-        let input_layout = D3D12_INPUT_LAYOUT_DESC {
-            pInputElementDescs: ied.as_ptr(),
-            NumElements: ied.len() as u32,
-        };
         Ok(D3DVertexShader {
             blob,
-            bytecode,
             ied,
-            input_layout,
         })
     }
 
-    pub(crate) fn get_bytecode(&'a self) -> &'a D3D12_SHADER_BYTECODE {
-        &self.bytecode
+    pub(crate) fn get_bytecode(&'a self) -> D3D12_SHADER_BYTECODE {
+        get_bytecode(&self.blob)
     }
 
-    pub(crate) fn get_input_layout(&'a self) -> &'a D3D12_INPUT_LAYOUT_DESC {
-        &self.input_layout
+    pub(crate) fn get_input_layout(&'a self) -> D3D12_INPUT_LAYOUT_DESC {
+        D3D12_INPUT_LAYOUT_DESC {
+            pInputElementDescs: self.ied.as_ptr(),
+            NumElements: self.ied.len() as u32,
+        }
     }
 }
 

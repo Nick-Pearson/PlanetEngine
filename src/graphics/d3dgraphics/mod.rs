@@ -407,6 +407,12 @@ impl WindowRenderTarget {
     }
 }
 
+struct Renderable {
+    mesh: D3DMesh,
+    root_signature: D3DRootSignature,
+    pipeline_state: D3DPipelineState,
+}
+
 pub struct D3DRenderer<'a> {
     graphics: &'a D3DGraphics,
 
@@ -414,12 +420,14 @@ pub struct D3DRenderer<'a> {
     draw_command_allocator: ID3D12CommandAllocator,
 
     render_target: WindowRenderTarget,
+
+    renderables: Vec<Renderable>,
 }
 
 impl<'a> Renderer for D3DRenderer<'a> {
     fn apply(&mut self, items: RenderQueueItems) {
         for instance in items.new_meshes {
-            let _d3d_mesh = self.graphics.load_mesh(instance.mesh);
+            let mesh = self.graphics.load_mesh(instance.mesh);
             // let d3d_material = self.graphics.load_material(instance.material);
 
             let ps = instance.material.shader;
@@ -428,7 +436,11 @@ impl<'a> Renderer for D3DRenderer<'a> {
                 D3DPipelineState::compile_for_mesh(&self.graphics.device, ps, &root_signature)
                     .unwrap();
 
-            dbg!(pipeline_state);
+            self.renderables.push(Renderable {
+                mesh,
+                root_signature,
+                pipeline_state,
+            });
         }
     }
 
@@ -472,6 +484,7 @@ impl<'a> CreateRenderer<'a> for D3DGraphics {
             draw_command_list: draw_commands.0,
             draw_command_allocator: draw_commands.1,
             render_target,
+            renderables: Vec::new(),
         })
     }
 }

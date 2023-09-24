@@ -14,17 +14,16 @@ pub struct D3DPipelineState {
 
 macro_rules! subobj {
     ($name:ident, $kind: expr, $typ: ty) => {
-        #[allow(dead_code)]
-        #[repr(C)]
+        #[repr(C, align(8))]
         struct $name {
-            kind: u64,
+            kind: i32,
             payload: $typ,
         }
 
         impl From<$typ> for $name {
             fn from(value: $typ) -> Self {
                 return Self {
-                    kind: $kind.0 as u64,
+                    kind: $kind.0 as i32,
                     payload: value,
                 };
             }
@@ -117,23 +116,24 @@ impl D3DPipelineState {
         };
 
         let signature = root_signature.get_signature();
-
-        let mut state = PipelineStateStream {
-            root_signature: signature.into(),
-            input_layout: (*vertex_shader.get_input_layout()).into(),
-            primitive_topology_type: D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE.into(),
-            rasertizer: rasterizer.into(),
-            vs: (*vertex_shader.get_bytecode()).into(),
-            ps: (*pixel_shader.get_bytecode()).into(),
-            depth_stencil: depth_stencil.into(),
-            dsv_format: DXGI_FORMAT_D32_FLOAT.into(),
-            rtv_formats: rtv_formats.into(),
-        };
-        let desc = D3D12_PIPELINE_STATE_STREAM_DESC {
-            SizeInBytes: std::mem::size_of::<PipelineStateStream>(),
-            pPipelineStateSubobjectStream: &mut state as *mut _ as *mut c_void,
-        };
-        unsafe { device.CreatePipelineState(&desc) }
+        unsafe {
+            let mut state = PipelineStateStream {
+                root_signature: signature.into(),
+                input_layout: vertex_shader.get_input_layout().into(),
+                primitive_topology_type: D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE.into(),
+                rasertizer: rasterizer.into(),
+                vs: vertex_shader.get_bytecode().into(),
+                ps: pixel_shader.get_bytecode().into(),
+                depth_stencil: depth_stencil.into(),
+                dsv_format: DXGI_FORMAT_D32_FLOAT.into(),
+                rtv_formats: rtv_formats.into(),
+            };
+            let desc = D3D12_PIPELINE_STATE_STREAM_DESC {
+                SizeInBytes: std::mem::size_of::<PipelineStateStream>(),
+                pPipelineStateSubobjectStream: &mut state as *mut _ as *mut c_void,
+            };
+            device.CreatePipelineState(&desc)
+        }
     }
 
     pub fn compile_for_mesh(
@@ -154,18 +154,13 @@ impl D3DPipelineState {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::mem::size_of;
+    use std::mem::{size_of, align_of};
 
     #[test]
     fn subobjects_have_correct_alignment() {
-        let item = PipelineStateRasterizer::from(D3D12_RASTERIZER_DESC::default());
-        let addr1 = &item.kind as *const _ as u64;
-        let addr2 = &item.payload as *const _ as u64;
-        assert_eq!(size_of::<*mut c_void>() as u64, addr2 - addr1);
-
         assert_eq!(
-            0,
-            size_of::<PipelineStateRasterizer>() % size_of::<*mut c_void>()
+            size_of::<*mut c_void>(),
+            align_of::<PipelineStateRasterizer>()
         );
     }
 }
