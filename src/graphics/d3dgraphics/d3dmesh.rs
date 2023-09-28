@@ -51,8 +51,7 @@ impl VertexLayout for PosNormUVVertexLayout {
 }
 
 pub struct D3DMesh {
-    pub loaded: bool,
-    first_bind: bool,
+    loaded: bool,
 
     vertex_buffer: D3DBuffer,
     vertex_buffer_view: D3D12_VERTEX_BUFFER_VIEW,
@@ -97,7 +96,6 @@ impl D3DMesh {
 
         Ok(D3DMesh {
             loaded: false,
-            first_bind: false,
 
             vertex_buffer,
             vertex_buffer_view,
@@ -108,18 +106,16 @@ impl D3DMesh {
         })
     }
 
-    pub fn draw(&mut self, command_list: ID3D12GraphicsCommandList) {
-        if self.first_bind {
-            self.first_bind = false;
+    pub fn on_loaded(&mut self, command_list: &ID3D12GraphicsCommandList) {
+        self.vertex_buffer.transition_to(
+            &command_list,
+            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+        );
+        self.triangle_buffer
+            .transition_to(&command_list, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    }
 
-            self.vertex_buffer.transition_to(
-                &command_list,
-                D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
-            );
-            self.triangle_buffer
-                .transition_to(&command_list, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-        }
-
+    pub fn draw(&self, command_list: &ID3D12GraphicsCommandList) {
         unsafe {
             command_list.IASetVertexBuffers(0, Some(&[self.vertex_buffer_view]));
             command_list.IASetIndexBuffer(Some(&self.triangle_buffer_view));

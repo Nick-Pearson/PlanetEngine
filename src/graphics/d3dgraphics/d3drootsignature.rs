@@ -1,29 +1,49 @@
 use crate::material::PixelShader;
-use glam::{Mat4, Vec3A};
+use glam::{Mat4, Vec3, Vec3A};
 use std::mem::size_of;
 
 use windows::Win32::Graphics::{Direct3D::ID3DBlob, Direct3D12::*};
 
 #[repr(C)]
 pub struct D3DSlowVSConstants {
-    world: Mat4,
-    view: Mat4,
+    pub world: Mat4,
+    pub view: Mat4,
 }
 
 impl D3DSlowVSConstants {
     pub const SIZE_32_BIT: u32 = (size_of::<Self>() / size_of::<u32>()) as u32;
 }
 
+impl Default for D3DSlowVSConstants {
+    fn default() -> Self {
+        Self {
+            world: Mat4::IDENTITY,
+            view: Mat4::IDENTITY,
+        }
+    }
+}
+
 #[repr(C)]
 pub struct D3DFastConstants {
-    model: Mat4,
-    sun_dir: Vec3A,
-    sun_sky_strength: f32,
-    sun_col: Vec3A,
+    pub model: Mat4,
+    pub sun_dir: Vec3,
+    pub sun_sky_strength: f32,
+    pub sun_col: Vec3,
 }
 
 impl D3DFastConstants {
     pub const SIZE_32_BIT: u32 = (size_of::<Self>() / size_of::<u32>()) as u32;
+}
+
+impl Default for D3DFastConstants {
+    fn default() -> Self {
+        Self {
+            model: Mat4::IDENTITY,
+            sun_dir: Vec3::NEG_Z,
+            sun_sky_strength: 1.0,
+            sun_col: Vec3::ONE,
+        }
+    }
 }
 
 pub struct D3DRootSignature {
@@ -187,5 +207,9 @@ impl D3DRootSignature {
 
     pub fn get_signature(&self) -> ID3D12RootSignature {
         self.root_signature.clone()
+    }
+
+    pub fn bind(&self, command_list: &ID3D12GraphicsCommandList) {
+        unsafe { command_list.SetGraphicsRootSignature(&self.root_signature) };
     }
 }

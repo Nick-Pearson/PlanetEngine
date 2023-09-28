@@ -1,5 +1,6 @@
 use std::alloc::{alloc, dealloc, handle_alloc_error, Layout};
 use std::ffi::c_void;
+use std::future::Future;
 use std::mem::{size_of, ManuallyDrop};
 use std::ptr::NonNull;
 
@@ -61,12 +62,19 @@ pub struct D3DResources {
 impl D3DResources {
     pub fn new(device: ID3D12Device2) -> Result<D3DResources> {
         let copy_commands = create_command_resource(&device, D3D12_COMMAND_LIST_TYPE_COPY)?;
-        Ok(D3DResources {
+        let resources = D3DResources {
             device,
             command_list: copy_commands.0,
             command_allocator: copy_commands.1,
             command_queue: copy_commands.2,
-        })
+        };
+        resources.reset();
+        Ok(resources)
+    }
+
+    fn reset(&self) {
+        unsafe { self.command_allocator.Reset() }.unwrap();
+        unsafe { self.command_list.Reset(&self.command_allocator, None) }.unwrap();
     }
 
     fn create_resource(
@@ -281,5 +289,12 @@ impl D3DResources {
             intermediate_resource,
             state: D3D12_RESOURCE_STATE_COPY_DEST,
         })
+    }
+
+    pub fn execute_resource_loads(&self) {
+        let signal = self.command_queue.signal();
+        self.command_queue.execute_command_list(&self.command_list);
+        self.command_queue.wait_for_signal(signal);
+        self.reset();
     }
 }

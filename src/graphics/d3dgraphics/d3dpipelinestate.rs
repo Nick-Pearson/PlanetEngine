@@ -149,12 +149,16 @@ impl D3DPipelineState {
                 .unwrap();
         Ok(D3DPipelineState { pipeline_state })
     }
+
+    pub fn bind(&self, command_list: &ID3D12GraphicsCommandList) {
+        unsafe { command_list.SetPipelineState(&self.pipeline_state) }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::mem::{size_of, align_of};
+    use std::mem::{align_of, size_of};
 
     #[test]
     fn subobjects_have_correct_alignment() {

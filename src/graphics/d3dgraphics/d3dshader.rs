@@ -208,10 +208,7 @@ impl<'a> D3DVertexShader {
                 InstanceDataStepRate: 0,
             },
         ];
-        Ok(D3DVertexShader {
-            blob,
-            ied,
-        })
+        Ok(D3DVertexShader { blob, ied })
     }
 
     pub(crate) fn get_bytecode(&'a self) -> D3D12_SHADER_BYTECODE {

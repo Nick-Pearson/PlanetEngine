@@ -7,7 +7,11 @@ mod d3dshader;
 
 use crate::graphics::*;
 use arrayvec::ArrayVec;
+use glam::Mat4;
+use std::ffi::c_void;
+use std::future::Future;
 use std::mem::ManuallyDrop;
+use std::thread;
 
 use windows::{
     core::*, Win32::Foundation::*, Win32::Graphics::Direct3D::*, Win32::Graphics::Direct3D12::*,
@@ -18,7 +22,7 @@ use self::d3dcommandqueue::{create_command_resource, D3DCommandQueue};
 use self::d3dmesh::D3DMesh;
 use self::d3dpipelinestate::D3DPipelineState;
 use self::d3dresources::D3DResources;
-use self::d3drootsignature::D3DRootSignature;
+use self::d3drootsignature::{D3DFastConstants, D3DRootSignature, D3DSlowVSConstants};
 
 pub struct D3DGraphics {
     adapter: IDXGIAdapter4,
@@ -121,10 +125,6 @@ impl D3DGraphics {
             compute_command_queue: compute_commands.2,
             debug,
         })
-    }
-
-    fn load_mesh(&self, mesh: &crate::mesh::Mesh) -> D3DMesh {
-        D3DMesh::load(mesh, &self.resources).unwrap()
     }
 }
 
@@ -243,8 +243,15 @@ impl WindowRenderTarget {
             TopLeftX: 0.0,
             TopLeftY: 0.0,
         };
+        let scissor_rect = RECT {
+            left: 0,
+            top: 0,
+            right: i32::MAX,
+            bottom: i32::MAX,
+        };
         unsafe {
             command_list.RSSetViewports(&[viewport]);
+            command_list.RSSetScissorRects(&[scissor_rect]);
         }
     }
 
@@ -421,13 +428,18 @@ pub struct D3DRenderer<'a> {
 
     render_target: WindowRenderTarget,
 
+    slow_constants: D3DSlowVSConstants,
+    fast_constants: D3DFastConstants,
+
     renderables: Vec<Renderable>,
 }
 
 impl<'a> Renderer for D3DRenderer<'a> {
     fn apply(&mut self, items: RenderQueueItems) {
+        let mut new_renderables = Vec::new();
+
         for instance in items.new_meshes {
-            let mesh = self.graphics.load_mesh(instance.mesh);
+            let mesh = D3DMesh::load(instance.mesh, &self.graphics.resources).unwrap();
             // let d3d_material = self.graphics.load_material(instance.material);
 
             let ps = instance.material.shader;
@@ -435,17 +447,25 @@ impl<'a> Renderer for D3DRenderer<'a> {
             let pipeline_state =
                 D3DPipelineState::compile_for_mesh(&self.graphics.device, ps, &root_signature)
                     .unwrap();
-
-            self.renderables.push(Renderable {
+            new_renderables.push(Renderable {
                 mesh,
                 root_signature,
                 pipeline_state,
             });
         }
+        self.graphics.resources.execute_resource_loads();
+
+        for mut r in new_renderables {
+            r.mesh.on_loaded(&self.draw_command_list);
+            self.renderables.push(r);
+        }
     }
 
     fn render_frame(&mut self) {
         self.pre_render();
+        for renderable in self.renderables.iter() {
+            self.draw(renderable);
+        }
         self.present();
     }
 }
@@ -460,6 +480,57 @@ impl<'a> D3DRenderer<'a> {
         .unwrap();
 
         self.render_target.pre_render(&self.draw_command_list);
+
+        // setup projection matrix
+        const NEAR_CLIP: f32 = 0.5;
+        const FAR_CLIP: f32 = 5000.0;
+
+        let aspect_ratio = self.render_target.height as f32 / self.render_target.width as f32;
+        self.slow_constants.view =
+            Mat4::perspective_lh(1.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
+        self.slow_constants.world = self.calculate_world_matrix();
+
+        // srv_heap_->Bind(command_list_);
+    }
+
+    fn draw(&self, renderable: &Renderable) {
+        renderable.root_signature.bind(&self.draw_command_list);
+
+        unsafe {
+            let ptr = &self.slow_constants as *const _ as *const c_void;
+            self.draw_command_list.SetGraphicsRoot32BitConstants(
+                0,
+                D3DSlowVSConstants::SIZE_32_BIT,
+                ptr,
+                0,
+            );
+        }
+
+        // DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(state.model_.GetMatrix());
+        // fast_constants_.model_ = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model_.GetMatrix()));
+        unsafe {
+            let ptr = &self.fast_constants as *const _ as *const c_void;
+            self.draw_command_list.SetGraphicsRoot32BitConstants(
+                1,
+                D3DFastConstants::SIZE_32_BIT,
+                ptr,
+                0,
+            );
+        }
+
+        unsafe {
+            self.draw_command_list
+                .IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST)
+        };
+
+        // state.material_->Bind(command_list_);
+        renderable.pipeline_state.bind(&self.draw_command_list);
+        renderable.mesh.draw(&self.draw_command_list);
+    }
+
+    fn calculate_world_matrix(&mut self) -> Mat4 {
+        let camera_transform = Mat4::IDENTITY;
+        camera_transform.inverse().transpose()
     }
 
     fn present(&mut self) {
@@ -485,6 +556,8 @@ impl<'a> CreateRenderer<'a> for D3DGraphics {
             draw_command_allocator: draw_commands.1,
             render_target,
             renderables: Vec::new(),
+            slow_constants: Default::default(),
+            fast_constants: Default::default(),
         })
     }
 }
