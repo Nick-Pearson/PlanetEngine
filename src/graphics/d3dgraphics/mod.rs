@@ -12,7 +12,6 @@ use std::ffi::c_void;
 
 use std::mem::ManuallyDrop;
 
-
 use windows::{
     core::*, Win32::Foundation::*, Win32::Graphics::Direct3D::*, Win32::Graphics::Direct3D12::*,
     Win32::Graphics::Dxgi::Common::*, Win32::Graphics::Dxgi::*,
