@@ -1,5 +1,5 @@
 use crate::material::PixelShader;
-use glam::{Mat4, Vec3, Vec3A};
+use glam::{Mat4, Vec3};
 use std::mem::size_of;
 
 use windows::Win32::Graphics::{Direct3D::ID3DBlob, Direct3D12::*};

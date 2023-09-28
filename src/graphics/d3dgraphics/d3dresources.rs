@@ -1,6 +1,6 @@
 use std::alloc::{alloc, dealloc, handle_alloc_error, Layout};
 use std::ffi::c_void;
-use std::future::Future;
+
 use std::mem::{size_of, ManuallyDrop};
 use std::ptr::NonNull;
 
@@ -277,7 +277,7 @@ impl D3DResources {
             D3D12_RESOURCE_STATE_GENERIC_READ,
         )?;
 
-        let data = D3D12_SUBRESOURCE_DATA {
+        let _data = D3D12_SUBRESOURCE_DATA {
             pData: buffer.data.as_ptr() as *const _ as *const c_void,
             RowPitch: buffer_size as isize,
             SlicePitch: buffer.element_size as isize,

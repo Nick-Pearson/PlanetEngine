@@ -108,11 +108,11 @@ impl D3DMesh {
 
     pub fn on_loaded(&mut self, command_list: &ID3D12GraphicsCommandList) {
         self.vertex_buffer.transition_to(
-            &command_list,
+            command_list,
             D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
         );
         self.triangle_buffer
-            .transition_to(&command_list, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+            .transition_to(command_list, D3D12_RESOURCE_STATE_INDEX_BUFFER);
     }
 
     pub fn draw(&self, command_list: &ID3D12GraphicsCommandList) {

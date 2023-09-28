@@ -9,9 +9,9 @@ use crate::graphics::*;
 use arrayvec::ArrayVec;
 use glam::Mat4;
 use std::ffi::c_void;
-use std::future::Future;
+
 use std::mem::ManuallyDrop;
-use std::thread;
+
 
 use windows::{
     core::*, Win32::Foundation::*, Win32::Graphics::Direct3D::*, Win32::Graphics::Direct3D12::*,
