@@ -17,6 +17,8 @@ version = "0.48"
 features = [
     "implement",
     "Win32_Foundation",
+    "Win32_UI_Shell",
+    "Win32_Storage_FileSystem",
     "Win32_Graphics_Direct3D_Fxc",
     "Win32_Graphics_Direct3D12",
     "Win32_Graphics_Dxgi_Common",
