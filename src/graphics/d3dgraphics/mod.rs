@@ -8,13 +8,13 @@ mod d3dshader;
 use crate::graphics::*;
 use arrayvec::ArrayVec;
 use glam::Mat4;
-use windows::Win32::System::LibraryLoader::{GetModuleHandleW, LoadLibraryW};
 use std::cmp::Ordering;
 use std::ffi::c_void;
 use windows::Win32::Storage::FileSystem::{
-    FindClose, FindFirstFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAGS_AND_ATTRIBUTES,
-    WIN32_FIND_DATAW, FindNextFileW,
+    FindClose, FindFirstFileW, FindNextFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAGS_AND_ATTRIBUTES,
+    WIN32_FIND_DATAW,
 };
+use windows::Win32::System::LibraryLoader::{GetModuleHandleW, LoadLibraryW};
 use windows::Win32::UI::Shell::{FOLDERID_ProgramFiles, SHGetKnownFolderPath, KF_FLAG_DEFAULT};
 
 use std::mem::ManuallyDrop;
@@ -110,7 +110,7 @@ fn create_swap_chain(queue: &D3DCommandQueue, hwnd: &HWND) -> Result<IDXGISwapCh
 
 fn wcscmp(a: &[u16], b: &[u16]) -> Ordering {
     for (ai, bi) in a.iter().zip(b.iter()) {
-        match ai.cmp(&bi) {
+        match ai.cmp(bi) {
             Ordering::Equal => continue,
             ord => return ord,
         }
@@ -135,27 +135,27 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
     let mut newest_version_found: Option<[u16; 260]> = None;
     let h_find = FindFirstFileW(ptr, &mut find_data);
 
-    h_find.map(|handle| {
-        loop {
-            if FILE_ATTRIBUTE_DIRECTORY
-                .contains(FILE_FLAGS_AND_ATTRIBUTES(find_data.dwFileAttributes))
-                && find_data.cFileName[0] != '.' as u16
-            {
-                if newest_version_found.is_none()
+    h_find
+        .map(|handle| {
+            loop {
+                if FILE_ATTRIBUTE_DIRECTORY
+                    .contains(FILE_FLAGS_AND_ATTRIBUTES(find_data.dwFileAttributes))
+                    && find_data.cFileName[0] != '.' as u16
+                    && newest_version_found.is_none()
                     && wcscmp(&newest_version_found.unwrap(), &find_data.cFileName)
                         == Ordering::Less
                 {
-                    newest_version_found = Some(find_data.cFileName.clone());
+                    newest_version_found = Some(find_data.cFileName);
+                }
+
+                if FindNextFileW(handle, &mut find_data) == BOOL(0) {
+                    break;
                 }
             }
-
-            if FindNextFileW(handle, &mut find_data) == BOOL(0) {
-                break;
-            }
-        }
-        FindClose(handle);
-        newest_version_found.map(|b| String::from_utf16_lossy(&b))
-    }).unwrap_or(None)
+            FindClose(handle);
+            newest_version_found.map(|b| String::from_utf16_lossy(&b))
+        })
+        .unwrap_or(None)
 }
 
 impl D3DGraphics {
@@ -166,15 +166,14 @@ impl D3DGraphics {
         unsafe { debug.EnableDebugLayer() };
         unsafe {
             let pix_module = GetModuleHandleW(w!("WinPixGpuCapturer.dll"));
-            if pix_module.is_err()
-            {
+            if pix_module.is_err() {
                 match get_latest_win_pix_gpu_capturer_path() {
                     Some(path) => {
                         let bytes: Vec<u16> = path.encode_utf16().collect();
                         let ptr: PCWSTR = PCWSTR::from_raw(bytes.as_ptr());
-                        LoadLibraryW(ptr);
-                    },
-                    None => println!("Failed to find PIX installation")
+                        LoadLibraryW(ptr).unwrap();
+                    }
+                    None => println!("Failed to find PIX installation"),
                 }
             }
         }
