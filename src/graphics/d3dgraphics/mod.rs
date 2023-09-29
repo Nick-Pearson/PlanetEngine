@@ -124,9 +124,8 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
         return None;
     }
 
-    let pix_search_path = String::from("\\\\?\\")
-        + &program_files_path.unwrap().to_string().unwrap()
-        + &String::from("\\Microsoft PIX\\*");
+    let pix_path = format!("{}\\Microsoft PIX\\", &program_files_path.unwrap().to_string().unwrap());
+    let pix_search_path = format!("\\\\?\\{}*\0", pix_path);
     let bytes: Vec<u16> = pix_search_path.encode_utf16().collect();
     let ptr: PCWSTR = PCWSTR::from_raw(bytes.as_ptr());
 
@@ -141,11 +140,13 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
                 if FILE_ATTRIBUTE_DIRECTORY
                     .contains(FILE_FLAGS_AND_ATTRIBUTES(find_data.dwFileAttributes))
                     && find_data.cFileName[0] != '.' as u16
-                    && newest_version_found.is_none()
-                    && wcscmp(&newest_version_found.unwrap(), &find_data.cFileName)
-                        == Ordering::Less
                 {
-                    newest_version_found = Some(find_data.cFileName);
+                    if newest_version_found.is_none()
+                        || wcscmp(&newest_version_found.unwrap(), &find_data.cFileName)
+                            == Ordering::Less
+                    {
+                        newest_version_found = Some(find_data.cFileName);
+                    }
                 }
 
                 if FindNextFileW(handle, &mut find_data) == BOOL(0) {
@@ -153,9 +154,13 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
                 }
             }
             FindClose(handle);
-            newest_version_found.map(|b| String::from_utf16_lossy(&b))
+            newest_version_found.map(|b| {
+                let end = b.iter().position(|&c| c == 0).unwrap_or(b.len());
+                String::from_utf16_lossy(&b[0..end])
+            })
         })
         .unwrap_or(None)
+        .map(|path| pix_path.clone() + &path + "\\WinPixGpuCapturer.dll")
 }
 
 impl D3DGraphics {
@@ -169,7 +174,9 @@ impl D3DGraphics {
             if pix_module.is_err() {
                 match get_latest_win_pix_gpu_capturer_path() {
                     Some(path) => {
-                        let bytes: Vec<u16> = path.encode_utf16().collect();
+                        println!("Loading a PIX installation at {}", path);
+                        let mut bytes: Vec<u16> = path.encode_utf16().collect();
+                        bytes.push(0);
                         let ptr: PCWSTR = PCWSTR::from_raw(bytes.as_ptr());
                         LoadLibraryW(ptr).unwrap();
                     }
