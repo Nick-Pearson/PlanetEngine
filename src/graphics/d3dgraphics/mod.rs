@@ -124,7 +124,10 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
         return None;
     }
 
-    let pix_path = format!("{}\\Microsoft PIX\\", &program_files_path.unwrap().to_string().unwrap());
+    let pix_path = format!(
+        "{}\\Microsoft PIX\\",
+        &program_files_path.unwrap().to_string().unwrap()
+    );
     let pix_search_path = format!("\\\\?\\{}*\0", pix_path);
     let bytes: Vec<u16> = pix_search_path.encode_utf16().collect();
     let ptr: PCWSTR = PCWSTR::from_raw(bytes.as_ptr());
@@ -140,13 +143,11 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
                 if FILE_ATTRIBUTE_DIRECTORY
                     .contains(FILE_FLAGS_AND_ATTRIBUTES(find_data.dwFileAttributes))
                     && find_data.cFileName[0] != '.' as u16
-                {
-                    if newest_version_found.is_none()
+                    && (newest_version_found.is_none()
                         || wcscmp(&newest_version_found.unwrap(), &find_data.cFileName)
-                            == Ordering::Less
-                    {
-                        newest_version_found = Some(find_data.cFileName);
-                    }
+                            == Ordering::Less)
+                {
+                    newest_version_found = Some(find_data.cFileName);
                 }
 
                 if FindNextFileW(handle, &mut find_data) == BOOL(0) {
