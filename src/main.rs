@@ -66,12 +66,12 @@ impl Window {
 
 struct Engine<'a> {
     window: Window,
-    renderer: &'a dyn Renderer,
+    renderer: &'a mut dyn Renderer,
     running: bool,
 }
 
 impl<'a> Engine<'a> {
-    pub fn new(window: Window, renderer: &'a dyn Renderer) -> Engine {
+    pub fn new(window: Window, renderer: &'a mut dyn Renderer) -> Engine {
         Engine {
             window,
             renderer,
@@ -82,6 +82,7 @@ impl<'a> Engine<'a> {
     pub fn run(&mut self) {
         while self.running {
             self.pump_windows_messages();
+            self.renderer.render_frame();
         }
     }
 
@@ -151,5 +152,5 @@ fn main() {
 
     setup_scene(&mut renderer);
 
-    Engine::new(window, &renderer).run();
+    Engine::new(window, &mut renderer).run();
 }
