@@ -535,7 +535,10 @@ impl<'a> Renderer for D3DRenderer<'a> {
 
     fn render_frame(&mut self) {
         self.pre_render();
-        for mut r in self.pending_renderables.drain(0..self.pending_renderables.len()) {
+        for mut r in self
+            .pending_renderables
+            .drain(0..self.pending_renderables.len())
+        {
             r.mesh.on_loaded(&self.draw_command_list);
             self.renderables.push(r);
         }
