@@ -131,7 +131,7 @@ impl D3DResources {
                 base_offset,
                 Some(playouts),
                 Some(pnumrows),
-                None,
+                Some(prowsizesinbytes),
                 Some(&mut required_size),
             );
 
@@ -249,11 +249,10 @@ impl D3DResources {
     }
 
     pub fn initialise_buffer(&self, buffer: &BufferDesc) -> Result<D3DBuffer> {
-        let buffer_size = buffer.data.len() * buffer.element_size;
         let desc = D3D12_RESOURCE_DESC {
             Dimension: D3D12_RESOURCE_DIMENSION_BUFFER,
             Alignment: 0,
-            Width: buffer_size as u64,
+            Width: buffer.data.len() as u64,
             Height: 1,
             DepthOrArraySize: 1,
             MipLevels: 1,
@@ -277,12 +276,12 @@ impl D3DResources {
             D3D12_RESOURCE_STATE_GENERIC_READ,
         )?;
 
-        let _data = D3D12_SUBRESOURCE_DATA {
+        let data = D3D12_SUBRESOURCE_DATA {
             pData: buffer.data.as_ptr() as *const _ as *const c_void,
-            RowPitch: buffer_size as isize,
+            RowPitch: buffer.data.len() as isize,
             SlicePitch: buffer.element_size as isize,
         };
-        // self.update_subresources(&resource, &intermediate_resource, 0, 0, 1, &data)?;
+        self.update_subresources(&resource, &intermediate_resource, 0, 0, 1, &data)?;
 
         Ok(D3DBuffer {
             resource,
@@ -292,8 +291,8 @@ impl D3DResources {
     }
 
     pub fn execute_resource_loads(&self) {
-        let signal = self.command_queue.signal();
         self.command_queue.execute_command_list(&self.command_list);
+        let signal = self.command_queue.signal();
         self.command_queue.wait_for_signal(signal);
         self.reset();
     }

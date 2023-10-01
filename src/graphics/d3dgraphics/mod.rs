@@ -9,6 +9,7 @@ use crate::graphics::*;
 use arrayvec::ArrayVec;
 use glam::Mat4;
 use std::cmp::Ordering;
+use std::collections::VecDeque;
 use std::ffi::c_void;
 use windows::Win32::Storage::FileSystem::{
     FindClose, FindFirstFileW, FindNextFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAGS_AND_ATTRIBUTES,
@@ -166,10 +167,6 @@ unsafe fn get_latest_win_pix_gpu_capturer_path() -> Option<String> {
 
 impl D3DGraphics {
     pub fn new() -> Result<D3DGraphics> {
-        let mut debug_opt: Option<ID3D12Debug> = None;
-        unsafe { D3D12GetDebugInterface(&mut debug_opt) }.unwrap();
-        let debug: ID3D12Debug = debug_opt.unwrap();
-        unsafe { debug.EnableDebugLayer() };
         unsafe {
             let pix_module = GetModuleHandleW(w!("WinPixGpuCapturer.dll"));
             if pix_module.is_err() {
@@ -185,6 +182,10 @@ impl D3DGraphics {
                 }
             }
         }
+        let mut debug_opt: Option<ID3D12Debug> = None;
+        unsafe { D3D12GetDebugInterface(&mut debug_opt) }.unwrap();
+        let debug: ID3D12Debug = debug_opt.unwrap();
+        unsafe { debug.EnableDebugLayer() };
 
         let adapter = create_adapter()?;
         let device = create_device(&adapter)?;
@@ -508,13 +509,12 @@ pub struct D3DRenderer<'a> {
     slow_constants: D3DSlowVSConstants,
     fast_constants: D3DFastConstants,
 
+    pending_renderables: VecDeque<Renderable>,
     renderables: Vec<Renderable>,
 }
 
 impl<'a> Renderer for D3DRenderer<'a> {
     fn apply(&mut self, items: RenderQueueItems) {
-        let mut new_renderables = Vec::new();
-
         for instance in items.new_meshes {
             let mesh = D3DMesh::load(instance.mesh, &self.graphics.resources).unwrap();
             // let d3d_material = self.graphics.load_material(instance.material);
@@ -524,22 +524,21 @@ impl<'a> Renderer for D3DRenderer<'a> {
             let pipeline_state =
                 D3DPipelineState::compile_for_mesh(&self.graphics.device, ps, &root_signature)
                     .unwrap();
-            new_renderables.push(Renderable {
+            self.pending_renderables.push_back(Renderable {
                 mesh,
                 root_signature,
                 pipeline_state,
             });
         }
         self.graphics.resources.execute_resource_loads();
-
-        for mut r in new_renderables {
-            r.mesh.on_loaded(&self.draw_command_list);
-            self.renderables.push(r);
-        }
     }
 
     fn render_frame(&mut self) {
         self.pre_render();
+        for mut r in self.pending_renderables.drain(0..self.pending_renderables.len()) {
+            r.mesh.on_loaded(&self.draw_command_list);
+            self.renderables.push(r);
+        }
         for renderable in self.renderables.iter() {
             self.draw(renderable);
         }
@@ -632,7 +631,8 @@ impl<'a> CreateRenderer<'a> for D3DGraphics {
             draw_command_list: draw_commands.0,
             draw_command_allocator: draw_commands.1,
             render_target,
-            renderables: Vec::new(),
+            pending_renderables: Default::default(),
+            renderables: Default::default(),
             slow_constants: Default::default(),
             fast_constants: Default::default(),
         })

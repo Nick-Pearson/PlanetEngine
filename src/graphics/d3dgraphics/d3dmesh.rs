@@ -77,7 +77,7 @@ impl D3DMesh {
         let vertex_buffer = resources.initialise_buffer(&vert_desc)?;
         let vertex_buffer_view = D3D12_VERTEX_BUFFER_VIEW {
             BufferLocation: vertex_buffer.get_gpu_virtual_address(),
-            SizeInBytes: (vert_desc.element_size * vert_desc.data.len()) as u32,
+            SizeInBytes: vert_desc.data.len() as u32,
             StrideInBytes: vert_desc.element_size as u32,
         };
 
@@ -90,7 +90,7 @@ impl D3DMesh {
         let triangle_buffer = resources.initialise_buffer(&tri_desc)?;
         let triangle_buffer_view = D3D12_INDEX_BUFFER_VIEW {
             BufferLocation: triangle_buffer.get_gpu_virtual_address(),
-            SizeInBytes: (tri_desc.element_size * tri_desc.data.len()) as u32,
+            SizeInBytes: tri_desc.data.len() as u32,
             Format: DXGI_FORMAT_R16_UINT,
         };
 
