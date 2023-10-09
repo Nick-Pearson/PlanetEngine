@@ -5,43 +5,43 @@ use std::mem::size_of;
 use windows::Win32::Graphics::{Direct3D::ID3DBlob, Direct3D12::*};
 
 #[repr(C)]
-pub struct D3DSlowVSConstants {
+pub struct WorldConstants {
     pub world: Mat4,
     pub view: Mat4,
-}
-
-impl D3DSlowVSConstants {
-    pub const SIZE_32_BIT: u32 = (size_of::<Self>() / size_of::<u32>()) as u32;
-}
-
-impl Default for D3DSlowVSConstants {
-    fn default() -> Self {
-        Self {
-            world: Mat4::IDENTITY,
-            view: Mat4::IDENTITY,
-        }
-    }
-}
-
-#[repr(C)]
-pub struct D3DFastConstants {
-    pub model: Mat4,
     pub sun_dir: Vec3,
     pub sun_sky_strength: f32,
     pub sun_col: Vec3,
 }
 
-impl D3DFastConstants {
+impl WorldConstants {
     pub const SIZE_32_BIT: u32 = (size_of::<Self>() / size_of::<u32>()) as u32;
 }
 
-impl Default for D3DFastConstants {
+impl Default for WorldConstants {
     fn default() -> Self {
         Self {
-            model: Mat4::IDENTITY,
+            world: Mat4::IDENTITY,
+            view: Mat4::IDENTITY,
             sun_dir: Vec3::NEG_Z,
             sun_sky_strength: 1.0,
             sun_col: Vec3::ONE,
+        }
+    }
+}
+
+#[repr(C)]
+pub struct MeshInstanceConstants {
+    pub model: Mat4,
+}
+
+impl MeshInstanceConstants {
+    pub const SIZE_32_BIT: u32 = (size_of::<Self>() / size_of::<u32>()) as u32;
+}
+
+impl Default for MeshInstanceConstants {
+    fn default() -> Self {
+        Self {
+            model: Mat4::IDENTITY,
         }
     }
 }
@@ -146,13 +146,13 @@ impl D3DRootSignature {
 
         let mut params: Vec<D3D12_ROOT_PARAMETER1> = Vec::new();
         params.push(Self::init_as_constants(
-            D3DSlowVSConstants::SIZE_32_BIT,
+            WorldConstants::SIZE_32_BIT,
             0,
             0,
-            D3D12_SHADER_VISIBILITY_VERTEX,
+            D3D12_SHADER_VISIBILITY_ALL,
         ));
         params.push(Self::init_as_constants(
-            D3DFastConstants::SIZE_32_BIT,
+            MeshInstanceConstants::SIZE_32_BIT,
             1,
             0,
             D3D12_SHADER_VISIBILITY_ALL,

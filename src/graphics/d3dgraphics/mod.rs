@@ -6,10 +6,12 @@ mod d3drootsignature;
 mod d3dshader;
 
 use crate::graphics::*;
+use crate::instance::{MatTransform, Transform};
 use arrayvec::ArrayVec;
-use glam::Mat4;
+use glam::{Mat4, Quat};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
+use std::f32::consts::PI;
 use std::ffi::c_void;
 use windows::Win32::Storage::FileSystem::{
     FindClose, FindFirstFileW, FindNextFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAGS_AND_ATTRIBUTES,
@@ -29,7 +31,7 @@ use self::d3dcommandqueue::{create_command_resource, D3DCommandQueue};
 use self::d3dmesh::D3DMesh;
 use self::d3dpipelinestate::D3DPipelineState;
 use self::d3dresources::D3DResources;
-use self::d3drootsignature::{D3DFastConstants, D3DRootSignature, D3DSlowVSConstants};
+use self::d3drootsignature::{MeshInstanceConstants, D3DRootSignature, WorldConstants};
 
 pub struct D3DGraphics {
     adapter: IDXGIAdapter4,
@@ -494,6 +496,7 @@ impl WindowRenderTarget {
 
 struct Renderable {
     mesh: D3DMesh,
+    constants: MeshInstanceConstants,
     root_signature: D3DRootSignature,
     pipeline_state: D3DPipelineState,
 }
@@ -506,8 +509,7 @@ pub struct D3DRenderer<'a> {
 
     render_target: WindowRenderTarget,
 
-    slow_constants: D3DSlowVSConstants,
-    fast_constants: D3DFastConstants,
+    world_constants: WorldConstants,
 
     pending_renderables: VecDeque<Renderable>,
     renderables: Vec<Renderable>,
@@ -519,6 +521,8 @@ impl<'a> Renderer for D3DRenderer<'a> {
             let mesh = D3DMesh::load(instance.mesh, &self.graphics.resources).unwrap();
             // let d3d_material = self.graphics.load_material(instance.material);
 
+            let model:Mat4 = instance.transform.into();
+
             let ps = instance.material.shader;
             let root_signature = D3DRootSignature::from_pixel_shader(ps, &self.graphics.device);
             let pipeline_state =
@@ -526,6 +530,9 @@ impl<'a> Renderer for D3DRenderer<'a> {
                     .unwrap();
             self.pending_renderables.push_back(Renderable {
                 mesh,
+                constants: MeshInstanceConstants {
+                    model: model.inverse().transpose()
+                },
                 root_signature,
                 pipeline_state,
             });
@@ -565,9 +572,9 @@ impl<'a> D3DRenderer<'a> {
         const FAR_CLIP: f32 = 5000.0;
 
         let aspect_ratio = self.render_target.height as f32 / self.render_target.width as f32;
-        self.slow_constants.view =
+        self.world_constants.view =
             Mat4::perspective_lh(1.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
-        self.slow_constants.world = self.calculate_world_matrix();
+        self.world_constants.world = self.calculate_world_matrix();
 
         // srv_heap_->Bind(command_list_);
     }
@@ -576,22 +583,20 @@ impl<'a> D3DRenderer<'a> {
         renderable.root_signature.bind(&self.draw_command_list);
 
         unsafe {
-            let ptr = &self.slow_constants as *const _ as *const c_void;
+            let ptr = &self.world_constants as *const _ as *const c_void;
             self.draw_command_list.SetGraphicsRoot32BitConstants(
                 0,
-                D3DSlowVSConstants::SIZE_32_BIT,
+                WorldConstants::SIZE_32_BIT,
                 ptr,
                 0,
             );
         }
 
-        // DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(state.model_.GetMatrix());
-        // fast_constants_.model_ = DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, state.model_.GetMatrix()));
         unsafe {
-            let ptr = &self.fast_constants as *const _ as *const c_void;
+            let ptr = &renderable.constants as *const _ as *const c_void;
             self.draw_command_list.SetGraphicsRoot32BitConstants(
                 1,
-                D3DFastConstants::SIZE_32_BIT,
+                MeshInstanceConstants::SIZE_32_BIT,
                 ptr,
                 0,
             );
@@ -608,8 +613,16 @@ impl<'a> D3DRenderer<'a> {
     }
 
     fn calculate_world_matrix(&mut self) -> Mat4 {
-        let camera_transform = Mat4::IDENTITY;
-        camera_transform.inverse().transpose()
+        let mut camera_transform = MatTransform::IDENTITY;
+        camera_transform.translate([0.0, 4.0, 0.0]);
+        camera_transform.rotate(Quat::from_euler(
+            glam::EulerRot::XYZ,
+            0.0,
+            PI,
+            0.0,
+        ));
+        let matrix:Mat4 = camera_transform.into();
+        matrix.inverse().transpose()
     }
 
     fn present(&mut self) {
@@ -636,8 +649,7 @@ impl<'a> CreateRenderer<'a> for D3DGraphics {
             render_target,
             pending_renderables: Default::default(),
             renderables: Default::default(),
-            slow_constants: Default::default(),
-            fast_constants: Default::default(),
+            world_constants: Default::default(),
         })
     }
 }

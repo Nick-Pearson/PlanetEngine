@@ -8,7 +8,7 @@ pub trait Transform {
     fn rotate<R: Into<Quat>>(&mut self, delta: R);
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq, Debug, Clone, Copy)]
 pub struct MatTransform {
     matrix: Mat4,
 }
@@ -26,6 +26,12 @@ impl MatTransform {
 
     pub fn get_position(&self) -> Vec3A {
         (self.matrix * Vec4::W).into()
+    }
+}
+
+impl Into<Mat4> for MatTransform {
+    fn into(self) -> Mat4 {
+        self.matrix
     }
 }
 

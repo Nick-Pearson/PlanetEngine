@@ -13,10 +13,3 @@ struct VS_In
     float3 normal : Normal;
     float2 texCoord : TexCoord;
 };
-
-struct SlowConstants
-{
-    matrix world;
-    matrix view;
-};
-ConstantBuffer<SlowConstants> slow : register(b0);
