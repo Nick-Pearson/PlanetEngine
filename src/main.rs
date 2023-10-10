@@ -17,7 +17,48 @@ use windows::{
 };
 
 use std::f32::consts::FRAC_PI_2;
+use std::ffi::c_void;
 use std::mem::transmute;
+
+trait WinProc {
+    fn wndproc(&self, window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> bool;
+}
+
+struct InputWinProc {}
+
+impl WinProc for InputWinProc {
+    fn wndproc(&self, _window: HWND, _message: u32, _wparam: WPARAM, _lparam: LPARAM) -> bool {
+        false
+    }
+}
+
+struct MultiplexWinProc {
+    handlers: Vec<Box<dyn WinProc>>,
+}
+
+impl MultiplexWinProc {
+    fn new() -> MultiplexWinProc {
+        MultiplexWinProc {
+            handlers: Vec::new(),
+        }
+    }
+
+    pub fn add_handler(&mut self, handler: Box<dyn WinProc>) {
+        self.handlers.push(handler);
+    }
+}
+
+impl WinProc for MultiplexWinProc {
+    fn wndproc(&self, window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> bool {
+        for handler in self.handlers.iter() {
+            let result = handler.as_ref().wndproc(window, message, wparam, lparam);
+            if result {
+                return true;
+            }
+        }
+        false
+    }
+}
 
 struct Window {
     hwnd: HWND,
@@ -27,10 +68,14 @@ impl Window {
     pub fn new(size_x: i32, size_y: i32) -> Result<Window> {
         let instance = unsafe { GetModuleHandleA(None)? };
 
+        let mut handler = Box::new(MultiplexWinProc::new());
+        handler.add_handler(Box::new(InputWinProc {}));
+        let handler_ptr = Box::into_raw(handler) as *const c_void;
+
         let wc: WNDCLASSEXA = WNDCLASSEXA {
             cbSize: std::mem::size_of::<WNDCLASSEXA>() as u32,
             style: CS_OWNDC,
-            lpfnWndProc: Some(wndproc),
+            lpfnWndProc: Some(wndproc_bootstrap),
             hInstance: instance,
             lpszClassName: s!("EngWindowClass"),
             ..Default::default()
@@ -52,7 +97,7 @@ impl Window {
                 None, // no parent window
                 None, // no menus
                 instance,
-                None,
+                Some(handler_ptr),
             )
         };
 
@@ -102,25 +147,53 @@ impl<'a> Engine<'a> {
     }
 }
 
-extern "system" fn wndproc(window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> LRESULT {
+extern "system" fn wndproc_bootstrap(
+    window: HWND,
+    message: u32,
+    wparam: WPARAM,
+    lparam: LPARAM,
+) -> LRESULT {
     match message {
         WM_CREATE => {
             unsafe {
                 let create_struct: &CREATESTRUCTA = transmute(lparam);
-                SetWindowLongPtrA(window, GWLP_USERDATA, create_struct.lpCreateParams as _);
+                SetWindowLongPtrA(window, GWLP_USERDATA, create_struct.lpCreateParams as isize);
+                SetWindowLongPtrA(window, GWLP_WNDPROC, wndproc_main as usize as isize);
             }
-            LRESULT::default()
-        }
-        WM_DESTROY => {
-            unsafe { PostQuitMessage(0) };
             LRESULT::default()
         }
         _ => unsafe { DefWindowProcA(window, message, wparam, lparam) },
     }
 }
 
+extern "system" fn wndproc_main(
+    window: HWND,
+    message: u32,
+    wparam: WPARAM,
+    lparam: LPARAM,
+) -> LRESULT {
+    match message {
+        WM_DESTROY => {
+            unsafe { PostQuitMessage(0) };
+            LRESULT::default()
+        }
+        _ => {
+            let ptr: *const MultiplexWinProc =
+                unsafe { GetWindowLongPtrA(window, GWLP_USERDATA) as *const MultiplexWinProc };
+            let result = unsafe { ptr.as_ref() }
+                .expect("missing windproc ptr")
+                .wndproc(window, message, wparam, lparam);
+            if !result {
+                unsafe { DefWindowProcA(window, message, wparam, lparam) }
+            } else {
+                LRESULT(1)
+            }
+        }
+    }
+}
+
 fn setup_scene(renderer: &mut dyn Renderer) {
-    let pixel_shader = PixelShader::new("ps/PixelShader.hlsl");
+    let pixel_shader = PixelShader::new("ps/FallbackShader.hlsl");
     let standard_material = Material::new(&pixel_shader);
 
     let floor_plane = Mesh::new_plane(100000.0);

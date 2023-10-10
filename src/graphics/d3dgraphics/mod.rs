@@ -31,7 +31,7 @@ use self::d3dcommandqueue::{create_command_resource, D3DCommandQueue};
 use self::d3dmesh::D3DMesh;
 use self::d3dpipelinestate::D3DPipelineState;
 use self::d3dresources::D3DResources;
-use self::d3drootsignature::{MeshInstanceConstants, D3DRootSignature, WorldConstants};
+use self::d3drootsignature::{D3DRootSignature, MeshInstanceConstants, WorldConstants};
 
 pub struct D3DGraphics {
     adapter: IDXGIAdapter4,
@@ -521,7 +521,7 @@ impl<'a> Renderer for D3DRenderer<'a> {
             let mesh = D3DMesh::load(instance.mesh, &self.graphics.resources).unwrap();
             // let d3d_material = self.graphics.load_material(instance.material);
 
-            let model:Mat4 = instance.transform.into();
+            let model: Mat4 = instance.transform.into();
 
             let ps = instance.material.shader;
             let root_signature = D3DRootSignature::from_pixel_shader(ps, &self.graphics.device);
@@ -531,7 +531,7 @@ impl<'a> Renderer for D3DRenderer<'a> {
             self.pending_renderables.push_back(Renderable {
                 mesh,
                 constants: MeshInstanceConstants {
-                    model: model.inverse().transpose()
+                    model: model.inverse().transpose(),
                 },
                 root_signature,
                 pipeline_state,
@@ -573,7 +573,7 @@ impl<'a> D3DRenderer<'a> {
 
         let aspect_ratio = self.render_target.height as f32 / self.render_target.width as f32;
         self.world_constants.view =
-            Mat4::perspective_lh(1.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
+            Mat4::perspective_lh(2.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
         self.world_constants.world = self.calculate_world_matrix();
 
         // srv_heap_->Bind(command_list_);
@@ -615,13 +615,8 @@ impl<'a> D3DRenderer<'a> {
     fn calculate_world_matrix(&mut self) -> Mat4 {
         let mut camera_transform = MatTransform::IDENTITY;
         camera_transform.translate([0.0, 4.0, 0.0]);
-        camera_transform.rotate(Quat::from_euler(
-            glam::EulerRot::XYZ,
-            0.0,
-            PI,
-            0.0,
-        ));
-        let matrix:Mat4 = camera_transform.into();
+        camera_transform.rotate(Quat::from_euler(glam::EulerRot::XYZ, 0.0, PI, 0.0));
+        let matrix: Mat4 = camera_transform.into();
         matrix.inverse().transpose()
     }
 

@@ -29,9 +29,9 @@ impl MatTransform {
     }
 }
 
-impl Into<Mat4> for MatTransform {
-    fn into(self) -> Mat4 {
-        self.matrix
+impl From<MatTransform> for Mat4 {
+    fn from(val: MatTransform) -> Self {
+        val.matrix
     }
 }
 
