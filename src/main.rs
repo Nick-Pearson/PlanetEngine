@@ -81,6 +81,8 @@ fn setup_scene(renderer: &mut dyn Renderer) {
 }
 
 fn main() {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
+
     let window = WinAPIWindow::new(1280, 720).unwrap();
     window.show();
 

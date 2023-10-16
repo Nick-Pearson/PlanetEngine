@@ -8,6 +8,7 @@ use std::{
     path::PathBuf,
 };
 
+use log::warn;
 use windows::{
     core::*,
     Win32::Graphics::Direct3D::*,
@@ -140,7 +141,7 @@ fn compile_shader_blob(
     match shader_blob {
         None => {
             let msg = extract_compile_error(error_blob);
-            println!("Failed to compile shader file [{}]: [{}]", filepath, msg);
+            warn!("Failed to compile shader file [{}]: [{}]", filepath, msg);
             Err(msg)
         }
         Some(a) => Ok(a),

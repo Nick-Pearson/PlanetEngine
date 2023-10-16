@@ -11,6 +11,8 @@ path = "src/main.rs"
 [dependencies]
 arrayvec = "0.7.0"
 glam = "0.24"
+log = "0.4"
+simple_logger = "4.2.0"
 
 [dependencies.windows]
 version = "0.48"

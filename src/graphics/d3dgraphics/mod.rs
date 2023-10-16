@@ -9,6 +9,7 @@ use crate::graphics::*;
 use crate::instance::{MatTransform, Transform};
 use arrayvec::ArrayVec;
 use glam::{Mat4, Quat};
+use log::{info, warn};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
 use std::f32::consts::PI;
@@ -64,7 +65,7 @@ fn get_adapter_description(adapter: &IDXGIAdapter4) -> Result<String> {
 }
 
 fn create_device(adapter: &IDXGIAdapter4) -> Result<ID3D12Device2> {
-    println!(
+    info!(
         "Initialising graphics device [{}]",
         get_adapter_description(adapter).unwrap_or_default()
     );
@@ -174,13 +175,13 @@ impl D3DGraphics {
             if pix_module.is_err() {
                 match get_latest_win_pix_gpu_capturer_path() {
                     Some(path) => {
-                        println!("Loading a PIX installation at {}", path);
+                        info!("Loading a PIX installation at {}", path);
                         let mut bytes: Vec<u16> = path.encode_utf16().collect();
                         bytes.push(0);
                         let ptr: PCWSTR = PCWSTR::from_raw(bytes.as_ptr());
                         LoadLibraryW(ptr).unwrap();
                     }
-                    None => println!("Failed to find PIX installation"),
+                    None => warn!("Failed to find PIX installation"),
                 }
             }
         }
@@ -243,7 +244,7 @@ impl WindowRenderTarget {
         unsafe { swap_chain.GetDesc(&mut swap_chain_desc) }.unwrap();
         let width = swap_chain_desc.BufferDesc.Width;
         let height = swap_chain_desc.BufferDesc.Height;
-        println!("Initialising window resolution to [{}x{}]", width, height);
+        info!("Initialising window resolution to [{}x{}]", width, height);
 
         let rtv_descriptor_heap =
             create_descriptor_heap(device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3)?;
@@ -376,7 +377,7 @@ impl WindowRenderTarget {
         unsafe { self.swap_chain.GetDesc(&mut swap_chain_desc) }.unwrap();
         self.width = swap_chain_desc.BufferDesc.Width;
         self.height = swap_chain_desc.BufferDesc.Height;
-        println!(
+        info!(
             "Updating window resolution to [{}x{}]",
             self.width, self.height
         );
