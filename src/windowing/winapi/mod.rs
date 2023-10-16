@@ -12,8 +12,8 @@ use std::mem::transmute;
 impl KeyCode {
     pub fn from_virtual_key_code(virtual_key_code: usize) -> std::result::Result<KeyCode, String> {
         let maybe_char: std::result::Result<u8, _> = virtual_key_code.try_into();
-        if maybe_char.is_ok() {
-            let c = maybe_char.unwrap() as char;
+        if let Ok(by) = maybe_char {
+            let c = by as char;
             if c.is_alphanumeric() {
                 return Ok(KeyCode::Character(c));
             }
@@ -102,8 +102,11 @@ impl WinProc for InputWinProc {
                 }
             }
             WM_MOUSEMOVE => {
-                const HALF_WORD:usize = std::mem::size_of::<usize>() * 4;
-                let (mouse_x, mouse_y) = (((lparam.0 << HALF_WORD) >> HALF_WORD) as i32, (lparam.0 >> HALF_WORD) as i32);
+                const HALF_WORD: usize = std::mem::size_of::<usize>() * 4;
+                let (mouse_x, mouse_y) = (
+                    ((lparam.0 << HALF_WORD) >> HALF_WORD) as i32,
+                    (lparam.0 >> HALF_WORD) as i32,
+                );
 
                 if self.mouse_position.0 != -1 {
                     self.mouse_delta = (
@@ -211,7 +214,7 @@ extern "system" fn wndproc_bootstrap(
             unsafe {
                 let create_struct: &CREATESTRUCTA = transmute(lparam);
                 SetWindowLongPtrA(window, GWLP_USERDATA, create_struct.lpCreateParams as _);
-                SetWindowLongPtrA(window, GWLP_WNDPROC, wndproc_main as _);
+                SetWindowLongPtrA(window, GWLP_WNDPROC, wndproc_main as usize as _);
             }
             LRESULT::default()
         }
