@@ -102,7 +102,8 @@ impl WinProc for InputWinProc {
                 }
             }
             WM_MOUSEMOVE => {
-                let (mouse_x, mouse_y) = (lparam.0 as i32, (lparam.0 >> 32) as i32);
+                const HALF_WORD:usize = std::mem::size_of::<usize>() * 4;
+                let (mouse_x, mouse_y) = (((lparam.0 << HALF_WORD) >> HALF_WORD) as i32, (lparam.0 >> HALF_WORD) as i32);
 
                 if self.mouse_position.0 != -1 {
                     self.mouse_delta = (
