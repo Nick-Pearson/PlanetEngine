@@ -209,8 +209,8 @@ extern "system" fn wndproc_bootstrap(
         WM_CREATE => {
             unsafe {
                 let create_struct: &CREATESTRUCTA = transmute(lparam);
-                SetWindowLongPtrA(window, GWLP_USERDATA, create_struct.lpCreateParams as isize);
-                SetWindowLongPtrA(window, GWLP_WNDPROC, wndproc_main as usize as isize);
+                SetWindowLongPtrA(window, GWLP_USERDATA, create_struct.lpCreateParams as _);
+                SetWindowLongPtrA(window, GWLP_WNDPROC, wndproc_main as _);
             }
             LRESULT::default()
         }
