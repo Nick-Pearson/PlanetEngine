@@ -10,14 +10,80 @@ use crate::graphics::d3dgraphics::D3DGraphics;
 use crate::graphics::{CreateRenderer, RenderQueueItems, Renderer};
 use crate::instance::MeshInstance;
 use crate::material::{Material, PixelShader};
-use glam::Quat;
-use instance::Transform;
+use glam::{Quat, Mat4, Vec3};
+use input::{KeyCode, InputReader};
+use instance::{Transform, MatTransform};
 use mesh::Mesh;
+use windowing::Window;
 use windowing::winapi::WinAPIWindow;
 
 use windows::Win32::UI::WindowsAndMessaging::*;
 
-use std::f32::consts::FRAC_PI_2;
+use std::f32::consts::{FRAC_PI_2, PI};
+use std::time::Instant;
+
+struct Camera {
+    transform: MatTransform
+}
+
+impl Camera {
+    pub fn new() -> Camera {
+        let mut transform = MatTransform::IDENTITY;
+        transform.translate([0.0, 4.0, 0.0]);
+        transform.rotate(Quat::from_euler(glam::EulerRot::XYZ, 0.0, PI, 0.0));
+
+        Camera { transform }
+    }
+
+    pub fn update(&mut self, delta_time: f32, input: &dyn InputReader) {
+        let mut movement = Vec3::ZERO;
+        let mut rotation_x = 0.0_f32;
+        let mut rotation_y = 0.0_f32;
+
+        if input.is_key_down(KeyCode::Character('W')) {
+            movement += Vec3::new(0.0, 0.0, 1.0);
+        } else if input.is_key_down(KeyCode::Character('S')) {
+            movement += Vec3::new(0.0, 0.0, -1.0);
+        }
+        if input.is_key_down(KeyCode::Character('D')) {
+            movement += Vec3::new(1.0, 0.0, 0.0);
+        } else if input.is_key_down(KeyCode::Character('A')) {
+            movement += Vec3::new(-1.0, 0.0, 0.0);
+        }
+
+        if input.is_key_down(KeyCode::LeftShift) {
+            movement *= 10.0;
+        }
+
+        if input.is_key_down(KeyCode::LeftArrow)
+        {
+            rotation_x -= 1.0;
+        } 
+        else if input.is_key_down(KeyCode::RightArrow)
+        {
+            rotation_x += 1.0;
+        }
+
+        if input.is_key_down(KeyCode::UpArrow)
+        {
+            rotation_y -= 1.0;
+        } 
+        else if input.is_key_down(KeyCode::DownArrow)
+        {
+            rotation_y += 1.0;
+        }
+
+        const ROTATION_SPEED:f32 = 0.1;
+        const MOVE_SPEED:f32 = 10.0;
+
+        self.transform.rotate(Quat::from_euler(
+            glam::EulerRot::XYZ,
+             rotation_x * delta_time * ROTATION_SPEED,
+              rotation_y * delta_time * ROTATION_SPEED,
+              0.0));
+        self.transform.translate(movement * delta_time * MOVE_SPEED);
+    }
+}
 
 struct Engine<'a> {
     window: WinAPIWindow,
@@ -35,9 +101,17 @@ impl<'a> Engine<'a> {
     }
 
     pub fn run(&mut self) {
+        let mut camera = Camera::new();
+        let mut delta_time = 0.01_f32;
+        let mut begin = Instant::now();
         while self.running {
             self.pump_windows_messages();
-            self.renderer.render_frame();
+            camera.update(delta_time, self.window.input());
+            self.renderer.render_frame(&camera.transform.into());
+
+            let end = Instant::now();
+            delta_time = (end - begin).as_secs_f32();
+            begin = end;
         }
     }
 
@@ -88,7 +162,7 @@ fn main() {
 
     let graphics = D3DGraphics::new().unwrap();
     let mut renderer = graphics.create_renderer(&window.hwnd).unwrap();
-    renderer.render_frame();
+    renderer.render_frame(&Mat4::IDENTITY);
 
     setup_scene(&mut renderer);
 

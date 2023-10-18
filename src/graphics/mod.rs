@@ -1,3 +1,5 @@
+use glam::Mat4;
+
 use crate::instance::MeshInstance;
 
 #[cfg(windows)]
@@ -22,7 +24,7 @@ impl<'a> RenderQueueItems<'a> {
 pub trait Renderer {
     fn apply(&mut self, items: RenderQueueItems);
 
-    fn render_frame(&mut self);
+    fn render_frame(&mut self, camera_transform: &Mat4);
 }
 
 pub trait CreateRenderer<'a> {

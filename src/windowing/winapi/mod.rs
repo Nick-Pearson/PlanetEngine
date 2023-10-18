@@ -1,4 +1,4 @@
-use crate::input::KeyCode;
+use crate::input::{KeyCode, InputReader};
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::{
     core::*, Win32::Foundation::*, Win32::System::LibraryLoader::*,
@@ -8,6 +8,8 @@ use windows::{
 use std::collections::HashSet;
 use std::ffi::c_void;
 use std::mem::transmute;
+
+use super::Window;
 
 impl KeyCode {
     pub fn from_virtual_key_code(virtual_key_code: usize) -> std::result::Result<KeyCode, String> {
@@ -123,47 +125,49 @@ impl WinProc for InputWinProc {
     }
 }
 
-struct MultiplexWinProc {
-    handlers: Vec<Box<dyn WinProc>>,
+impl InputReader for InputWinProc {
+    fn is_key_down(&self, key_code: KeyCode) -> bool {
+        self.keys_pressed.contains(&key_code)
+    }
 }
 
-impl MultiplexWinProc {
-    fn new() -> MultiplexWinProc {
-        MultiplexWinProc {
-            handlers: Vec::new(),
+struct WinProcHolder {
+    input: InputWinProc,
+}
+
+impl WinProcHolder {
+    fn new(input: InputWinProc) -> WinProcHolder {
+        WinProcHolder {
+            input,
         }
     }
-
-    pub fn add_handler(&mut self, handler: Box<dyn WinProc>) {
-        self.handlers.push(handler);
-    }
 }
 
-impl WinProc for MultiplexWinProc {
+impl WinProc for WinProcHolder {
     fn wndproc(&mut self, window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> bool {
-        for handler in self.handlers.iter_mut() {
-            let result = handler.as_mut().wndproc(window, message, wparam, lparam);
-            if result {
-                return true;
-            }
-        }
-        false
+        let result = self.input.wndproc(window, message, wparam, lparam);
+        result
     }
 }
 
 pub struct WinAPIWindow {
     pub hwnd: HWND,
-    handler_ptr: *mut MultiplexWinProc,
+    handler: Box<WinProcHolder>,
+}
+
+impl Drop for WinAPIWindow {
+    fn drop(&mut self) {
+        unsafe { DestroyWindow(self.hwnd) };
+    }
 }
 
 impl WinAPIWindow {
     pub fn new(size_x: i32, size_y: i32) -> Result<WinAPIWindow> {
         let instance = unsafe { GetModuleHandleA(None)? };
 
-        let input_handler = Box::new(InputWinProc::new());
+        let input_handler = InputWinProc::new();
 
-        let mut handler = Box::new(MultiplexWinProc::new());
-        handler.add_handler(input_handler);
+        let handler = Box::new(WinProcHolder::new(input_handler));
         let handler_ptr = Box::into_raw(handler);
 
         let wc: WNDCLASSEXA = WNDCLASSEXA {
@@ -195,11 +199,24 @@ impl WinAPIWindow {
             )
         };
 
-        Ok(WinAPIWindow { hwnd, handler_ptr })
+        Ok(WinAPIWindow { 
+            hwnd, 
+            handler: unsafe { Box::from_raw(handler_ptr) }
+        })
+    }
+}
+
+impl Window for WinAPIWindow {
+    fn show(&self) {
+        unsafe { ShowWindow(self.hwnd, SW_SHOW) };
     }
 
-    pub fn show(&self) {
-        unsafe { ShowWindow(self.hwnd, SW_SHOW) };
+    fn hide(&self) {
+        unsafe { CloseWindow(self.hwnd) };
+    }
+
+    fn input(&self) -> &dyn crate::input::InputReader {
+        &self.handler.input
     }
 }
 
@@ -234,8 +251,8 @@ extern "system" fn wndproc_main(
             LRESULT::default()
         }
         _ => {
-            let ptr: *mut MultiplexWinProc =
-                unsafe { GetWindowLongPtrA(window, GWLP_USERDATA) as *mut MultiplexWinProc };
+            let ptr: *mut WinProcHolder =
+                unsafe { GetWindowLongPtrA(window, GWLP_USERDATA) as *mut WinProcHolder };
             let result = unsafe { ptr.as_mut() }
                 .expect("missing windproc ptr")
                 .wndproc(window, message, wparam, lparam);

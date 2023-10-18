@@ -541,8 +541,8 @@ impl<'a> Renderer for D3DRenderer<'a> {
         self.graphics.resources.execute_resource_loads();
     }
 
-    fn render_frame(&mut self) {
-        self.pre_render();
+    fn render_frame(&mut self, camera_transform: &Mat4) {
+        self.pre_render(camera_transform);
         for mut r in self
             .pending_renderables
             .drain(0..self.pending_renderables.len())
@@ -558,7 +558,7 @@ impl<'a> Renderer for D3DRenderer<'a> {
 }
 
 impl<'a> D3DRenderer<'a> {
-    fn pre_render(&mut self) {
+    fn pre_render(&mut self, camera_transform: &Mat4) {
         unsafe { self.draw_command_allocator.Reset() }.unwrap();
         unsafe {
             self.draw_command_list
@@ -575,7 +575,7 @@ impl<'a> D3DRenderer<'a> {
         let aspect_ratio = self.render_target.height as f32 / self.render_target.width as f32;
         self.world_constants.view =
             Mat4::perspective_lh(2.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
-        self.world_constants.world = self.calculate_world_matrix();
+        self.world_constants.world = camera_transform.inverse().transpose();
 
         // srv_heap_->Bind(command_list_);
     }
@@ -611,14 +611,6 @@ impl<'a> D3DRenderer<'a> {
         // state.material_->Bind(command_list_);
         renderable.pipeline_state.bind(&self.draw_command_list);
         renderable.mesh.draw(&self.draw_command_list);
-    }
-
-    fn calculate_world_matrix(&mut self) -> Mat4 {
-        let mut camera_transform = MatTransform::IDENTITY;
-        camera_transform.translate([0.0, 4.0, 0.0]);
-        camera_transform.rotate(Quat::from_euler(glam::EulerRot::XYZ, 0.0, PI, 0.0));
-        let matrix: Mat4 = camera_transform.into();
-        matrix.inverse().transpose()
     }
 
     fn present(&mut self) {

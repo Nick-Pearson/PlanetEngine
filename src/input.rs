@@ -30,3 +30,7 @@ pub enum KeyCode {
     LeftSuper,
     RightSuper,
 }
+
+pub trait InputReader {
+    fn is_key_down(&self, key_code: KeyCode) -> bool;
+}

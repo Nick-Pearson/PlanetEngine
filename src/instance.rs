@@ -24,8 +24,12 @@ impl MatTransform {
         }
     }
 
-    pub fn get_position(&self) -> Vec3A {
+    pub fn position(&self) -> Vec3A {
         (self.matrix * Vec4::W).into()
+    }
+
+    pub fn rotation(&self) -> Quat {
+        Quat::from_mat4(&self.matrix)
     }
 }
 
@@ -84,7 +88,7 @@ mod tests {
         let a = MatTransform::from_position([50.0, 100.0, 200.0]);
 
         let expected = Vec3A::new(50.0, 100.0, 200.0);
-        assert_eq!(expected, a.get_position());
+        assert_eq!(expected, a.position());
     }
 
     #[test]
@@ -94,7 +98,7 @@ mod tests {
         a.translate([100.0, 200.0, 300.0]);
 
         let expected = Vec3A::new(100.0, 200.0, 300.0);
-        assert_eq!(expected, a.get_position());
+        assert_eq!(expected, a.position());
     }
 
     #[test]
@@ -103,7 +107,7 @@ mod tests {
 
         a.rotate(Quat::from_rotation_x(FRAC_PI_2));
 
-        let actual: Vec3 = a.get_position().into();
+        let actual: Vec3 = a.position().into();
         assert_approx_eq!(5.0, actual.x);
         assert_approx_eq!(-2.0, actual.y);
         assert_approx_eq!(1.0, actual.z);
