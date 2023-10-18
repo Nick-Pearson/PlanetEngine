@@ -6,13 +6,13 @@ mod d3drootsignature;
 mod d3dshader;
 
 use crate::graphics::*;
-use crate::instance::{MatTransform, Transform};
+
 use arrayvec::ArrayVec;
-use glam::{Mat4, Quat};
+use glam::Mat4;
 use log::{info, warn};
 use std::cmp::Ordering;
 use std::collections::VecDeque;
-use std::f32::consts::PI;
+
 use std::ffi::c_void;
 use windows::Win32::Storage::FileSystem::{
     FindClose, FindFirstFileW, FindNextFileW, FILE_ATTRIBUTE_DIRECTORY, FILE_FLAGS_AND_ATTRIBUTES,

@@ -10,12 +10,12 @@ use crate::graphics::d3dgraphics::D3DGraphics;
 use crate::graphics::{CreateRenderer, RenderQueueItems, Renderer};
 use crate::instance::MeshInstance;
 use crate::material::{Material, PixelShader};
-use glam::{Quat, Mat4, Vec3};
-use input::{KeyCode, InputReader};
-use instance::{Transform, MatTransform};
+use glam::{Mat4, Quat, Vec3};
+use input::{InputReader, KeyCode};
+use instance::{MatTransform, Transform};
 use mesh::Mesh;
-use windowing::Window;
 use windowing::winapi::WinAPIWindow;
+use windowing::Window;
 
 use windows::Win32::UI::WindowsAndMessaging::*;
 
@@ -23,7 +23,7 @@ use std::f32::consts::{FRAC_PI_2, PI};
 use std::time::Instant;
 
 struct Camera {
-    transform: MatTransform
+    transform: MatTransform,
 }
 
 impl Camera {
@@ -55,32 +55,27 @@ impl Camera {
             movement *= 10.0;
         }
 
-        if input.is_key_down(KeyCode::LeftArrow)
-        {
+        if input.is_key_down(KeyCode::LeftArrow) {
             rotation_x -= 1.0;
-        } 
-        else if input.is_key_down(KeyCode::RightArrow)
-        {
+        } else if input.is_key_down(KeyCode::RightArrow) {
             rotation_x += 1.0;
         }
 
-        if input.is_key_down(KeyCode::UpArrow)
-        {
+        if input.is_key_down(KeyCode::UpArrow) {
             rotation_y -= 1.0;
-        } 
-        else if input.is_key_down(KeyCode::DownArrow)
-        {
+        } else if input.is_key_down(KeyCode::DownArrow) {
             rotation_y += 1.0;
         }
 
-        const ROTATION_SPEED:f32 = 0.1;
-        const MOVE_SPEED:f32 = 10.0;
+        const ROTATION_SPEED: f32 = 0.1;
+        const MOVE_SPEED: f32 = 10.0;
 
         self.transform.rotate(Quat::from_euler(
             glam::EulerRot::XYZ,
-             rotation_x * delta_time * ROTATION_SPEED,
-              rotation_y * delta_time * ROTATION_SPEED,
-              0.0));
+            rotation_x * delta_time * ROTATION_SPEED,
+            rotation_y * delta_time * ROTATION_SPEED,
+            0.0,
+        ));
         self.transform.translate(movement * delta_time * MOVE_SPEED);
     }
 }

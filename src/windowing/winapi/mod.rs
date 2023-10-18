@@ -1,4 +1,4 @@
-use crate::input::{KeyCode, InputReader};
+use crate::input::{InputReader, KeyCode};
 use windows::Win32::UI::Input::KeyboardAndMouse::*;
 use windows::{
     core::*, Win32::Foundation::*, Win32::System::LibraryLoader::*,
@@ -137,16 +137,13 @@ struct WinProcHolder {
 
 impl WinProcHolder {
     fn new(input: InputWinProc) -> WinProcHolder {
-        WinProcHolder {
-            input,
-        }
+        WinProcHolder { input }
     }
 }
 
 impl WinProc for WinProcHolder {
     fn wndproc(&mut self, window: HWND, message: u32, wparam: WPARAM, lparam: LPARAM) -> bool {
-        let result = self.input.wndproc(window, message, wparam, lparam);
-        result
+        self.input.wndproc(window, message, wparam, lparam)
     }
 }
 
@@ -199,9 +196,9 @@ impl WinAPIWindow {
             )
         };
 
-        Ok(WinAPIWindow { 
-            hwnd, 
-            handler: unsafe { Box::from_raw(handler_ptr) }
+        Ok(WinAPIWindow {
+            hwnd,
+            handler: unsafe { Box::from_raw(handler_ptr) },
         })
     }
 }
