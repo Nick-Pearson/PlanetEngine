@@ -572,7 +572,7 @@ impl<'a> D3DRenderer<'a> {
         const NEAR_CLIP: f32 = 0.5;
         const FAR_CLIP: f32 = 5000.0;
 
-        let aspect_ratio = self.render_target.height as f32 / self.render_target.width as f32;
+        let aspect_ratio = self.render_target.width as f32 / self.render_target.height as f32;
         self.world_constants.view =
             Mat4::perspective_lh(2.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
         self.world_constants.world = camera_transform.inverse().transpose();

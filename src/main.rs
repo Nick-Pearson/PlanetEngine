@@ -13,6 +13,7 @@ use crate::material::{Material, PixelShader};
 use glam::{Mat4, Quat, Vec3};
 use input::{InputReader, KeyCode};
 use instance::{MatTransform, Transform};
+use log::info;
 use mesh::Mesh;
 use windowing::winapi::WinAPIWindow;
 use windowing::Window;
@@ -29,8 +30,8 @@ struct Camera {
 impl Camera {
     pub fn new() -> Camera {
         let mut transform = MatTransform::IDENTITY;
-        transform.translate([0.0, 4.0, 0.0]);
-        transform.rotate(Quat::from_euler(glam::EulerRot::XYZ, 0.0, PI, 0.0));
+        // transform.translate([0.0, 4.0, 0.0]);
+        // transform.rotate(Quat::from_euler(glam::EulerRot::XYZ, 0.0, PI, 0.0));
 
         Camera { transform }
     }
@@ -67,7 +68,7 @@ impl Camera {
             rotation_y += 1.0;
         }
 
-        const ROTATION_SPEED: f32 = 0.1;
+        const ROTATION_SPEED: f32 = 0.5;
         const MOVE_SPEED: f32 = 10.0;
 
         self.transform.rotate(Quat::from_euler(
@@ -139,13 +140,19 @@ fn setup_scene(renderer: &mut dyn Renderer) {
         -FRAC_PI_2,
     ));
 
-    // std::shared_ptr<Entity> planeEntity = scene_->SpawnEntity("wall");
-    // planeEntity->Rotate(Vector{ 0.0f, 160.0f, 0.0f });
-    // planeEntity->Translate(Vector{ -4.0f, -2.0f, -2.0f });
-    // planeEntity->AddComponent<MeshComponent>(Primitives::Plane(2.0f), texturedMaterial);
+    let wall_plane = Mesh::new_plane(2.0);
+    let mut wall = MeshInstance::new(&wall_plane, &standard_material);
+    // wall.rotate(Quat::from_euler(
+    //     glam::EulerRot::XYZ,
+    //     0.0,
+    //     FRAC_PI_2,
+    //     0.0,
+    // ));
+    // wall.translate(Vec3::new(-4.0, -2.0, -2.0));
 
     let mut queue = RenderQueueItems::empty();
     queue.new_meshes.push(&floor);
+    queue.new_meshes.push(&wall);
     renderer.apply(queue);
 }
 
