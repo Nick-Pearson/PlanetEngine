@@ -6,6 +6,8 @@ pub trait Transform {
     fn translate<P: Into<Vec3>>(&mut self, delta: P);
 
     fn rotate<R: Into<Quat>>(&mut self, delta: R);
+
+    fn rotate_around<P: Into<Vec3>, R: Into<Quat>>(&mut self, origin: P, delta: R);
 }
 
 #[derive(PartialEq, Debug, Clone, Copy)]
@@ -42,12 +44,19 @@ impl From<MatTransform> for Mat4 {
 impl Transform for MatTransform {
     fn translate<P: Into<Vec3>>(&mut self, delta: P) {
         let translation_matrix = Mat4::from_translation(delta.into());
-        self.matrix *= translation_matrix;
+        self.matrix = translation_matrix * self.matrix;
     }
 
     fn rotate<R: Into<Quat>>(&mut self, delta: R) {
+        self.rotate_around(self.position(), delta)
+    }
+
+    fn rotate_around<P: Into<Vec3>, R: Into<Quat>>(&mut self, origin: P, delta: R) {
+        let point: Vec3 = origin.into();
+        self.translate(-point);
         let rotation_matrix = Mat4::from_quat(delta.into());
         self.matrix = rotation_matrix * self.matrix;
+        self.translate(point);
     }
 }
 
@@ -74,6 +83,10 @@ impl<'a> Transform for MeshInstance<'a> {
 
     fn rotate<R: Into<Quat>>(&mut self, delta: R) {
         self.transform.rotate(delta);
+    }
+
+    fn rotate_around<P: Into<Vec3>, R: Into<Quat>>(&mut self, origin: P, delta: R) {
+        self.transform.rotate_around(origin, delta)
     }
 }
 
@@ -102,10 +115,22 @@ mod tests {
     }
 
     #[test]
-    fn rotate_moves_position() {
+    fn rotate_does_not_move_position() {
         let mut a = MatTransform::from_position([5.0, 1.0, 2.0]);
 
         a.rotate(Quat::from_rotation_x(FRAC_PI_2));
+
+        let actual: Vec3 = a.position().into();
+        assert_approx_eq!(5.0, actual.x);
+        assert_approx_eq!(1.0, actual.y);
+        assert_approx_eq!(2.0, actual.z);
+    }
+
+    #[test]
+    fn rotate_around_origin_moves_position() {
+        let mut a = MatTransform::from_position([5.0, 1.0, 2.0]);
+
+        a.rotate_around(Vec3::new(0.0, 0.0, 0.0), Quat::from_rotation_x(FRAC_PI_2));
 
         let actual: Vec3 = a.position().into();
         assert_approx_eq!(5.0, actual.x);

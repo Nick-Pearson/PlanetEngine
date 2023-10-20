@@ -13,14 +13,14 @@ use crate::material::{Material, PixelShader};
 use glam::{Mat4, Quat, Vec3};
 use input::{InputReader, KeyCode};
 use instance::{MatTransform, Transform};
-use log::info;
+
 use mesh::Mesh;
 use windowing::winapi::WinAPIWindow;
 use windowing::Window;
 
 use windows::Win32::UI::WindowsAndMessaging::*;
 
-use std::f32::consts::{FRAC_PI_2, PI};
+use std::f32::consts::FRAC_PI_2;
 use std::time::Instant;
 
 struct Camera {
@@ -30,8 +30,8 @@ struct Camera {
 impl Camera {
     pub fn new() -> Camera {
         let mut transform = MatTransform::IDENTITY;
-        // transform.translate([0.0, 4.0, 0.0]);
-        // transform.rotate(Quat::from_euler(glam::EulerRot::XYZ, 0.0, PI, 0.0));
+        transform.translate([0.0, 4.0, 10.0]);
+        // transform.rotate(Quat::from_euler(glam::EulerRot::YXZ, PI, 0.0, 0.0));
 
         Camera { transform }
     }
@@ -52,29 +52,31 @@ impl Camera {
             movement += Vec3::new(-1.0, 0.0, 0.0);
         }
 
-        if input.is_key_down(KeyCode::LeftShift) {
-            movement *= 10.0;
+        if input.is_key_down(KeyCode::UpArrow) {
+            rotation_x += 1.0;
+        } else if input.is_key_down(KeyCode::DownArrow) {
+            rotation_x -= 1.0;
         }
 
         if input.is_key_down(KeyCode::LeftArrow) {
-            rotation_x -= 1.0;
+            rotation_y -= 1.0;
         } else if input.is_key_down(KeyCode::RightArrow) {
-            rotation_x += 1.0;
+            rotation_y += 1.0;
         }
 
-        if input.is_key_down(KeyCode::UpArrow) {
-            rotation_y -= 1.0;
-        } else if input.is_key_down(KeyCode::DownArrow) {
-            rotation_y += 1.0;
+        if input.is_key_down(KeyCode::LeftShift) {
+            movement *= 10.0;
+            rotation_x *= 10.0;
+            rotation_y *= 10.0;
         }
 
         const ROTATION_SPEED: f32 = 0.5;
         const MOVE_SPEED: f32 = 10.0;
 
         self.transform.rotate(Quat::from_euler(
-            glam::EulerRot::XYZ,
-            rotation_x * delta_time * ROTATION_SPEED,
+            glam::EulerRot::YXZ,
             rotation_y * delta_time * ROTATION_SPEED,
+            rotation_x * delta_time * ROTATION_SPEED,
             0.0,
         ));
         self.transform.translate(movement * delta_time * MOVE_SPEED);
@@ -128,13 +130,13 @@ impl<'a> Engine<'a> {
 }
 
 fn setup_scene(renderer: &mut dyn Renderer) {
-    let pixel_shader = PixelShader::new("ps/FallbackShader.hlsl");
+    let pixel_shader = PixelShader::new("ps/PixelShader.hlsl");
     let standard_material = Material::new(&pixel_shader);
 
     let floor_plane = Mesh::new_plane(100000.0);
     let mut floor = MeshInstance::new(&floor_plane, &standard_material);
     floor.rotate(Quat::from_euler(
-        glam::EulerRot::XYZ,
+        glam::EulerRot::YXZ,
         FRAC_PI_2,
         FRAC_PI_2,
         -FRAC_PI_2,
@@ -142,13 +144,8 @@ fn setup_scene(renderer: &mut dyn Renderer) {
 
     let wall_plane = Mesh::new_plane(2.0);
     let mut wall = MeshInstance::new(&wall_plane, &standard_material);
-    // wall.rotate(Quat::from_euler(
-    //     glam::EulerRot::XYZ,
-    //     0.0,
-    //     FRAC_PI_2,
-    //     0.0,
-    // ));
-    // wall.translate(Vec3::new(-4.0, -2.0, -2.0));
+    wall.rotate(Quat::from_rotation_y(f32::to_radians(160.0)));
+    wall.translate(Vec3::new(-4.0, -2.0, -2.0));
 
     let mut queue = RenderQueueItems::empty();
     queue.new_meshes.push(&floor);
