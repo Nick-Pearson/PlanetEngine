@@ -22,7 +22,7 @@ impl Default for WorldConstants {
         Self {
             world: Mat4::IDENTITY,
             view: Mat4::IDENTITY,
-            sun_dir: Vec3::NEG_Z,
+            sun_dir: Vec3::NEG_Y,
             sun_sky_strength: 1.0,
             sun_col: Vec3::ONE,
         }

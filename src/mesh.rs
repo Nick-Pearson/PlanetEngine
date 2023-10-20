@@ -100,7 +100,7 @@ impl Mesh {
     }
 
     pub fn new_plane(scale: f32) -> Mesh {
-        let norm = [0.0, 0.0, 1.0];
+        let norm = [0.0, 0.0, -1.0];
         let v = vec![
             Vertex::new([scale * 1.0, scale * -1.0, 0.0], norm, [1.0, 0.0]),
             Vertex::new([scale * -1.0, scale * 1.0, 0.0], norm, [0.0, 1.0]),

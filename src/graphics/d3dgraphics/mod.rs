@@ -574,7 +574,7 @@ impl<'a> D3DRenderer<'a> {
 
         let aspect_ratio = self.render_target.width as f32 / self.render_target.height as f32;
         self.world_constants.view =
-            Mat4::perspective_lh(2.0, aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
+            Mat4::perspective_lh(f32::to_radians(60.0), aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
         self.world_constants.world = camera_transform.inverse().transpose();
 
         // srv_heap_->Bind(command_list_);

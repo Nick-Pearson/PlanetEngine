@@ -79,7 +79,7 @@ impl Camera {
             rotation_x * delta_time * ROTATION_SPEED,
             0.0,
         ));
-        self.transform.translate(movement * delta_time * MOVE_SPEED);
+        self.transform.translate((self.transform.rotation() * movement) * delta_time * MOVE_SPEED);
     }
 }
 
