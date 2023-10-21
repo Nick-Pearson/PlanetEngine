@@ -555,6 +555,12 @@ impl<'a> Renderer for D3DRenderer<'a> {
         }
         self.present();
     }
+
+    fn update_world(&mut self, world: &World) {
+        self.world_constants.sun_dir = world.sun_dir;
+        self.world_constants.sun_sky_strength = world.sun_sky_strength;
+        self.world_constants.sun_col = world.sun_col;
+    }
 }
 
 impl<'a> D3DRenderer<'a> {
@@ -574,7 +580,8 @@ impl<'a> D3DRenderer<'a> {
 
         let aspect_ratio = self.render_target.width as f32 / self.render_target.height as f32;
         self.world_constants.view =
-            Mat4::perspective_lh(f32::to_radians(60.0), aspect_ratio, NEAR_CLIP, FAR_CLIP).transpose();
+            Mat4::perspective_lh(f32::to_radians(60.0), aspect_ratio, NEAR_CLIP, FAR_CLIP)
+                .transpose();
         self.world_constants.world = camera_transform.inverse().transpose();
 
         // srv_heap_->Bind(command_list_);

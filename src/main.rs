@@ -3,6 +3,7 @@ mod input;
 mod instance;
 mod material;
 mod mesh;
+mod timeofday;
 mod windowing;
 
 #[cfg(windows)]
@@ -11,10 +12,12 @@ use crate::graphics::{CreateRenderer, RenderQueueItems, Renderer};
 use crate::instance::MeshInstance;
 use crate::material::{Material, PixelShader};
 use glam::{Mat4, Quat, Vec3};
+use graphics::World;
 use input::{InputReader, KeyCode};
 use instance::{MatTransform, Transform};
 
 use mesh::Mesh;
+use timeofday::{GeographicCoord, TimeOfDay};
 use windowing::winapi::WinAPIWindow;
 use windowing::Window;
 
@@ -79,7 +82,8 @@ impl Camera {
             rotation_x * delta_time * ROTATION_SPEED,
             0.0,
         ));
-        self.transform.translate((self.transform.rotation() * movement) * delta_time * MOVE_SPEED);
+        self.transform
+            .translate((self.transform.rotation() * movement) * delta_time * MOVE_SPEED);
     }
 }
 
@@ -100,11 +104,22 @@ impl<'a> Engine<'a> {
 
     pub fn run(&mut self) {
         let mut camera = Camera::new();
+        let mut tod = TimeOfDay::new(GeographicCoord::LONDON);
+        let mut world = World {
+            sun_dir: tod.calculate_sun_direction(),
+            sun_sky_strength: 1.0,
+            sun_col: Vec3::new(1.0, 1.0, 1.0),
+        };
+
         let mut delta_time = 0.01_f32;
         let mut begin = Instant::now();
         while self.running {
             self.pump_windows_messages();
+            tod.update(delta_time);
             camera.update(delta_time, self.window.input());
+
+            world.sun_dir = -tod.calculate_sun_direction();
+            self.renderer.update_world(&world);
             self.renderer.render_frame(&camera.transform.into());
 
             let end = Instant::now();

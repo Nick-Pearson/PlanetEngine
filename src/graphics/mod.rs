@@ -1,4 +1,4 @@
-use glam::Mat4;
+use glam::{Mat4, Vec3};
 
 use crate::instance::MeshInstance;
 
@@ -21,10 +21,18 @@ impl<'a> RenderQueueItems<'a> {
     }
 }
 
+pub struct World {
+    pub sun_dir: Vec3,
+    pub sun_sky_strength: f32,
+    pub sun_col: Vec3,
+}
+
 pub trait Renderer {
     fn apply(&mut self, items: RenderQueueItems);
 
     fn render_frame(&mut self, camera_transform: &Mat4);
+
+    fn update_world(&mut self, world: &World);
 }
 
 pub trait CreateRenderer<'a> {
